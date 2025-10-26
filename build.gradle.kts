@@ -11,10 +11,11 @@ version = "1.0"
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://repo.aikar.co/content/groups/aikar/") }
-    maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
-    maven { url = uri("https://jitpack.io") }
-    maven { url = uri("https://repo.gravemc.net/releases/") }
+    maven("https://repo.aikar.co/content/groups/aikar/")
+    maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://jitpack.io")
+    maven("https://repo.gravemc.net/releases/")
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 }
 
 dependencies {
@@ -22,6 +23,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.23")
+
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
@@ -32,10 +34,12 @@ dependencies {
         exclude(group = "org.yaml", module = "snakeyaml")
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
-    implementation("com.github.Clearedspore:SporeAPI:1.7.3")
+    implementation("com.github.Clearedspore:SporeAPI:1.7.4")
     implementation("org.dizitart:nitrite:4.3.2")
     implementation(platform("org.dizitart:nitrite-bom:4.3.2"))
     implementation("org.dizitart:nitrite-mvstore-adapter:4.3.2")
+
+    compileOnly("me.clip:placeholderapi:2.11.6")
 }
 
 tasks.shadowJar {

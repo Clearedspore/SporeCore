@@ -1,8 +1,7 @@
-package me.clearedSpore.sporeCore.util
+package me.clearedSpore.sporeCore.extension
 
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
-
 
 object Extensions {
 

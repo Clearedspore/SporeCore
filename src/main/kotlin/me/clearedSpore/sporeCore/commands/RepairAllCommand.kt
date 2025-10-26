@@ -4,7 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeCore.util.Extensions.isNullOrAir
+import me.clearedSpore.sporeCore.extension.Extensions.isNullOrAir
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.Material

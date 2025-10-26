@@ -2,11 +2,14 @@ package me.clearedSpore.sporeCore.commands
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
+import de.exlll.configlib.ConfigurationException
+import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
@@ -32,7 +35,7 @@ class CoreCommand : BaseCommand() {
 
         val startTime = System.currentTimeMillis()
 
-        reloadConfig(plugin)
+        reloadConfig(plugin, sender)
             .thenCompose { reloadEconomy() }
             .thenCompose { reloadWarps(plugin) }
             .thenCompose { reloadDatabase(plugin) }
@@ -50,16 +53,28 @@ class CoreCommand : BaseCommand() {
     }
 
 
-    private fun reloadConfig(plugin: SporeCore): CompletableFuture<Void> {
+    private fun reloadConfig(plugin: SporeCore, sender: CommandSender): CompletableFuture<Void> {
         return CompletableFuture.runAsync {
             Logger.info("Reloading config...")
-            val configFile = File(plugin.dataFolder, "config.yml").toPath()
-            plugin.coreConfig = me.clearedSpore.sporeCore.CoreConfig::class.java
-                .let { clazz -> de.exlll.configlib.YamlConfigurations.update(configFile, clazz) }
-            Logger.initialize(plugin.coreConfig.general.prefix)
-            Logger.info("Config reloaded successfully.")
+            try {
+                val configFile = File(plugin.dataFolder, "config.yml").toPath()
+                plugin.coreConfig = YamlConfigurations.update(configFile, CoreConfig::class.java)
+                Logger.initialize(plugin.coreConfig.general.prefix)
+                Logger.info("Config reloaded successfully.")
+
+                sender.sendMessage("Config reloaded successfully!".blue())
+            } catch (ex: ConfigurationException) {
+                val shortMessage = ex.message?.lineSequence()?.firstOrNull() ?: "Invalid configuration!"
+                sender.sendMessage("Failed to reload config: $shortMessage".red())
+
+                Logger.error("Failed to reload config.yml!")
+                Logger.error("Reason: $shortMessage")
+                ex.printStackTrace()
+            }
         }
     }
+
+
 
     private fun reloadEconomy(): CompletableFuture<Void> {
         return CompletableFuture.runAsync {

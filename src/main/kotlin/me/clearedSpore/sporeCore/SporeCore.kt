@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore
 import co.aikar.commands.Locales
 import co.aikar.commands.MessageKeys
 import co.aikar.commands.PaperCommandManager
+import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
@@ -10,7 +11,6 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
-import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.acf.ConfirmCondition
 import me.clearedSpore.sporeCore.acf.CooldownCondition
@@ -33,15 +33,14 @@ import me.clearedSpore.sporeCore.database.Database
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
-import me.clearedSpore.sporeCore.features.eco.`object`.EconomyLog
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.features.warp.WarpService
+import me.clearedSpore.sporeCore.hook.PlaceholderAPIHook
 import me.clearedSpore.sporeCore.listener.ChatEvent
 import me.clearedSpore.sporeCore.listener.LoggerEvent
 import me.clearedSpore.sporeCore.user.UserListener
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -49,7 +48,6 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import java.util.concurrent.CompletableFuture
 
 
 class SporeCore : JavaPlugin() {
@@ -69,17 +67,52 @@ class SporeCore : JavaPlugin() {
 
     override fun onEnable() {
         instance = this
-        val configFile = File(dataFolder, "config.yml").toPath()
-        coreConfig = YamlConfigurations.update(configFile, CoreConfig::class.java)
+        loadConfig()
         Logger.initialize(coreConfig.general.prefix)
         Logger.info("Loading SporeCore")
         Message.init(true)
-
         commandManager = PaperCommandManager(this)
         setupACF()
         Task.initialize(this)
         Perm.registerAll()
 
+        setupEconomy()
+
+        DatabaseManager.init(dataFolder)
+        database = DatabaseManager.getServerData()
+        server.pluginManager.registerEvents(UserListener(), this)
+
+        if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")){
+            PlaceholderAPIHook().register()
+        }
+
+        if(coreConfig.features.warps){
+            warpService = WarpService()
+        }
+
+        if(coreConfig.features.homes){
+            homeService = HomeService()
+        }
+
+        Cooldown.createCooldown("msg_cooldown", 2)
+
+        registerListeners()
+        registerCompletions()
+        registerCommands()
+
+        Logger.info("§aPlugin Loaded!")
+    }
+
+    override fun onDisable() {
+        Logger.infoDB("Saving all user data before shutdown...")
+        UserManager.saveAllUsers()
+        Logger.infoDB("All user data saved. Goodbye!")
+
+        DatabaseManager.close()
+    }
+
+
+    fun setupEconomy(){
         if (coreConfig.economy.enabled) {
             if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
                 Logger.warn("Vault not found! Disabling economy.")
@@ -98,34 +131,46 @@ class SporeCore : JavaPlugin() {
                 Logger.info("Registered Vault economy: ${coreConfig.economy.name}")
             }
         }
-
-        DatabaseManager.init(dataFolder)
-        database = DatabaseManager.getServerData()
-        server.pluginManager.registerEvents(UserListener(), this)
-
-
-        Cooldown.createCooldown("msg_cooldown", 2)
-
-        if(coreConfig.features.warps){
-            warpService = WarpService()
-        }
-
-        if(coreConfig.features.homes){
-            homeService = HomeService()
-        }
-
-
-        registerListeners()
-        registerCompletions()
-        registerCommands()
-
-        Logger.info("§aPlugin Loaded!")
     }
-
 
     fun registerListeners(){
         server.pluginManager.registerEvents(LoggerEvent(), this)
         server.pluginManager.registerEvents(ChatEvent(), this)
+    }
+
+    fun loadConfig(): CoreConfig {
+        val configFile = File(dataFolder, "config.yml").toPath()
+        return try {
+            YamlConfigurations.update(configFile, CoreConfig::class.java)
+        } catch (ex: ConfigurationException) {
+            Logger.error("Invalid config detected. Some values will use defaults. Check console for details.")
+
+            Logger.error("Configuration error while loading config.yml: ${ex.message}")
+            ex.printStackTrace()
+
+            CoreConfig()
+        }
+    }
+
+
+    fun setupACF() {
+        val prefix = "⚙ ".blue() + "SporeCore » ".white()
+
+        val locales = commandManager.locales
+
+        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_HEADER, "$prefix &fAvailable Commands:")
+        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_FORMAT, "&e/{command} &7{parameters} &f- {description}")
+
+        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_HEADER, "$prefix &fCommand Help for &e/{command}")
+        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_COMMAND_FORMAT, "Usage: &f/{command} {parameters}".blue())
+        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_PARAMETER_FORMAT, "&7- &f{parameter} &7({description})")
+
+        locales.addMessage(Locales.ENGLISH, MessageKeys.INVALID_SYNTAX, "$prefix" + "Use &e{command} &f{syntax}".red())
+        locales.addMessage(Locales.ENGLISH, MessageKeys.PERMISSION_DENIED, "$prefix" + "You don't have permission to use this command!".red())
+        locales.addMessage(Locales.ENGLISH, MessageKeys.UNKNOWN_COMMAND, "$prefix" + "That command does not exist!".red())
+
+        ConfirmCondition.register(commandManager)
+        CooldownCondition.register(commandManager)
     }
 
     fun registerCommands(){
@@ -203,26 +248,6 @@ class SporeCore : JavaPlugin() {
         }
     }
 
-    fun setupACF() {
-        val prefix = "⚙ ".blue() + "SporeCore » ".white()
-
-        val locales = commandManager.locales
-
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_HEADER, "$prefix &fAvailable Commands:")
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_FORMAT, "&e/{command} &7{parameters} &f- {description}")
-
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_HEADER, "$prefix &fCommand Help for &e/{command}")
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_COMMAND_FORMAT, "Usage: &f/{command} {parameters}".blue())
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_PARAMETER_FORMAT, "&7- &f{parameter} &7({description})")
-
-        locales.addMessage(Locales.ENGLISH, MessageKeys.INVALID_SYNTAX, "$prefix" + "Use &e{command} &f{syntax}".red())
-        locales.addMessage(Locales.ENGLISH, MessageKeys.PERMISSION_DENIED, "$prefix" + "You don't have permission to use this command!".red())
-        locales.addMessage(Locales.ENGLISH, MessageKeys.UNKNOWN_COMMAND, "$prefix" + "That command does not exist!".red())
-
-        ConfirmCondition.register(commandManager)
-        CooldownCondition.register(commandManager)
-    }
-
     fun registerCompletions(){
         commandManager.commandCompletions.registerCompletion("gamemodes") { context ->
             val sender = context.sender
@@ -290,15 +315,4 @@ class SporeCore : JavaPlugin() {
             user.homes.map { it.name }
         }
     }
-
-
-    override fun onDisable() {
-        Logger.infoDB("Saving all user data before shutdown...")
-        UserManager.saveAllUsers()
-        Logger.infoDB("All user data saved. Goodbye!")
-
-        DatabaseManager.close()
-    }
-
-
 }

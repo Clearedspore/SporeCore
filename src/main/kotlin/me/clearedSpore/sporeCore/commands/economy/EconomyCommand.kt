@@ -33,8 +33,8 @@ class EconomyCommand : BaseCommand() {
 
         val displayName = target.name ?: user.playerName.ifEmpty { "Unknown" }
 
-
-        sender.sendMessage("${displayName}'s balance: ".blue() + EconomyService.format(user.balance).green())
+        val formatted = EconomyService.format(user.balance)
+        sender.sendMessage("${displayName}'s Balance: ".blue() + formatted.green())
     }
 
     @Subcommand("add")
@@ -65,6 +65,8 @@ class EconomyCommand : BaseCommand() {
     fun onRemove(sender: CommandSender, targetName: String, amountStr: String) {
         val amount = EconomyService.parseAmount(amountStr)
             ?: return sender.sendMessage("Invalid amount!".red())
+
+
 
         val target = Bukkit.getOfflinePlayer(targetName)
         val user = UserManager.get(target.uniqueId)

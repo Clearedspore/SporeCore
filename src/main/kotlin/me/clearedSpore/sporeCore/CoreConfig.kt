@@ -2,6 +2,7 @@ package me.clearedSpore.sporeCore
 
 import de.exlll.configlib.Comment
 import de.exlll.configlib.Configuration
+import me.clearedSpore.sporeCore.features.eco.`object`.BalanceFormat
 import org.intellij.lang.annotations.JdkConstants
 import javax.swing.text.StyledEditorKit
 
@@ -109,7 +110,15 @@ data class EconomyConfig(
     @Comment(
         "Allow players to pay each other via /pay."
     )
-    var paying: Boolean = true
+    var paying: Boolean = true,
+
+    @Comment(
+        "Choose how balances are displayed:",
+        "PLAIN → 5000",
+        "DECIMAL → 5000.00",
+        "COMPACT → 5k, 5m, etc."
+    )
+    var balanceFormat: BalanceFormat = BalanceFormat.DECIMAL
 )
 
 @Configuration
