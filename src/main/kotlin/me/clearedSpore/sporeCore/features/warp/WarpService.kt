@@ -11,7 +11,7 @@ import org.bukkit.Location
 @Setter
 class WarpService {
 
-    private val db = DatabaseManager.get()
+    private val db = DatabaseManager.getServerData()
 
     val warps: MutableMap<String, Warp> = mutableMapOf()
 
@@ -74,13 +74,12 @@ class WarpService {
             return
         }
 
-        val warp = Warp(name, null, location)
+        val warp = Warp(name, location, null)
         warps[key] = warp
         db.warps.add(warp)
 
-        db.save("warps").thenRun {
-            Logger.info("Created a new warp called '$name' at ${location.world?.name ?: "Unknown world"} [${location.blockX}, ${location.blockY}, ${location.blockZ}]")
-        }
+        DatabaseManager.saveServerData()
+        Logger.info("Created a new warp called '$name' at ${location.world?.name ?: "Unknown world"} [${location.blockX}, ${location.blockY}, ${location.blockZ}]")
     }
 
     fun deleteWarp(name: String) {
@@ -90,7 +89,7 @@ class WarpService {
         if (removed != null) {
             db.warps.removeIf { it.name.equals(name, ignoreCase = true) }
 
-            db.save("warps")
+            DatabaseManager.saveServerData()
             Logger.info("Warp '$name' removed successfully.")
         } else {
             Logger.warn("Attempted to remove warp '$name', but it was not found.")
@@ -108,9 +107,8 @@ class WarpService {
             val index = db.warps.indexOfFirst { it.name.equals(warpName, ignoreCase = true) }
             if (index != -1) db.warps[index] = updated
 
-            db.save("warps").thenRun {
-                Logger.infoDB("Permission for warp '$warpName' set to '$permission'")
-            }
+            DatabaseManager.saveServerData()
+            Logger.infoDB("Permission for warp '$warpName' set to '$permission'")
         } else {
             Logger.warn("Tried to set permission for warp '$warpName' but it was not found.")
         }
@@ -121,15 +119,14 @@ class WarpService {
         val warp = warps[key]
 
         if (warp != null) {
-            val updated = warp.copy(permission = null)
+            val updated = warp.copy()
             warps[key] = updated
 
             val index = db.warps.indexOfFirst { it.name.equals(warpName, ignoreCase = true) }
             if (index != -1) db.warps[index] = updated
 
-            db.save("warps").thenRun {
-                Logger.infoDB("Permission cleared for warp '$warpName'")
-            }
+            DatabaseManager.saveServerData()
+            Logger.infoDB("Permission cleared for warp '$warpName'")
         } else {
             Logger.warn("Tried to clear permission for warp '$warpName' but it was not found.")
         }

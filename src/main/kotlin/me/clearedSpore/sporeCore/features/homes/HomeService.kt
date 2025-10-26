@@ -1,9 +1,9 @@
 package me.clearedSpore.sporeCore.features.homes
 
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.features.homes.`object`.Home
+import me.clearedSpore.sporeCore.user.User
 import org.bukkit.Location
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -16,33 +16,31 @@ class HomeService {
     }
 
 
-    fun createHome(user: User, name: String, location: Location): CompletableFuture<Void> {
+    fun createHome(user: User, name: String, location: Location) {
         val key = name.lowercase()
 
         if (user.homes.any { it.name.equals(name, ignoreCase = true) }) {
             Logger.warn("Home '$name' already exists for player ${user.playerName}. Skipping creation.")
-            return CompletableFuture.completedFuture(null)
+            return
         }
 
         val home = Home(name, location)
         user.homes.add(home)
         Logger.info("Created home '$name' for player ${user.playerName} at ${location.world?.name ?: "Unknown world"} [${location.blockX}, ${location.blockY}, ${location.blockZ}]")
-
-        return user.save("homes")
+        UserManager.save(user)
     }
 
 
-    fun deleteHome(user: User, name: String): CompletableFuture<Void> {
+    fun deleteHome(user: User, name: String) {
         val home = user.homes.find { it.name.equals(name, ignoreCase = true) }
         if (home == null) {
             Logger.warn("Attempted to remove home '$name' for player ${user.playerName}, but it was not found.")
-            return CompletableFuture.completedFuture(null)
+            return
         }
 
         user.homes.remove(home)
         Logger.info("Deleted home '$name' for player ${user.playerName}.")
-
-        return user.save("homes")
+        UserManager.save(user)
     }
 
 

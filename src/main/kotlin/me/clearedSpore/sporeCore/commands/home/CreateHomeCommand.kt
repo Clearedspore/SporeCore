@@ -19,8 +19,10 @@ class CreateHomeCommand() : BaseCommand() {
     @Syntax("<name>")
     fun onCreate(player: Player, name: String) {
         val user = UserManager.get(player)
-        if (user == null) {
-            return player.userFail()
+
+        if(user == null){
+            player.userFail()
+            return
         }
 
         val homeCount = user.homes.size + 1
@@ -37,8 +39,7 @@ class CreateHomeCommand() : BaseCommand() {
             return
         }
 
-        homeService.createHome(user, name, player.location).thenRun {
-            player.sendSuccessMessage("Created home '$name'.")
-        }
+        homeService.createHome(user, name, player.location)
+        player.sendSuccessMessage("Created home '$name'.")
     }
 }

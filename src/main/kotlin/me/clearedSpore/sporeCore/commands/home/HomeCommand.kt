@@ -69,9 +69,8 @@ class HomeCommand() : BaseCommand() {
         }
 
         ConfirmMenu(player) {
-            homeService.deleteHome(user, name).thenRun {
-                player.sendSuccessMessage("Deleted home '$name'.")
-            }
+            homeService.deleteHome(user, name)
+            player.sendSuccessMessage("Deleted home '$name'.")
         }.open(player)
     }
 
@@ -82,9 +81,11 @@ class HomeCommand() : BaseCommand() {
     fun adminGoto(sender: Player, targetName: String, homeName: String) {
         val offlinePlayer = Bukkit.getOfflinePlayer(targetName)
 
-        val user = UserManager.getOffline(offlinePlayer)
-        if (user == null) {
-            return sender.userFail()
+        val user = UserManager.get(offlinePlayer.uniqueId)
+
+        if(user == null){
+            sender.userFail()
+            return
         }
 
         val home = homeService.getHome(user, homeName)
@@ -110,9 +111,11 @@ class HomeCommand() : BaseCommand() {
             return
         }
 
-        val user = UserManager.getOffline(offlinePlayer)
-        if (user == null) {
-            return sender.userFail()
+        val user = UserManager.get(offlinePlayer.uniqueId)
+
+        if(user == null){
+            sender.userFail()
+            return
         }
 
         val home = user.homes.find { input -> input.name.equals(name) }
@@ -122,8 +125,7 @@ class HomeCommand() : BaseCommand() {
             return
         }
 
-        homeService.deleteHome(user, homeName).thenRun {
-            sender.sendSuccessMessage("Deleted home '$homeName' for ${offlinePlayer.name ?: targetName}.")
-        }
+        homeService.deleteHome(user, homeName)
+        sender.sendSuccessMessage("Deleted home '$homeName' for ${offlinePlayer.name ?: targetName}.")
     }
 }

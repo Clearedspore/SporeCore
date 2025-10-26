@@ -1,117 +1,90 @@
 package me.clearedSpore.sporeCore.database
 
-import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.database.gson.Serializer
+import me.clearedSpore.sporeCore.database.util.DocReader
+import me.clearedSpore.sporeCore.database.util.DocWriter
 import me.clearedSpore.sporeCore.features.warp.`object`.Warp
+import org.bukkit.Bukkit
 import org.bukkit.Location
-import java.util.concurrent.CompletableFuture
-import com.google.gson.reflect.TypeToken
+import org.dizitart.no2.collection.Document
+import org.dizitart.no2.collection.NitriteCollection
 
-class Database {
-
-    var spawn: String? = null
+data class Database(
+    val id: String = "server",
+    var spawn: Location? = null,
     var warps: MutableList<Warp> = mutableListOf()
+) {
 
-    init {
-        loadDatabase()
+    private fun locationToString(loc: Location?): String? =
+        loc?.let { "${it.world?.name},${it.x},${it.y},${it.z},${it.yaw},${it.pitch}" }
+
+    private fun stringToLocation(str: String?): Location? {
+        if (str.isNullOrEmpty()) return null
+        val parts = str.split(",")
+        if (parts.size != 6) return null
+        val world = Bukkit.getWorld(parts[0]) ?: return null
+        val x = parts[1].toDoubleOrNull() ?: return null
+        val y = parts[2].toDoubleOrNull() ?: return null
+        val z = parts[3].toDoubleOrNull() ?: return null
+        val yaw = parts[4].toFloatOrNull() ?: return null
+        val pitch = parts[5].toFloatOrNull() ?: return null
+        return Location(world, x, y, z, yaw, pitch)
     }
 
-    fun getSpawn(): Location? =
-        spawn?.let { Serializer.fromJson(it, Location::class.java) }
+    private fun warpToDocument(warp: Warp): Document = DocWriter()
+        .put("name", warp.name)
+        .put("permission", warp.permission)
+        .put("location", locationToString(warp.location))
+        .build()
 
-    fun setSpawn(location: Location) {
-        spawn = Serializer.toJson(location)
+    fun toDocument(): Document = DocWriter()
+        .put("id", id)
+        .put("spawn", locationToString(spawn))
+        .putList("warps", warps.map { warpToDocument(it) })
+        .build()
+
+    fun save(collection: NitriteCollection) {
+        val filter = org.dizitart.no2.filters.FluentFilter.where("id").eq(id)
+        val doc = toDocument()
+        val result = collection.update(filter, doc)
+        if (result.affectedCount == 0) {
+            collection.insert(doc)
+        }
     }
 
-    private fun loadDatabase() {
-        Logger.infoDB("Loading Database")
-        val startTime = System.currentTimeMillis()
-
-        val futures = this::class.java.declaredFields.map { field ->
-            field.isAccessible = true
-            DatabaseManager.getValue(field.name).thenAccept { value ->
-                try {
-                    if (value != null) {
-                        val deserialized = when {
-                            field.type == Location::class.java -> Serializer.fromJson(value, Location::class.java)
-
-                            List::class.java.isAssignableFrom(field.type) -> {
-                                val genericType = (field.genericType as? java.lang.reflect.ParameterizedType)
-                                val type = TypeToken.getParameterized(
-                                    List::class.java,
-                                    genericType?.actualTypeArguments?.get(0) ?: Any::class.java
-                                ).type
-                                Serializer.fromJson<Any>(value, type)
-                            }
-
-                            Map::class.java.isAssignableFrom(field.type) -> {
-                                val genericType = (field.genericType as? java.lang.reflect.ParameterizedType)
-                                val keyType = genericType?.actualTypeArguments?.get(0) ?: Any::class.java
-                                val valueType = genericType?.actualTypeArguments?.get(1) ?: Any::class.java
-                                val type = TypeToken.getParameterized(Map::class.java, keyType, valueType).type
-                                Serializer.fromJson<Any>(value, type)
-                            }
-
-                            else -> Serializer.fromJson(value, field.type)
-                        }
-
-                        field.set(this, deserialized)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+    companion object {
+        fun load(collection: NitriteCollection): Database {
+            val docRaw = collection.find(org.dizitart.no2.filters.FluentFilter.where("id").eq("server")).firstOrNull()
+            if (docRaw == null) {
+                val db = Database()
+                db.save(collection)
+                return db
             }
+
+            val doc = DocReader(docRaw)
+            val warpDocs = doc.documents("warps")
+            return Database(
+                id = doc.string("id") ?: "server",
+                spawn = doc.string("spawn")?.let { stringToLocation(it) },
+                warps = warpDocs.mapNotNull { d ->
+                    val name = d.get("name") as? String ?: return@mapNotNull null
+                    val location = stringToLocation(d.get("location") as? String) ?: return@mapNotNull null
+                    val permission = d.get("permission") as? String
+                    Warp(name, location, permission)
+                }.toMutableList()
+            )
         }
 
-        CompletableFuture.allOf(*futures.toTypedArray()).thenRun {
-            val elapsed = System.currentTimeMillis() - startTime
-            Logger.infoDB("Loaded Database. Took $elapsed ms")
-        }
-    }
-
-    fun saveAll(): CompletableFuture<Void> {
-        val startTime = System.currentTimeMillis()
-        Logger.infoDB("Saving entire Database...")
-
-        val futures = this::class.java.declaredFields.map { field ->
-            field.isAccessible = true
-            try {
-                val value = field.get(this)
-                DatabaseManager.setValue(field.name, Serializer.toJson(value))
-            } catch (e: Exception) {
-                e.printStackTrace()
-                CompletableFuture.completedFuture(null)
-            }
-        }
-
-        return CompletableFuture.allOf(*futures.toTypedArray()).thenRun {
-            val elapsed = System.currentTimeMillis() - startTime
-            Logger.infoDB("Saved Database. Took $elapsed ms")
-        }
-    }
-
-
-    fun save(fieldName: String): CompletableFuture<Void> {
-        val field = this::class.java.declaredFields.find { it.name == fieldName }
-
-        if (field == null) {
-            Logger.warn("Attempted to save unknown field '$fieldName'")
-            return CompletableFuture.completedFuture(null)
-        }
-
-        return try {
-            field.isAccessible = true
-            val value = field.get(this)
-            val json = Serializer.toJson(value)
-            Logger.infoDB("Saving '$fieldName' to database...")
-
-            DatabaseManager.setValue(field.name, json).thenRun {
-                Logger.infoDB("Saved '$fieldName' successfully.")
-            }
-        } catch (e: Exception) {
-            Logger.warn("Failed to save '$fieldName': ${e.message}")
-            e.printStackTrace()
-            CompletableFuture.completedFuture(null)
+        private fun stringToLocation(str: String?): Location? {
+            if (str.isNullOrEmpty()) return null
+            val parts = str.split(",")
+            if (parts.size != 6) return null
+            val world = Bukkit.getWorld(parts[0]) ?: return null
+            val x = parts[1].toDoubleOrNull() ?: return null
+            val y = parts[2].toDoubleOrNull() ?: return null
+            val z = parts[3].toDoubleOrNull() ?: return null
+            val yaw = parts[4].toFloatOrNull() ?: return null
+            val pitch = parts[5].toFloatOrNull() ?: return null
+            return Location(world, x, y, z, yaw, pitch)
         }
     }
 }

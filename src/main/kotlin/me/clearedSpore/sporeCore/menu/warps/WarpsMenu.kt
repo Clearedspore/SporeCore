@@ -8,7 +8,6 @@ import me.clearedSpore.sporeCore.features.warp.`object`.Warp
 import me.clearedSpore.sporeCore.menu.homes.item.HomeItem
 import me.clearedSpore.sporeCore.menu.warps.item.NoWarpsItem
 import me.clearedSpore.sporeCore.menu.warps.item.WarpItem
-import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

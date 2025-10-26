@@ -17,7 +17,8 @@ class SettingsMenu(private val player: Player) : BasePaginatedMenu(SporeCore.ins
 
     override fun createItems() {
         val user = UserManager.get(player)
-        if (user == null) {
+
+        if(user == null){
             player.userFail()
             return
         }

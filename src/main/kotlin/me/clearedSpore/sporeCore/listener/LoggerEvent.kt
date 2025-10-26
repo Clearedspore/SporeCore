@@ -15,7 +15,7 @@ class LoggerEvent : Listener {
     fun onPreLog(event: PlayerPreLogEvent) {
         val player = event.sender as? Player ?: return
 
-        val user = UserManager.getOffline(player)
+        val user = UserManager.get(player)
         if (user == null) {
             player.userFail()
             event.isCancelled = true

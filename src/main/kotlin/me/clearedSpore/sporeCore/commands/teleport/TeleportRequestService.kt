@@ -27,8 +27,10 @@ object TeleportRequestService {
         }
 
         val targetUser = UserManager.get(target)
-        if (targetUser == null) {
-            return requester.userFail()
+
+        if(targetUser == null){
+            requester.userFail()
+            return
         }
 
         if (!targetUser.isSettingEnabled(Setting.TELEPORT_REQUESTS)) {
@@ -62,9 +64,12 @@ object TeleportRequestService {
         }
 
         val targetUser = UserManager.get(target)
-        if (targetUser == null) {
-            return request.requester.userFail()
+
+        if(targetUser == null){
+            request.requester.userFail()
+            return
         }
+
         val executeTeleport = {
             pendingRequests.remove(target)
 

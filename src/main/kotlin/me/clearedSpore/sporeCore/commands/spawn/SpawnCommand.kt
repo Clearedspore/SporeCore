@@ -22,7 +22,7 @@ class SpawnCommand(): BaseCommand() {
 
     @Default
     fun onSpawn(player: Player) {
-        val spawn = DatabaseManager.get().getSpawn()
+        val spawn = DatabaseManager.getServerData().spawn
 
         if (spawn == null) {
             player.sendMessage("Spawn has not been set yet!".red())

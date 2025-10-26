@@ -20,7 +20,7 @@ class SetSpawnCommand(): BaseCommand() {
 
     @Default()
     fun onSetSpawn(player: Player){
-        DatabaseManager.get().setSpawn(player.location)
+        DatabaseManager.getServerData().spawn = player.location
         player.sendSuccessMessage("You have successfully set the spawn location!")
     }
 

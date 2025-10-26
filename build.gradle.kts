@@ -33,10 +33,9 @@ dependencies {
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
     implementation("com.github.Clearedspore:SporeAPI:1.7.3")
-    implementation("com.h2database:h2:2.3.232")
-    implementation("com.google.code.gson:gson:2.10.1")
-
-
+    implementation("org.dizitart:nitrite:4.3.2")
+    implementation(platform("org.dizitart:nitrite-bom:4.3.2"))
+    implementation("org.dizitart:nitrite-mvstore-adapter:4.3.2")
 }
 
 tasks.shadowJar {

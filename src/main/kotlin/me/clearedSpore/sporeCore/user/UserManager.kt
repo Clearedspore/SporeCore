@@ -1,89 +1,106 @@
 package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 object UserManager {
+    private val users = mutableMapOf<UUID, User>()
+    private val scheduler = Executors.newScheduledThreadPool(1)
+    private val autoSaveTasks = mutableMapOf<UUID, Runnable>()
 
-    private val users = HashMap<UUID, User>()
+    private val userCollection get() = DatabaseManager.getUserCollection()
 
-    fun get(player: Player): User = get(player.uniqueId)
+    fun get(uuid: UUID, name: String? = null): User? {
+        users[uuid]?.let { return it }
 
-    fun get(uuid: UUID): User {
-        getIfLoaded(uuid)?.let { return it }
-
-        return try {
-            val user = User(uuid)
-            user.playerName = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
-            users[uuid] = user
-
-            user.mergeFromDatabase().join()
-
-            user
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            val fallback = User(uuid)
-            fallback.playerName = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
-            users[uuid] = fallback
-            fallback
+        val loaded = User.load(uuid, userCollection)
+        if (loaded != null) {
+            loaded.playerName = name ?: Bukkit.getOfflinePlayer(uuid).name ?: loaded.playerName.ifEmpty { "Unknown" }
+            users[uuid] = loaded
+            return loaded
         }
+
+        val finalName = name ?: Bukkit.getOfflinePlayer(uuid).name
+        if (!finalName.isNullOrBlank()) {
+            val existingByName = userCollection.find().firstOrNull { doc ->
+                doc.get("playerName", String::class.java)?.equals(finalName, ignoreCase = true) == true
+            }
+
+            if (existingByName != null) {
+                val existingUuid = UUID.fromString(existingByName.get("uuidStr", String::class.java))
+                val existingUser = User.load(existingUuid, userCollection)
+                if (existingUser != null) {
+                    users[existingUuid] = existingUser
+                    return existingUser
+                }
+            }
+        }
+
+        val offlinePlayer = Bukkit.getOfflinePlayer(uuid)
+        if (!offlinePlayer.hasPlayedBefore()) return null
+
+        val newUser = User.create(uuid, finalName ?: "Unknown", userCollection)
+        users[uuid] = newUser
+        return newUser
     }
 
-    fun getOffline(uuid: UUID): User {
-        getIfLoaded(uuid)?.let { return it }
-
-        val user = User(uuid)
-        user.playerName = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
-        users[uuid] = user
-
-        Task.runAsync { user.mergeFromDatabase() }
-
-        return user
+    fun getAllStoredUUIDsFromDB(): List<UUID> {
+        return userCollection.find().mapNotNull {
+            val id = it["uuidStr"] as? String ?: return@mapNotNull null
+            runCatching { UUID.fromString(id) }.getOrNull()
+        }.toList()
     }
 
-    fun getOffline(player: OfflinePlayer): User = getOffline(player.uniqueId)
-    fun getOffline(player: Player): User = getOffline(player.uniqueId)
+
+    fun get(player: Player): User? = get(player.uniqueId, player.name)
+    fun get(player: OfflinePlayer): User? = get(player.uniqueId, player.name)
 
     fun getIfLoaded(uuid: UUID): User? = users[uuid]
-    fun getIfLoaded(player: Player): User? = getIfLoaded(player.uniqueId)
 
-    fun saveUser(uuid: UUID) { getIfLoaded(uuid)?.save() }
+    fun saveAllUsers(): CompletableFuture<Void> =
+        CompletableFuture.runAsync {
+            users.values.forEach { save(it) }
+        }
 
-    fun saveAllUsers(): CompletableFuture<Void> {
-        val loadedUsers = users.values.toList()
-        if (loadedUsers.isEmpty()) return CompletableFuture.completedFuture(null)
-        return CompletableFuture.allOf(*loadedUsers.map { it.save() }.toTypedArray())
+    fun save(user: User) {
+        user.save(userCollection)
     }
 
-    fun startAutoSave(player: Player) {
-        Task.runRepeated(player.uniqueId, {
-            saveUser(player.uniqueId)
-            Logger.infoDB("Auto-saved User for ${player.name}")
-        }, 10, 10, TimeUnit.MINUTES)
-    }
-
-    fun stopAutoSave(player: Player) { Task.cancel(player.uniqueId) }
-
-    fun getUserValue(uuid: UUID, key: String) = DatabaseManager.getUserValue(uuid, key)
-    fun setUserValue(uuid: UUID, key: String, value: String) = DatabaseManager.setUserValue(uuid, key, value)
-
-    fun getAllPlayerIds(): CompletableFuture<List<UUID>> = DatabaseManager.getAllPlayerUUIDs()
-
-    fun deleteUser(player: Player) {
-        users[player.uniqueId]?.save()
-        users.remove(player.uniqueId)
-        stopAutoSave(player)
-    }
-
-    fun deleteUser(uuid: UUID) {
-        users[uuid]?.save()
+    fun remove(uuid: UUID) {
         users.remove(uuid)
     }
+
+    fun startAutoSave(user: User) {
+        if (autoSaveTasks.containsKey(user.uuid)) return
+        val task = Runnable {
+            if (users.containsKey(user.uuid)) save(user)
+        }
+        scheduler.scheduleAtFixedRate(task, 10, 10, TimeUnit.MINUTES)
+        autoSaveTasks[user.uuid] = task
+    }
+
+    fun stopAutoSave(uuid: UUID) {
+        autoSaveTasks.remove(uuid)
+    }
+
+
+    fun getBalance(uuid: UUID): CompletableFuture<Double?> =
+        CompletableFuture.supplyAsync {
+            get(uuid)?.balance
+        }
+
+    fun setBalance(uuid: UUID, amount: Double): CompletableFuture<Void> =
+        CompletableFuture.runAsync {
+            get(uuid)?.let {
+                it.balance = amount
+                it.save(userCollection)
+            }
+        }
 }

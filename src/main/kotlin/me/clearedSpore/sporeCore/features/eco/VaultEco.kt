@@ -87,7 +87,7 @@ class VaultEco : Economy {
     }
 
     override fun getBalance(player: OfflinePlayer): Double {
-        val user = UserManager.getOffline(player.uniqueId)
+        val user = UserManager.get(player.uniqueId)
         if (user == null) {
             Logger.error("Failed to load data for ${player.name}")
             return 0.0
@@ -118,7 +118,7 @@ class VaultEco : Economy {
         offlinePlayer: OfflinePlayer,
         amount: Double
     ): EconomyResponse {
-        val user = UserManager.getOffline(offlinePlayer.uniqueId)
+        val user = UserManager.get(offlinePlayer.uniqueId)
         if (user == null) {
             return EconomyResponse(0.0, 0.0, ResponseType.FAILURE, "Failed to load user!")
         }
@@ -130,7 +130,7 @@ class VaultEco : Economy {
         user.balance -= amount
         Tasks.runAsync {
             user.logEconomy(EcoAction.REMOVED, amount, "Vault withdrawal by a different plugin")
-            user.save(true)
+            UserManager.save(user)
         }
 
         return EconomyResponse(amount, user.balance, ResponseType.SUCCESS, null)
@@ -154,7 +154,7 @@ class VaultEco : Economy {
         offlinePlayer: OfflinePlayer,
         amount: Double
     ): EconomyResponse {
-        val user = UserManager.getOffline(offlinePlayer.uniqueId)
+        val user = UserManager.get(offlinePlayer.uniqueId)
         if (user == null) {
             return EconomyResponse(0.0, 0.0, ResponseType.FAILURE, "Failed to load user!")
         }
@@ -162,7 +162,7 @@ class VaultEco : Economy {
         user.balance += amount
         Tasks.runAsync {
             user.logEconomy(EcoAction.ADDED, amount, "Vault deposit by a different plugin")
-            user.save(true)
+            UserManager.save(user)
         }
 
         return EconomyResponse(amount, user.balance, ResponseType.SUCCESS, null)

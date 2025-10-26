@@ -44,16 +44,19 @@ object EconomyService {
         Logger.info("EconomyService loaded in ${elapsed}ms")
     }
 
-    fun add(user: User, amount: Double, reason: String = "") {
+    fun add(user: User, amount: Double, reason: String = "", shouldSave: Boolean = true) {
         user.balance += amount
         user.logEconomy(EcoAction.ADDED, amount, reason)
-        user.save(true)
+        if(shouldSave) {
+            UserManager.save(user)
+        }
+
     }
 
     fun remove(user: User, amount: Double, reason: String = "") {
         user.balance -= amount
         user.logEconomy(EcoAction.REMOVED, amount, reason)
-        user.save(true)
+        UserManager.save(user)
     }
 
 
@@ -74,7 +77,7 @@ object EconomyService {
     fun set(user: User, amount: Double, reason: String = "") {
         user.balance = amount
         user.logEconomy(EcoAction.SET, amount, reason)
-        user.save(true)
+        UserManager.save(user)
     }
 
     fun parseAmount(input: String): Double? {
@@ -92,26 +95,25 @@ object EconomyService {
     }
 
     fun top(limit: Int = 10): CompletableFuture<List<Pair<OfflinePlayer, Double>>> {
-        return UserManager.getAllPlayerIds().thenCompose { uuids ->
-            val futures = uuids.map { uuid ->
-                UserManager.getUserValue(uuid, "balance")
-                    .thenApply { balanceStr ->
-                        val balance = balanceStr?.toDoubleOrNull() ?: 0.0
-                        SporeCore.instance.server.getOfflinePlayer(uuid) to balance
-                    }.exceptionally { ex ->
-                        Logger.warn("Failed to fetch balance for $uuid: ${ex.message}")
-                        null
-                    }
-            }
+        val uuids = UserManager.getAllStoredUUIDsFromDB().distinct()
 
-            CompletableFuture.allOf(*futures.toTypedArray()).thenApply {
-                futures.mapNotNull { it.getNow(null) }  // safe since all futures completed
-                    .sortedByDescending { it.second }
-                    .take(limit)
+        val balanceFutures = uuids.map { uuid ->
+            UserManager.getBalance(uuid).handle { balance, ex ->
+                if (ex != null) {
+                    Logger.warn("Failed to fetch balance for $uuid: ${ex.message}")
+                    null
+                } else {
+                    Bukkit.getOfflinePlayer(uuid) to balance
+                }
             }
         }
+
+        return CompletableFuture.allOf(*balanceFutures.toTypedArray()).thenApply {
+            balanceFutures.mapNotNull { it.getNow(null) }
+                .filter { (_, balance) -> balance != null && balance > 0.0 }
+                .map { it.first to it.second!! }
+                .sortedByDescending { it.second }
+                .take(limit)
+        }
     }
-
-
-
 }

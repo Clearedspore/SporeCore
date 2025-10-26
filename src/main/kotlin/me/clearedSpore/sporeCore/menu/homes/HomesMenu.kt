@@ -6,7 +6,6 @@ import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.menu.homes.item.HomeItem
 import me.clearedSpore.sporeCore.menu.homes.item.NoHomesItem
-import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
@@ -21,7 +20,8 @@ class HomesMenu(private val player: Player) : BasePaginatedMenu(SporeCore.instan
 
     override fun createItems() {
         val user = UserManager.get(player)
-        if (user == null) {
+
+        if(user == null){
             player.userFail()
             return
         }

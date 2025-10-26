@@ -125,18 +125,18 @@ class CoreCommand : BaseCommand() {
     @CommandCompletion("@players @nothing")
     fun onUserGet(sender: CommandSender, playerName: String, fieldName: String) {
         val target = Bukkit.getOfflinePlayer(playerName)
+
         if (!target.hasPlayedBefore() && !target.isOnline) {
             sender.sendMessage("That player has never joined before!".red())
             return
         }
 
-        val user = UserManager.get(target.uniqueId)
-        if (user == null) {
+        val user = UserManager.get(target) ?: run {
             sender.userFail()
             return
         }
-        val field = user::class.java.declaredFields.find { it.name == fieldName }
 
+        val field = user::class.java.declaredFields.find { it.name == fieldName }
         if (field == null) {
             sender.sendMessage("Field '$fieldName' not found in user data.".red())
             return
@@ -147,23 +147,25 @@ class CoreCommand : BaseCommand() {
         sender.sendMessage("Value of '$fieldName' for ${target.name}: ".blue() + value.toString().green())
     }
 
+
     @Subcommand("user set")
     @CommandPermission(Perm.ADMIN)
     @Syntax("<player> <field> <value>")
     @CommandCompletion("@players @nothing")
     fun onUserSet(sender: CommandSender, playerName: String, fieldName: String, value: String) {
         val target = Bukkit.getOfflinePlayer(playerName)
+
         if (!target.hasPlayedBefore() && !target.isOnline) {
             sender.sendMessage("That player has never joined before!".red())
             return
         }
 
-        val user = UserManager.getOffline(target)
-        if (user == null) {
-            return sender.userFail()
+        val user = UserManager.get(target) ?: run {
+            sender.userFail()
+            return
         }
-        val field = user::class.java.declaredFields.find { it.name == fieldName }
 
+        val field = user::class.java.declaredFields.find { it.name == fieldName }
         if (field == null) {
             sender.sendMessage("Field '$fieldName' not found in user data.".red())
             return
@@ -179,7 +181,7 @@ class CoreCommand : BaseCommand() {
                 else -> value
             }
             field.set(user, castValue)
-            user.save(fieldName)
+            UserManager.save(user)
             sender.sendMessage("Set '$fieldName' for ${target.name} to $value.".blue())
         } catch (ex: Exception) {
             sender.sendMessage("Failed to set value: ${ex.message}".red())
@@ -187,26 +189,22 @@ class CoreCommand : BaseCommand() {
         }
     }
 
+
     @Subcommand("user info")
     @CommandPermission(Perm.ADMIN)
     @Syntax("<player>")
     @CommandCompletion("@players")
     fun onUserInfo(sender: CommandSender, playerName: String) {
-        val target: OfflinePlayer = Bukkit.getOfflinePlayer(playerName)
-        if (!target.hasPlayedBefore() && !target.isOnline) {
-            sender.sendMessage("That player has never joined before!".red())
-            return
-        }
+        val target = Bukkit.getOfflinePlayer(playerName)
 
-        val user = UserManager.getOffline(target)
-        if (user == null) {
-            return sender.userFail()
+        val user = UserManager.get(target) ?: run {
+            sender.userFail()
+            return
         }
 
         sender.sendMessage("=== User Info for ${target.name} ===".blue())
         sender.sendMessage("UUID: ".white() + target.uniqueId.toString().green())
         sender.sendMessage("First Join: ".white() + (user.firstJoin ?: "Unknown").green())
-        sender.sendMessage("Has Joined Before: ".white() + user.hasJoinedBefore.toString().green())
         sender.sendMessage("Homes: ".white() + user.homes.size.toString().green())
         sender.sendMessage("Pending Messages: ".white() + user.pendingMessages.size.toString().green())
     }

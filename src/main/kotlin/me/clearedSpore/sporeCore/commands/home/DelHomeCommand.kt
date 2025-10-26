@@ -21,8 +21,10 @@ class DelHomeCommand() : BaseCommand() {
     @Syntax("<name>")
     fun onDelete(player: Player, name: String) {
         val user = UserManager.get(player)
-        if (user == null) {
-            return player.userFail()
+
+        if(user == null){
+            player.userFail()
+            return
         }
 
         val home = user.homes.find { input -> input.name.equals(name) }
@@ -33,9 +35,8 @@ class DelHomeCommand() : BaseCommand() {
         }
 
         ConfirmMenu(player) {
-            homeService.deleteHome(user, name).thenRun {
-                player.sendSuccessMessage("Deleted home '$name'.")
-            }
+            homeService.deleteHome(user, name)
+            player.sendSuccessMessage("Deleted home '$name'.")
         }.open(player)
     }
 }

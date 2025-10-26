@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
@@ -19,10 +20,17 @@ class EcoLogsCommand : BaseCommand() {
     @Syntax("<player> [page]")
     fun onLogs(sender: CommandSender, targetName: String, @Optional page: Int?) {
         val logPage = page ?: 1
-        val user = UserManager.getOffline(Bukkit.getOfflinePlayer(targetName).uniqueId)
-        if (user == null) { return sender.userFail() }
+        val user = UserManager.get(Bukkit.getOfflinePlayer(targetName).uniqueId)
 
-        user.getEconomyLogs(user.playerId, logPage, 10).thenAccept { logs ->
+        if(user == null){
+            sender.userFail()
+            return
+        }
+
+
+        user.getEconomyLogs(logPage, 10).thenAccept { logs ->
+
+
             if (logs.isEmpty()) {
                 sender.sendMessage("No logs found.".red())
                 return@thenAccept
@@ -30,7 +38,7 @@ class EcoLogsCommand : BaseCommand() {
 
             val displayName = user.playerName.ifEmpty { targetName }
             sender.sendMessage("=== Economy Logs for $displayName (Page $logPage) ===".blue())
-            logs.forEach { sender.sendMessage(it) }
+            logs.forEach { sender.sendMessage(it.translate()) }
         }
     }
 }

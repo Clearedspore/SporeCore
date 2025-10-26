@@ -27,14 +27,23 @@ class PayCommand : BaseCommand() {
             return
         }
 
-        val amount = EconomyService.parseAmount(amountStr) ?: return sender.sendMessage("Invalid amount!".red())
+        val amount = EconomyService.parseAmount(amountStr) ?: run {
+            sender.sendMessage("Invalid amount!".red())
+            return
+        }
 
-        val senderUser = UserManager.getOffline(Bukkit.getOfflinePlayer(sender.name).uniqueId)
-        if (senderUser == null) { return sender.userFail() }
+        val senderUser = UserManager.get(sender.uniqueId)
+        if (senderUser == null) {
+            sender.userFail()
+            return
+        }
 
-        val targetUser = UserManager.getOffline(Bukkit.getOfflinePlayer(targetName).uniqueId)
-        if (targetUser == null) { return sender.userFail() }
-
+        val targetOffline = Bukkit.getOfflinePlayer(targetName)
+        val targetUser = UserManager.get(targetOffline.uniqueId)
+        if (targetUser == null) {
+            sender.userFail()
+            return
+        }
 
         if (senderUser.balance < amount) {
             sender.sendErrorMessage("You do not have enough money.")
@@ -42,19 +51,16 @@ class PayCommand : BaseCommand() {
         }
 
         EconomyService.remove(senderUser, amount, "Paid to ${targetUser.playerName}")
-        EconomyService.add(targetUser, amount, "Received from ${sender.name}")
+        EconomyService.add(targetUser, amount, "Received from ${sender.name}", false)
 
         val formattedAmount = EconomyService.format(amount)
         sender.sendMessage("You paid ${targetUser.playerName} ".blue() + formattedAmount.green())
 
-        targetUser.player?.let { player ->
-            if (player.isOnline) {
-                player.sendMessage("You received ".blue() + formattedAmount.green() + " from ${sender.name}.".blue())
-            } else {
-                targetUser.pendingMessages.add(
-                    "While you were away you received ".blue() + formattedAmount.green() + " from ${sender.name}".blue()
-                )
-            }
+        val onlinePlayer = Bukkit.getPlayer(targetUser.uuid)
+        if (onlinePlayer != null && onlinePlayer.isOnline) {
+            onlinePlayer.sendMessage("You received ".blue() + formattedAmount.green() + " from ${sender.name}.".blue())
+        } else {
+            targetUser.queuePayment(sender.name, amount)
         }
     }
 }

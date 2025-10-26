@@ -42,8 +42,10 @@ class PrivateMessageCommand : BaseCommand() {
         }
 
         val user = UserManager.get(target)
-        if (user == null) {
-            return player.userFail()
+
+        if(user == null){
+            player.userFail()
+            return
         }
 
         if (!user.isSettingEnabled(Setting.PRIVATE_MESSAGES) && !player.hasPermission(Perm.PM_BYPASS)) {

@@ -21,7 +21,7 @@ object PlayerExtension {
 
     fun CommandSender.userFail() {
         val prefix = Logger.pluginName
-        this.sendMessage("$prefix » ✖ | Failed to load data for the requested user. Please try again later.".red())
+        this.sendMessage("$prefix » ✖ | That player has never joined the server!".red())
         if (this is Player) {
             this.playSound(this.location, Sound.ENTITY_VILLAGER_NO, 1f, 1f)
         }

@@ -43,7 +43,8 @@ data class EconomyConfig(
 
     @Comment(
         "Enable or disable the economy system entirely.",
-        "If false, Vault will not register this economy provider."
+        "If false, Vault will not register this economy provider.",
+        "When changing this option you will have to restart your server!"
     )
     var enabled: Boolean = true,
 

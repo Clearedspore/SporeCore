@@ -31,7 +31,7 @@ class ChatEvent : Listener {
         }
 
         val toRemove = event.recipients.filter { recipient ->
-            val recipientUser = UserManager.getOffline(recipient)
+            val recipientUser = UserManager.get(recipient)
 
             if (recipientUser == null) return@filter true
 

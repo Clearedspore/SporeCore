@@ -100,7 +100,7 @@ class SporeCore : JavaPlugin() {
         }
 
         DatabaseManager.init(dataFolder)
-        database = Database()
+        database = DatabaseManager.getServerData()
         server.pluginManager.registerEvents(UserListener(), this)
 
 
@@ -122,17 +122,6 @@ class SporeCore : JavaPlugin() {
         Logger.info("§aPlugin Loaded!")
     }
 
-    fun setupEco(): Boolean {
-        if (server.pluginManager.getPlugin("Vault") == null) {
-            return false
-        }
-        val rsp = server.servicesManager.getRegistration<Economy?>(Economy::class.java)
-        if (rsp == null) {
-            return false
-        }
-        eco = rsp.getProvider()
-        return eco != null
-    }
 
     fun registerListeners(){
         server.pluginManager.registerEvents(LoggerEvent(), this)
@@ -283,51 +272,33 @@ class SporeCore : JavaPlugin() {
 
         commandManager.commandCompletions.registerCompletion("homes") { context ->
             val sender = context.sender
-            if (sender !is Player) return@registerCompletion emptyList<String>()
+            if (sender !is Player) return@registerCompletion emptyList()
 
-            val user = UserManager.get(sender.uniqueId)
+            val user = UserManager.get(sender)
 
             if(user == null){
                 return@registerCompletion emptyList()
             }
 
-            try {
-                user.homes.map { it.name }
-            } catch (e: Exception) {
-                emptyList<String>()
-            }
+            user.homes.map { it.name }
         }
 
         commandManager.commandCompletions.registerCompletion("playerhomes") { context ->
-            val sender = context.sender
-            if (sender !is Player) return@registerCompletion emptyList<String>()
-
             val targetName = context.input
-            val target = Bukkit.getPlayer(targetName) ?: return@registerCompletion emptyList<String>()
-            val user = UserManager.get(target.uniqueId)
-
-            if(user == null){
-                return@registerCompletion emptyList()
-            }
-
-            user.homes.mapNotNull { home ->
-                when (home) {
-                    else -> home.name
-                }
-            }
+            val target = Bukkit.getOfflinePlayer(targetName) ?: return@registerCompletion emptyList()
+            val user = UserManager.getIfLoaded(target.uniqueId) ?: return@registerCompletion emptyList()
+            user.homes.map { it.name }
         }
     }
 
 
     override fun onDisable() {
         Logger.infoDB("Saving all user data before shutdown...")
-        UserManager.saveAllUsers().join()
+        UserManager.saveAllUsers()
         Logger.infoDB("All user data saved. Goodbye!")
 
-        DatabaseManager.saveAll()
         DatabaseManager.close()
     }
-
 
 
 }

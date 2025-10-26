@@ -6,9 +6,9 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.features.homes.`object`.Home
 import me.clearedSpore.sporeCore.menu.confirm.ConfirmMenu
+import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -43,9 +43,9 @@ class HomeItem(
             }
             clickType.isRightClick && clickType.isShiftClick -> {
                 ConfirmMenu(player) {
-                    homeService.deleteHome(user, home.name).thenRun {
-                        player.sendSuccessMessage("Home ${home.name} has successfully been deleted!")
-                    }
+                    homeService.deleteHome(user, home.name)
+                    player.sendSuccessMessage("Home ${home.name} has successfully been deleted!")
+
                 }.open(player)
             }
         }
