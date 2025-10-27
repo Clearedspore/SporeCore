@@ -11,7 +11,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
@@ -44,7 +44,7 @@ class PrivateMessageCommand : BaseCommand() {
         val user = UserManager.get(target)
 
         if(user == null){
-            player.userFail()
+            player.userJoinFail()
             return
         }
 

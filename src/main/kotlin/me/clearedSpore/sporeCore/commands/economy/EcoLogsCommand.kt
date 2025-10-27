@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
@@ -23,7 +23,7 @@ class EcoLogsCommand : BaseCommand() {
         val user = UserManager.get(Bukkit.getOfflinePlayer(targetName).uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 

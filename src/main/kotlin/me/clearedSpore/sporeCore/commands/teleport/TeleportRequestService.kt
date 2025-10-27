@@ -3,7 +3,7 @@ package me.clearedSpore.sporeCore.commands.teleport
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.menu.confirm.TPAConfirmMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
@@ -29,7 +29,7 @@ object TeleportRequestService {
         val targetUser = UserManager.get(target)
 
         if(targetUser == null){
-            requester.userFail()
+            requester.userJoinFail()
             return
         }
 
@@ -66,7 +66,7 @@ object TeleportRequestService {
         val targetUser = UserManager.get(target)
 
         if(targetUser == null){
-            request.requester.userFail()
+            request.requester.userJoinFail()
             return
         }
 

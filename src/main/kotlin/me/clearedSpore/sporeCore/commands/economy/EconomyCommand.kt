@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
@@ -22,12 +22,12 @@ class EconomyCommand : BaseCommand() {
     @Syntax("[player]")
     fun onBalance(sender: CommandSender, @Optional targetName: String?) {
         val target = if (sender is Player && targetName == null) sender
-        else Bukkit.getOfflinePlayer(targetName ?: return sender.userFail())
+        else Bukkit.getOfflinePlayer(targetName ?: return sender.userJoinFail())
 
         val user = UserManager.get(target.uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
@@ -49,7 +49,7 @@ class EconomyCommand : BaseCommand() {
         val user = UserManager.get(target.uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
@@ -72,7 +72,7 @@ class EconomyCommand : BaseCommand() {
         val user = UserManager.get(target.uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
@@ -93,7 +93,7 @@ class EconomyCommand : BaseCommand() {
         val user = UserManager.get(target.uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 

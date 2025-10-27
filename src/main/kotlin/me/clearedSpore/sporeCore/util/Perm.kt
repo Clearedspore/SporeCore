@@ -16,29 +16,38 @@ object Perm {
     const val PM_BYPASS = BYPASS + "privatemessage"
     const val CHAT_BYPASS = BYPASS + "chat"
 
+    //chat
+    const val CHAT = MAIN + "chat."
+    const val COLORED_CHAT = CHAT + "colored"
 
+
+    //gamemode
     const val GAMEMODE  = MAIN + "gamemode"
     const val GAMEMODE_OTHERS  = MAIN + "gamemode.others"
     const val CREATIVE  = MAIN + "gamemode.creative"
     const val SURVIVAL  = MAIN + "gamemode.survival"
+    const val ADVENTURE  = MAIN + "gamemode.adventure"
     const val SPECTATOR  = MAIN + "gamemode.spectator"
 
-    const val ADVENTURE  = MAIN + "gamemode.adventure"
+    //teleport
     const val TELEPORT = MAIN + "teleport"
     const val TELEPORT_CORDS = MAIN + "teleport.coordinates"
     const val TELEPORT_OTHERS = MAIN + "teleport.others"
     const val TELEPORT_ALL = MAIN + "teleport.all"
 
+    //heal & feed
     const val HEAL = MAIN + "heal"
     const val HEAL_OTHERS = MAIN + "heal.others"
     const val FEED = MAIN + "feed"
     const val FEED_OTHERS = MAIN + "feed.others"
 
+    //repair
     const val REPAIR = MAIN + "repair"
     const val REPAIR_OTHERS = MAIN + "repair.others"
     const val REPAIRALL = MAIN + "repairall"
     const val REPAIRALL_OTHERS = MAIN + "repairall.others"
 
+    //utility menus
     const val UTILITY_OTHERS = MAIN + "utility.others"
     const val ANVIL = MAIN + "utility.anvil"
     const val CARTOGRAPHY = MAIN + "utility.cartography"
@@ -49,24 +58,28 @@ object Perm {
     const val STONECUTTER = MAIN + "utility.stonecutter"
     const val WORKBENCH = MAIN + "utility.workbench"
 
+    //utility permissions
     const val SETSPAWN = MAIN + "spawn.set"
-
     const val CLEAR_OTHERS = MAIN + "clear.others"
     const val FLIGHT = MAIN + "fly"
     const val FLIGHT_OTHERS = MAIN + "fly.others"
     const val GOD = MAIN + "god"
     const val GOD_OTHERS = MAIN + "god.others"
 
+    //warps
     const val WARP = MAIN + "warp."
     const val WARP_CREATE = WARP + "create"
     const val WARP_DELETE = WARP + "delete"
     const val WARP_PERMISSION = WARP + "permission"
 
+    //home
     const val HOME = MAIN + "home"
 
+    //economy
     const val ECO = MAIN + "eco"
     const val ECO_ADMIN = "$ECO.admin"
 
+    //admin permissions
     const val ADMIN = MAIN + "admin"
     const val LOG = MAIN + "log"
     const val ADMIN_LOG = MAIN + "log.admin"

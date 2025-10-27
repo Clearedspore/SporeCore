@@ -2,7 +2,6 @@ package me.clearedSpore.sporeCore.extension
 
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.Bukkit
 import org.bukkit.Sound
@@ -19,9 +18,18 @@ object PlayerExtension {
         }
     }
 
-    fun CommandSender.userFail() {
+    fun CommandSender.userJoinFail() {
         val prefix = Logger.pluginName
         this.sendMessage("$prefix » ✖ | That player has never joined the server!".red())
+        if (this is Player) {
+            this.playSound(this.location, Sound.ENTITY_VILLAGER_NO, 1f, 1f)
+        }
+    }
+
+
+    fun CommandSender.userFail() {
+        val prefix = Logger.pluginName
+        this.sendMessage("$prefix » ✖ | Failed to load requested user data!".red())
         if (this is Player) {
             this.playSound(this.location, Sound.ENTITY_VILLAGER_NO, 1f, 1f)
         }

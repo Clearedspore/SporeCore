@@ -2,7 +2,7 @@ package me.clearedSpore.sporeCore.menu.homes
 
 import me.clearedSpore.sporeAPI.menu.BasePaginatedMenu
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.menu.homes.item.HomeItem
 import me.clearedSpore.sporeCore.menu.homes.item.NoHomesItem
@@ -22,7 +22,7 @@ class HomesMenu(private val player: Player) : BasePaginatedMenu(SporeCore.instan
         val user = UserManager.get(player)
 
         if(user == null){
-            player.userFail()
+            player.userJoinFail()
             return
         }
 

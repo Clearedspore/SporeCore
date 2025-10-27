@@ -13,7 +13,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 
 class BalTopMenu(private val viewer: Player) : BasePaginatedMenu(SporeCore.instance, true) {
 
-    override fun getMenuName(): String = "Baltop (Page $page)"
+    override fun getMenuName(): String = "Baltop (Page ${page + 1})"
     override fun getRows(): Int = 6
 
     override fun createItems() {

@@ -4,7 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.entity.Player
@@ -21,7 +21,7 @@ class CreateHomeCommand() : BaseCommand() {
         val user = UserManager.get(player)
 
         if(user == null){
-            player.userFail()
+            player.userJoinFail()
             return
         }
 

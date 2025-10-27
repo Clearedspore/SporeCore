@@ -2,7 +2,7 @@ package me.clearedSpore.sporeCore.menu.settings
 
 import me.clearedSpore.sporeAPI.menu.BasePaginatedMenu
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.menu.settings.item.SettingItem
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
@@ -19,7 +19,7 @@ class SettingsMenu(private val player: Player) : BasePaginatedMenu(SporeCore.ins
         val user = UserManager.get(player)
 
         if(user == null){
-            player.userFail()
+            player.userJoinFail()
             return
         }
 

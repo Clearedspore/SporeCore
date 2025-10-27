@@ -51,7 +51,7 @@ class BalTopCommand: BaseCommand() {
                 sender.sendMessage(
                     "#${startIndex + index + 1}".white() + " " +
                             displayName.blue() + " " +
-                            "%.2f".format(bal).green()
+                            EconomyService.format(bal).green()
                 )
             }
         }.exceptionally { ex ->

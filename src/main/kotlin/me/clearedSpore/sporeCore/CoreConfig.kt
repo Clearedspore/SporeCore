@@ -13,7 +13,9 @@ data class CoreConfig(
 
     @Comment(
         "Toggle features you don't want/need!",
-        "NOTE: Any feature you toggle requires a restart to apply!"
+        "NOTE: Any feature you toggle requires a restart to apply!",
+        "Some features require ingame permissions to use them.",
+        "These permissions are always registered ingame."
     )
     var features: FeaturesConfig = FeaturesConfig(),
 
@@ -118,7 +120,7 @@ data class EconomyConfig(
         "DECIMAL → 5000.00",
         "COMPACT → 5k, 5m, etc."
     )
-    var balanceFormat: BalanceFormat = BalanceFormat.DECIMAL
+    var balanceFormat: BalanceFormat = BalanceFormat.COMPACT
 )
 
 @Configuration
@@ -137,7 +139,14 @@ data class FeaturesConfig(
 
     var warps: Boolean = true,
 
-    var homes: Boolean = true
+    var homes: Boolean = true,
+
+    @Comment(
+        "Allows players with the 'sporecore.chat.colored' permission to use",
+        "color codes (e.g. &c, &b) and RGB colors in their messages.",
+        "You only need to run /sporecore reload to apply changes — no server restart required."
+    )
+    var coloredChat: Boolean = true
 )
 
 

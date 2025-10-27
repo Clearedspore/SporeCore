@@ -67,7 +67,7 @@ class SporeCore : JavaPlugin() {
 
     override fun onEnable() {
         instance = this
-        loadConfig()
+        coreConfig = loadConfig()
         Logger.initialize(coreConfig.general.prefix)
         Logger.info("Loading SporeCore")
         Message.init(true)
@@ -82,8 +82,9 @@ class SporeCore : JavaPlugin() {
         database = DatabaseManager.getServerData()
         server.pluginManager.registerEvents(UserListener(), this)
 
-        if(Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")){
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             PlaceholderAPIHook().register()
+            Logger.info("Successfully integrated with PlaceholderAPI")
         }
 
         if(coreConfig.features.warps){
@@ -100,7 +101,7 @@ class SporeCore : JavaPlugin() {
         registerCompletions()
         registerCommands()
 
-        Logger.info("§aPlugin Loaded!")
+        logStartupBanner()
     }
 
     override fun onDisable() {
@@ -152,6 +153,39 @@ class SporeCore : JavaPlugin() {
         }
     }
 
+    fun logStartupBanner() {
+        val pluginName = "SporeCore"
+        val version = "v${description.version}"
+        val author = "ClearedSpore"
+        val serverType = Bukkit.getServer().name + " - " + Bukkit.getServer().version
+
+        val features = mutableListOf<String>()
+        if (::warpService.isInitialized) features.add("§aWarps")
+        if (::homeService.isInitialized) features.add("§bHomes")
+        if (coreConfig.economy.enabled) features.add("§eEconomy")
+        val featureLine = if (features.isNotEmpty()) features.joinToString(" §7| ") else "§7No features enabled"
+
+        val banner = listOf(
+            "",
+            "   _____  _____ ".blue(),
+            "  / ____|/ ____|".blue(),
+            " | (___ | |     ".blue(),
+            "  \\___ \\| |     ".blue(),
+            "  ____) | |____ ".blue(),
+            " |_____/ \\_____|".blue(),
+            "",
+            "§f$pluginName §e$version",
+            "§fAuthor: $author",
+            "§fServer: $serverType",
+            "§fFeatures: $featureLine",
+            ""
+        )
+
+        banner.forEach { line ->
+            Bukkit.getConsoleSender().sendMessage(line)
+        }
+    }
+
 
     fun setupACF() {
         val prefix = "⚙ ".blue() + "SporeCore » ".white()
@@ -165,7 +199,7 @@ class SporeCore : JavaPlugin() {
         locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_COMMAND_FORMAT, "Usage: &f/{command} {parameters}".blue())
         locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_PARAMETER_FORMAT, "&7- &f{parameter} &7({description})")
 
-        locales.addMessage(Locales.ENGLISH, MessageKeys.INVALID_SYNTAX, "$prefix" + "Use &e{command} &f{syntax}".red())
+        locales.addMessage(Locales.ENGLISH, MessageKeys.INVALID_SYNTAX, "$prefix" + "Use &e{command} &f{syntax}".blue())
         locales.addMessage(Locales.ENGLISH, MessageKeys.PERMISSION_DENIED, "$prefix" + "You don't have permission to use this command!".red())
         locales.addMessage(Locales.ENGLISH, MessageKeys.UNKNOWN_COMMAND, "$prefix" + "That command does not exist!".red())
 

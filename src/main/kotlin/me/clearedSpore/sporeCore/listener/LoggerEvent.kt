@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.event.PlayerPreLogEvent
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
@@ -17,7 +17,7 @@ class LoggerEvent : Listener {
 
         val user = UserManager.get(player)
         if (user == null) {
-            player.userFail()
+            player.userJoinFail()
             event.isCancelled = true
             return
         }

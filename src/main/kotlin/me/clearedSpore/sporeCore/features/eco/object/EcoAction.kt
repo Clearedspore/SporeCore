@@ -12,7 +12,7 @@ enum class EcoAction {
         return when (this) {
             ADDED -> "+$formattedAmount".green()
             REMOVED -> "-$formattedAmount".red()
-            SET -> "+/-$formattedAmount".green()
+            SET -> formattedAmount.green()
         }
     }
 }

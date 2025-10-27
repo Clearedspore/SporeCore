@@ -1,5 +1,7 @@
 package me.clearedSpore.sporeCore.features.eco
 
+import me.clearedSpore.sporeAPI.util.CC.gray
+import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.eco.`object`.BalanceFormat
@@ -58,6 +60,23 @@ object EconomyService {
         }
     }
 
+    fun logConsole(userName: String, action: EcoAction, amount: Double, reason: String = "") {
+        val shouldLog = SporeCore.instance.coreConfig.economy.logging
+        if (!shouldLog) return
+
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yy HH:mm")
+        val timestamp = java.time.Instant.ofEpochMilli(System.currentTimeMillis())
+            .atZone(java.time.ZoneId.systemDefault())
+            .format(formatter)
+
+        val amountStr = action.format(amount)
+        val reasonText = if (reason.isNotBlank()) " | ${reason}" else ""
+
+        val message = "§7[§6Economy§7] §f($userName) §7| $amountStr$reasonText".white() + " [${timestamp}]".gray()
+
+        Bukkit.getConsoleSender().sendMessage(message)
+    }
+
     fun add(user: User, amount: Double, reason: String = "", shouldSave: Boolean = true) {
         user.balance += amount
         user.logEconomy(EcoAction.ADDED, amount, reason)
@@ -65,12 +84,15 @@ object EconomyService {
             UserManager.save(user)
         }
 
+        logConsole(user.playerName, EcoAction.ADDED, amount, reason)
     }
+
 
     fun remove(user: User, amount: Double, reason: String = "") {
         user.balance -= amount
         user.logEconomy(EcoAction.REMOVED, amount, reason)
         UserManager.save(user)
+        logConsole(user.playerName, EcoAction.REMOVED, amount, reason)
     }
 
     fun set(user: User, amount: Double, reason: String = "", shouldSave: Boolean = true) {
@@ -79,8 +101,8 @@ object EconomyService {
         if (shouldSave) {
             UserManager.save(user)
         }
+        logConsole(user.playerName, EcoAction.SET, amount, reason)
     }
-
 
 
     fun format(amount: Double, formatOverride: BalanceFormat? = null): String {
@@ -93,7 +115,6 @@ object EconomyService {
             if (digits > 0) append("." + "0".repeat(digits))
         }
         val formatter = java.text.DecimalFormat(pattern)
-
 
         val (value, suffix) = when {
             kotlin.math.abs(amount) >= 1_000_000_000_000 -> amount / 1_000_000_000_000 to "T"
@@ -116,54 +137,40 @@ object EconomyService {
         } else ""
 
         return if (cfg.symbolBeforeAmount) {
-            "$symbolPart$formattedBase $currencyName"
+            "$symbolPart$formattedBase $currencyName".trim()
         } else {
-            "$formattedBase ${symbolPart}$currencyName"
+            "$formattedBase ${symbolPart}$currencyName".trim()
         }
     }
 
-}
 
 
-fun set(user: User, amount: Double, reason: String = "") {
-    user.balance = amount
-    user.logEconomy(EcoAction.SET, amount, reason)
-    UserManager.save(user)
-}
-
-fun parseAmount(input: String): Double? {
-    val cleaned = input.trim().lowercase()
-    return try {
-        when {
-            cleaned.endsWith("k") -> cleaned.dropLast(1).toDouble() * 1_000
-            cleaned.endsWith("m") -> cleaned.dropLast(1).toDouble() * 1_000_000
-            cleaned.endsWith("b") -> cleaned.dropLast(1).toDouble() * 1_000_000_000
-            else -> cleaned.toDouble()
-        }
-    } catch (e: NumberFormatException) {
-        null
+    fun set(user: User, amount: Double, reason: String = "") {
+        user.balance = amount
+        user.logEconomy(EcoAction.SET, amount, reason)
+        UserManager.save(user)
     }
-}
 
-fun top(limit: Int = 10): CompletableFuture<List<Pair<OfflinePlayer, Double>>> {
-    val uuids = UserManager.getAllStoredUUIDsFromDB().distinct()
+    fun top(limit: Int = 10): CompletableFuture<List<Pair<OfflinePlayer, Double>>> {
+        val uuids = UserManager.getAllStoredUUIDsFromDB().distinct()
 
-    val balanceFutures = uuids.map { uuid ->
-        UserManager.getBalance(uuid).handle { balance, ex ->
-            if (ex != null) {
-                Logger.warn("Failed to fetch balance for $uuid: ${ex.message}")
-                null
-            } else {
-                Bukkit.getOfflinePlayer(uuid) to balance
+        val balanceFutures = uuids.map { uuid ->
+            UserManager.getBalance(uuid).handle { balance, ex ->
+                if (ex != null) {
+                    Logger.warn("Failed to fetch balance for $uuid: ${ex.message}")
+                    null
+                } else {
+                    Bukkit.getOfflinePlayer(uuid) to balance
+                }
             }
         }
-    }
 
-    return CompletableFuture.allOf(*balanceFutures.toTypedArray()).thenApply {
-        balanceFutures.mapNotNull { it.getNow(null) }
-            .filter { (_, balance) -> balance != null && balance > 0.0 }
-            .map { it.first to it.second!! }
-            .sortedByDescending { it.second }
-            .take(limit)
+        return CompletableFuture.allOf(*balanceFutures.toTypedArray()).thenApply {
+            balanceFutures.mapNotNull { it.getNow(null) }
+                .filter { (_, balance) -> balance != null && balance > 0.0 }
+                .map { it.first to it.second!! }
+                .sortedByDescending { it.second }
+                .take(limit)
+        }
     }
 }

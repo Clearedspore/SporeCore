@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.*
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
@@ -12,12 +13,11 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.database.DatabaseManager
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
-import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import java.io.File
 import java.util.concurrent.CompletableFuture
@@ -38,11 +38,12 @@ class CoreCommand : BaseCommand() {
         reloadConfig(plugin, sender)
             .thenCompose { reloadEconomy() }
             .thenCompose { reloadWarps(plugin) }
-            .thenCompose { reloadDatabase(plugin) }
+            .thenCompose { reloadDatabase() }
             .thenRun {
                 val duration = System.currentTimeMillis() - startTime
                 sender.sendMessage("Reload complete. Took ${duration}ms.".blue())
                 Logger.info("SporeCore reloaded in ${duration}ms.")
+
             }
             .exceptionally { ex ->
                 sender.sendMessage("Reload failed: ${ex.message}".red())
@@ -101,21 +102,18 @@ class CoreCommand : BaseCommand() {
         }
     }
 
-    private fun reloadDatabase(plugin: SporeCore): CompletableFuture<Void> {
+    private fun reloadDatabase(): CompletableFuture<Void> {
         return CompletableFuture.runAsync {
             Logger.infoDB("Reloading database...")
-            DatabaseManager.close()
-            DatabaseManager.init(plugin.dataFolder)
-            plugin.database = me.clearedSpore.sporeCore.database.Database()
+            DatabaseManager.saveServerData()
             Logger.infoDB("Database reloaded successfully.")
         }
     }
 
-
     @Subcommand("version")
     fun onVersion(sender: CommandSender) {
         val desc = SporeCore.instance.description
-        sender.sendMessage(desc.name.blue() + " v${desc.version}".green())
+        sender.sendMessage("Version: ".white() + " v${desc.version}".green())
         sender.sendMessage("Author(s): ".white() + desc.authors.joinToString(", ").blue())
     }
 
@@ -147,7 +145,7 @@ class CoreCommand : BaseCommand() {
         }
 
         val user = UserManager.get(target) ?: run {
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
@@ -176,7 +174,7 @@ class CoreCommand : BaseCommand() {
         }
 
         val user = UserManager.get(target) ?: run {
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
@@ -212,16 +210,25 @@ class CoreCommand : BaseCommand() {
     fun onUserInfo(sender: CommandSender, playerName: String) {
         val target = Bukkit.getOfflinePlayer(playerName)
 
-        val user = UserManager.get(target) ?: run {
-            sender.userFail()
+        val user = UserManager.get(target.uniqueId)
+
+        if(user == null){
+            sender.userJoinFail()
             return
         }
 
         sender.sendMessage("=== User Info for ${target.name} ===".blue())
-        sender.sendMessage("UUID: ".white() + target.uniqueId.toString().green())
-        sender.sendMessage("First Join: ".white() + (user.firstJoin ?: "Unknown").green())
-        sender.sendMessage("Homes: ".white() + user.homes.size.toString().green())
-        sender.sendMessage("Pending Messages: ".white() + user.pendingMessages.size.toString().green())
+        sender.sendMessage("UUID: ".white() + target.uniqueId.toString().green() + "(uuidStr)".gray())
+        sender.sendMessage("First Join: ".white() + (user.firstJoin ?: "Unknown").green() + "(firstJoin)".gray())
+        sender.sendMessage("Homes: ".white() + user.homes.size.toString().green() + "(homes)".gray())
+        sender.sendMessage("Pending Messages: ".white() + user.pendingMessages.size.toString().green() + "(pendingMessages)".gray())
+        sender.sendMessage("Balance: ".white() + EconomyService.format(user.balance).green() + "(balance)".gray())
+        sender.sendMessage("Pending Payments: ".white() + "(pendingPayments)".gray())
+        user.pendingPayments.forEach { (senderName, total) ->
+            val formattedAmount = EconomyService.format(total)
+            sender.sendMessage("   ${formattedAmount.green()} from ${senderName.white()}".blue())
+        }
+
     }
 
     private fun formatDuration(ms: Long): String {

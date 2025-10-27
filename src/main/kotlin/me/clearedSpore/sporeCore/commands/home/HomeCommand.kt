@@ -4,7 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.menu.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.menu.homes.HomesMenu
@@ -26,7 +26,7 @@ class HomeCommand() : BaseCommand() {
     fun onHome(player: Player, @Optional homeArg: String?) {
         val user = UserManager.get(player)
         if (user == null) {
-            return player.userFail()
+            return player.userJoinFail()
         }
 
         if (homeArg.isNullOrEmpty()) {
@@ -58,7 +58,7 @@ class HomeCommand() : BaseCommand() {
     fun onDelete(player: Player, name: String) {
         val user = UserManager.get(player)
         if (user == null) {
-            return player.userFail()
+            return player.userJoinFail()
         }
 
         val home = user.homes.find { input -> input.name.equals(name) }
@@ -84,7 +84,7 @@ class HomeCommand() : BaseCommand() {
         val user = UserManager.get(offlinePlayer.uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
@@ -114,7 +114,7 @@ class HomeCommand() : BaseCommand() {
         val user = UserManager.get(offlinePlayer.uniqueId)
 
         if(user == null){
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 

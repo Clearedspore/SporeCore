@@ -7,7 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
@@ -34,14 +34,14 @@ class PayCommand : BaseCommand() {
 
         val senderUser = UserManager.get(sender.uniqueId)
         if (senderUser == null) {
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
         val targetOffline = Bukkit.getOfflinePlayer(targetName)
         val targetUser = UserManager.get(targetOffline.uniqueId)
         if (targetUser == null) {
-            sender.userFail()
+            sender.userJoinFail()
             return
         }
 
