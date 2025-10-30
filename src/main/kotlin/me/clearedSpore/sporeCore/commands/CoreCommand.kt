@@ -38,6 +38,7 @@ class CoreCommand : BaseCommand() {
         reloadConfig(plugin, sender)
             .thenCompose { reloadEconomy() }
             .thenCompose { reloadWarps(plugin) }
+            .thenCompose { reloadKits(plugin) }
             .thenCompose { reloadDatabase() }
             .thenRun {
                 val duration = System.currentTimeMillis() - startTime
@@ -98,6 +99,19 @@ class CoreCommand : BaseCommand() {
                 Logger.info("Warps reloaded successfully.")
             } else {
                 Logger.warn("Warps are disabled in config.")
+            }
+        }
+    }
+
+
+    private fun reloadKits(plugin: SporeCore): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
+            if (plugin.coreConfig.features.kits) {
+                Logger.info("Reloading kits")
+                plugin.kitService.reloadKits()
+                Logger.info("Kits reloaded successfully.")
+            } else {
+                Logger.warn("Kits are disabled in config.")
             }
         }
     }

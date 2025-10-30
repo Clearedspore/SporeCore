@@ -6,7 +6,7 @@ import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.homes.HomeService
-import me.clearedSpore.sporeCore.menu.confirm.ConfirmMenu
+import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.menu.homes.HomesMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm

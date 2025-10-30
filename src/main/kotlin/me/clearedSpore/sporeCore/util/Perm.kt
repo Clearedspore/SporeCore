@@ -65,6 +65,10 @@ object Perm {
     const val FLIGHT_OTHERS = MAIN + "fly.others"
     const val GOD = MAIN + "god"
     const val GOD_OTHERS = MAIN + "god.others"
+    const val PWEATHER = "pweather"
+    const val PWEATHER_OTHERS = "pweather.others"
+    const val PTIME = "ptime"
+    const val PTIME_OTHERS = "ptime.others"
 
     //warps
     const val WARP = MAIN + "warp."
@@ -74,6 +78,13 @@ object Perm {
 
     //home
     const val HOME = MAIN + "home"
+
+    //kits
+    const val KITS = MAIN + "kits"
+    const val KIT_ADMIN = "$KITS.admin"
+
+    // /stats for other players
+    const val STATS_OTHERS = MAIN + "stats.others"
 
     //economy
     const val ECO = MAIN + "eco"

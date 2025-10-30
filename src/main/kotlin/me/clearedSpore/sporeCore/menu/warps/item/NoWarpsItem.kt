@@ -1,16 +1,8 @@
 package me.clearedSpore.sporeCore.menu.warps.item
 
 import me.clearedSpore.sporeAPI.menu.Item
-import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.white
-import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.features.warp.`object`.Warp
-import me.clearedSpore.sporeCore.menu.confirm.ConfirmMenu
-import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

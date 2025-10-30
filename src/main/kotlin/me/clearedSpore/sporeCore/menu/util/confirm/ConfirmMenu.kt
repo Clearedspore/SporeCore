@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.menu.confirm
+package me.clearedSpore.sporeCore.menu.util.confirm
 
 import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.menu.Menu

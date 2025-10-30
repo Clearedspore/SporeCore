@@ -7,7 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.homes.`object`.Home
-import me.clearedSpore.sporeCore.menu.confirm.ConfirmMenu
+import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
 import org.bukkit.Material

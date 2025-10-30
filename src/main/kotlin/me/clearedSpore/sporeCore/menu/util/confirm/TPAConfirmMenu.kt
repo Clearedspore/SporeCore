@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.menu.confirm
+package me.clearedSpore.sporeCore.menu.util.confirm
 
 import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.menu.Menu
@@ -6,7 +6,6 @@ import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.white
-import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.Bukkit
 import org.bukkit.Material

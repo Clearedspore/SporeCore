@@ -15,7 +15,7 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.features.warp.WarpService
-import me.clearedSpore.sporeCore.menu.confirm.ConfirmMenu
+import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.menu.warps.WarpsMenu
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
@@ -70,6 +70,7 @@ class WarpCommand : BaseCommand() {
 
         warpService.createWarp(name, location)
         player.sendSuccessMessage("You have successfully created a new warp called '$name'")
+        Logger.log(player, Perm.LOG, "created a new warp called '$name'", false)
     }
 
 
@@ -90,6 +91,8 @@ class WarpCommand : BaseCommand() {
         } else {
             player.sendErrorMessage("No warp found with the name '$name'.")
         }
+
+        Logger.log(player, Perm.LOG, "deleted a warp called '$name'", false)
     }
 
     @Subcommand("permission")

@@ -11,6 +11,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
+import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.acf.ConfirmCondition
 import me.clearedSpore.sporeCore.acf.CooldownCondition
@@ -34,6 +35,7 @@ import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
 import me.clearedSpore.sporeCore.features.homes.HomeService
+import me.clearedSpore.sporeCore.features.kit.KitService
 import me.clearedSpore.sporeCore.features.warp.WarpService
 import me.clearedSpore.sporeCore.hook.PlaceholderAPIHook
 import me.clearedSpore.sporeCore.listener.ChatEvent
@@ -44,6 +46,7 @@ import me.clearedSpore.sporeCore.util.Perm
 import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
@@ -62,6 +65,7 @@ class SporeCore : JavaPlugin() {
     lateinit var database: Database
     lateinit var warpService: WarpService
     lateinit var homeService: HomeService
+    lateinit var kitService: KitService
 
     var eco: Economy? = null
 
@@ -93,6 +97,10 @@ class SporeCore : JavaPlugin() {
 
         if(coreConfig.features.homes){
             homeService = HomeService()
+        }
+
+        if(coreConfig.features.kits){
+            kitService = KitService()
         }
 
         Cooldown.createCooldown("msg_cooldown", 2)
@@ -163,6 +171,7 @@ class SporeCore : JavaPlugin() {
         if (::warpService.isInitialized) features.add("§aWarps")
         if (::homeService.isInitialized) features.add("§bHomes")
         if (coreConfig.economy.enabled) features.add("§eEconomy")
+        if(::kitService.isInitialized) features.add("§9Kits")
         val featureLine = if (features.isNotEmpty()) features.joinToString(" §7| ") else "§7No features enabled"
 
         val banner = listOf(
@@ -208,8 +217,12 @@ class SporeCore : JavaPlugin() {
     }
 
     fun registerCommands(){
+
+        val features = coreConfig.features
+
         commandManager.registerDependency(WarpService::class.java, warpService)
         commandManager.registerDependency(HomeService::class.java, homeService)
+        commandManager.registerDependency(KitService::class.java, kitService)
 
         commandManager.registerCommand(AdventureCommand())
         commandManager.registerCommand(CreativeCommand())
@@ -217,7 +230,7 @@ class SporeCore : JavaPlugin() {
         commandManager.registerCommand(SpectatorCommand())
         commandManager.registerCommand(SurvivalCommand())
 
-        if(coreConfig.features.teleportRequest) {
+        if(features.teleportRequest) {
             commandManager.registerCommand(TpaAcceptCommand())
             commandManager.registerCommand(TpaCommand())
             commandManager.registerCommand(TpaHereCommand())
@@ -237,12 +250,12 @@ class SporeCore : JavaPlugin() {
         commandManager.registerCommand(GodCommand())
         commandManager.registerCommand(ClearinvCommand())
 
-        if(coreConfig.features.privateMessages){
+        if(features.privateMessages){
             commandManager.registerCommand(PrivateMessageCommand())
             commandManager.registerCommand(ReplyCommand())
         }
 
-        if(coreConfig.features.utilityMenus){
+        if(features.utilityMenus){
             commandManager.registerCommand(AnvilCommand())
             commandManager.registerCommand(CartographyTableCommand())
             commandManager.registerCommand(EnchantmentTableCommand())
@@ -253,22 +266,22 @@ class SporeCore : JavaPlugin() {
             commandManager.registerCommand(WorkbenchCommand())
         }
 
-        if(coreConfig.features.utilityMenus){
+        if(features.utilityMenus){
             commandManager.registerCommand(SpawnCommand())
             commandManager.registerCommand(SetSpawnCommand())
         }
 
         commandManager.registerCommand(CoreCommand())
 
-        if(coreConfig.features.settings) {
+        if(features.settings) {
             commandManager.registerCommand(SettingCommand())
         }
 
-        if(coreConfig.features.warps){
+        if(features.warps){
             commandManager.registerCommand(WarpCommand())
         }
 
-        if(coreConfig.features.homes){
+        if(features.homes){
             commandManager.registerCommand(HomeCommand())
             commandManager.registerCommand(CreateHomeCommand())
             commandManager.registerCommand(DelHomeCommand())
@@ -280,6 +293,18 @@ class SporeCore : JavaPlugin() {
             commandManager.registerCommand(BalTopCommand())
             commandManager.registerCommand(EcoLogsCommand())
         }
+
+        commandManager.registerCommand(PlayerTimeCommand())
+        commandManager.registerCommand(PlayerWeatherCommand())
+
+        if(features.kits){
+            commandManager.registerCommand(KitCommand())
+        }
+
+        if(features.stats){
+            commandManager.registerCommand(StatsCommand())
+        }
+
     }
 
     fun registerCompletions(){
@@ -306,6 +331,21 @@ class SporeCore : JavaPlugin() {
                 warpService.getAllWarps()
                     .filter { warp ->
                         warp.permission == null || player.hasPermission(warp.permission)
+                    }
+                    .map { it.name }
+            } catch (e: Exception) {
+                emptyList<String>()
+            }
+        }
+
+        commandManager.commandCompletions.registerCompletion("kits") { context ->
+            val player = context.player
+            if (player == null) return@registerCompletion emptyList<String>()
+
+            try {
+                kitService.getAllKits()
+                    .filter { kit ->
+                        kit.permission == null || player.hasPermission(kit.permission)
                     }
                     .map { it.name }
             } catch (e: Exception) {
@@ -348,5 +388,18 @@ class SporeCore : JavaPlugin() {
             val user = UserManager.getIfLoaded(target.uniqueId) ?: return@registerCompletion emptyList()
             user.homes.map { it.name }
         }
+
+        commandManager.commandCompletions.registerCompletion("materials") { context ->
+            val input = context.input?.trim()?.uppercase() ?: ""
+
+            Material.entries
+                .asSequence()
+                .filter { !it.isLegacy }
+                .map { it.name.lowercase().capitalizeFirstLetter() }
+                .filter { it!!.startsWith(input.lowercase()) }
+                .take(50)
+                .toList()
+        }
+
     }
 }

@@ -2,13 +2,9 @@ package me.clearedSpore.sporeCore.menu.warps
 
 import me.clearedSpore.sporeAPI.menu.BasePaginatedMenu
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.features.warp.WarpService
-import me.clearedSpore.sporeCore.features.warp.`object`.Warp
-import me.clearedSpore.sporeCore.menu.homes.item.HomeItem
 import me.clearedSpore.sporeCore.menu.warps.item.NoWarpsItem
 import me.clearedSpore.sporeCore.menu.warps.item.WarpItem
-import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -23,15 +19,15 @@ class WarpsMenu(private val player: Player) : BasePaginatedMenu(SporeCore.instan
     override fun createItems() {
         val warps = warpService.getAllWarps()
 
-        if (warps.isEmpty()){
+        val accessibleWarps = warps.filter { it.permission == null || player.hasPermission(it.permission) }
+
+        if (accessibleWarps.isEmpty()) {
             setGlobalMenuItem(5, 3, NoWarpsItem())
             return
         }
 
-        warps.forEach { warp ->
-            if (warp.permission == null || player.hasPermission(warp.permission)) {
-                addItem(WarpItem(warp, player))
-            }
+        accessibleWarps.forEach { warp ->
+            addItem(WarpItem(warp, player))
         }
 
     }

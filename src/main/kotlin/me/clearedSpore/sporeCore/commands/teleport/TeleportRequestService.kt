@@ -4,7 +4,7 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
-import me.clearedSpore.sporeCore.menu.confirm.TPAConfirmMenu
+import me.clearedSpore.sporeCore.menu.util.confirm.TPAConfirmMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport

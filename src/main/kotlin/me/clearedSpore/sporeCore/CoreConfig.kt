@@ -146,7 +146,11 @@ data class FeaturesConfig(
         "color codes (e.g. &c, &b) and RGB colors in their messages.",
         "You only need to run /sporecore reload to apply changes — no server restart required."
     )
-    var coloredChat: Boolean = true
+    var coloredChat: Boolean = true,
+
+    var kits: Boolean = true,
+
+    var stats: Boolean = true
 )
 
 
