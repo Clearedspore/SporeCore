@@ -86,6 +86,16 @@ object Perm {
     // /stats for other players
     const val STATS_OTHERS = MAIN + "stats.others"
 
+
+    //custom currency
+    const val CURRENCY = MAIN + "currency."
+    const val CURRENCY_GET = CURRENCY + "get"
+    const val CURRENCY_GET_OTHERS = CURRENCY + "get.others"
+    const val CURRENCY_ADMIN = CURRENCY + "admin"
+    const val CURRENCY_TOP = CURRENCY + "top"
+    const val CURRENCY_NOTIFY = CURRENCY + "notify"
+
+
     //economy
     const val ECO = MAIN + "eco"
     const val ECO_ADMIN = "$ECO.admin"

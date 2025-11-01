@@ -3,6 +3,8 @@ package me.clearedSpore.sporeCore.user
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeCore.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.currency.`object`.CreditLog
 import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
 import me.clearedSpore.sporeCore.features.eco.`object`.EconomyLog
 import me.clearedSpore.sporeCore.features.homes.`object`.Home
@@ -33,7 +35,10 @@ data class User(
     var kitCooldowns: MutableMap<String, Long> = mutableMapOf(),
     var lastJoin: Long? = null,
     var totalPlaytime: Long = 0L,
-    var playtimeHistory: MutableList<Pair<Long, Long>> = mutableListOf()
+    var playtimeHistory: MutableList<Pair<Long, Long>> = mutableListOf(),
+    var credits: Double = 0.0,
+    var creditLogs: MutableList<CreditLog> = mutableListOf(),
+    var creditsSpent: MutableList<CreditLog> = mutableListOf()
 ) {
     val uuid: UUID get() = UUID.fromString(uuidStr)
     val player: Player? get() = Bukkit.getPlayer(uuid)
@@ -53,6 +58,9 @@ data class User(
         .putLong("lastJoin", lastJoin ?: 0L)
         .putLong("totalPlaytime", totalPlaytime)
         .putList("playtimeHistory", playtimeHistory.map { "${it.first}:${it.second}" })
+        .putDouble("credits", credits)
+        .putDocuments("creditLogs", creditLogs.map { it.toDocument() })
+        .putDocuments("creditsSpent", creditsSpent.map { it.toDocument() })
         .build()
 
     companion object {
@@ -79,8 +87,10 @@ data class User(
                 playtimeHistory = doc.list("playtimeHistory").mapNotNull {
                     val parts = it.toString().split(":")
                     if (parts.size == 2) parts[0].toLongOrNull()?.let { a -> parts[1].toLongOrNull()?.let { b -> a to b } } else null
-                }.toMutableList()
-
+                }.toMutableList(),
+                credits = doc.double("credits"),
+                creditLogs = doc.documents("creditLogs").mapNotNull { CreditLog.fromDocument(it) }.toMutableList(),
+                creditsSpent = doc.documents("creditsSpent").mapNotNull { CreditLog.fromDocument(it) }.toMutableList()
             )
         }
 
@@ -99,7 +109,10 @@ data class User(
                 kitCooldowns = mutableMapOf(),
                 lastJoin = null,
                 totalPlaytime = 0L,
-                playtimeHistory = mutableListOf()
+                playtimeHistory = mutableListOf(),
+                credits = 0.0,
+                creditLogs = mutableListOf(),
+                creditsSpent = mutableListOf()
             )
 
             collection.insert(user.toDocument())
@@ -133,6 +146,31 @@ data class User(
             }
         }
 
+    fun getCreditLogs(page: Int, pageSize: Int = 10): CompletableFuture<List<String>> =
+        CompletableFuture.supplyAsync {
+            try {
+                val start = (page - 1) * pageSize
+                val end = minOf(start + pageSize, creditLogs.size)
+                if (start >= creditLogs.size) return@supplyAsync emptyList()
+
+                val formatter = DateTimeFormatter.ofPattern("MM/dd/yy HH:mm")
+                creditLogs.subList(start, end).map { log ->
+                    val timestamp = Instant.ofEpochMilli(log.timestamp)
+                        .atZone(ZoneId.systemDefault())
+                        .format(formatter)
+                        .let { "[$it]".gray() }
+
+                    val amountStr = log.action.format(log.amount)
+                    val reasonStr = if (log.reason.isNotBlank())
+                        " &f${log.reason.translate()}" else " No reason found!"
+                    "$amountStr$reasonStr $timestamp"
+                }
+            } catch (e: Exception) {
+                Logger.warn("Failed to load credit logs for $playerName ($uuid): ${e.message}")
+                emptyList()
+            }
+        }
+
     fun save(collection: NitriteCollection) {
         val filter = FluentFilter.where("uuidStr").eq(uuidStr)
         val result = collection.update(filter, toDocument())
@@ -150,6 +188,11 @@ data class User(
     fun logEconomy(action: EcoAction, amount: Double, reason: String = "") {
         economyLogs.add(0, EconomyLog(action, amount, reason, System.currentTimeMillis()))
         if (economyLogs.size > 100) economyLogs.removeLast()
+    }
+
+    fun logCredit(action: CreditAction, amount: Double, reason: String = "") {
+        creditLogs.add(0, CreditLog(action, amount, reason, System.currentTimeMillis()))
+        if (creditLogs.size > 100) creditLogs.removeLast()
     }
 
     fun getFormattedFirstJoin() = firstJoin ?: "Never"

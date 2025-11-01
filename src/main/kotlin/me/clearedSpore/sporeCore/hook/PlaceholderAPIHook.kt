@@ -2,6 +2,7 @@ package me.clearedSpore.sporeCore.hook
 
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.`object`.BalanceFormat
 import me.clearedSpore.sporeCore.user.UserManager
@@ -43,6 +44,33 @@ class PlaceholderAPIHook() : PlaceholderExpansion() {
                 val kitName = args.drop(2).joinToString("_")
                 val remaining = user.getKitCooldownRemaining(kitName)
                 if (remaining <= 0) "Ready" else TimeUtil.formatDuration(remaining)
+            }
+
+            //%sporecore_<currencyName>_balance_<format>%
+            args.size >= 2 && args[1].equals("balance", ignoreCase = true) -> {
+                val currencyToken = args[0].lowercase()
+
+                val settings = CurrencySystemService.config.currencySettings
+                val matchesCurrency = currencyToken == settings.pluralName.lowercase()
+                        || currencyToken == settings.singularName.lowercase()
+
+                if (!matchesCurrency) {
+                    null
+                } else {
+                    val formatToken = args.getOrNull(2)?.lowercase()
+                    val formatType = when (formatToken) {
+                        "plain" -> BalanceFormat.PLAIN
+                        "decimal" -> BalanceFormat.DECIMAL
+                        "compact" -> BalanceFormat.COMPACT
+                        null -> runCatching { BalanceFormat.valueOf(settings.balanceFormat.uppercase()) }
+                            .getOrDefault(BalanceFormat.PLAIN)
+                        else -> runCatching { BalanceFormat.valueOf(settings.balanceFormat.uppercase()) }
+                            .getOrDefault(BalanceFormat.PLAIN)
+                    }
+
+                    val balance = CurrencySystemService.getBalance(user)
+                    CurrencySystemService.format(balance, formatType)
+                }
             }
 
             else -> null

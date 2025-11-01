@@ -12,15 +12,23 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.currency.CurrencySystemService
+import me.clearedSpore.sporeCore.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.currency.`object`.CreditLog
+import me.clearedSpore.sporeCore.currency.`object`.PackagePurchase
+import me.clearedSpore.sporeCore.database.Database
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.eco.EconomyService
+import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import java.io.File
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
+import kotlin.random.Random
 
 @CommandAlias("sporecore|sc")
 class CoreCommand : BaseCommand() {
@@ -41,11 +49,15 @@ class CoreCommand : BaseCommand() {
             .thenCompose { reloadKits(plugin) }
             .thenCompose { reloadDatabase() }
             .thenRun {
+                if (plugin.coreConfig.features.currency.enabled) {
+                    CurrencySystemService.reload()
+                }
+
                 val duration = System.currentTimeMillis() - startTime
                 sender.sendMessage("Reload complete. Took ${duration}ms.".blue())
                 Logger.info("SporeCore reloaded in ${duration}ms.")
-
             }
+
             .exceptionally { ex ->
                 sender.sendMessage("Reload failed: ${ex.message}".red())
                 Logger.error("Reload error: ${ex.message}")
@@ -172,6 +184,87 @@ class CoreCommand : BaseCommand() {
         field.isAccessible = true
         val value = field.get(user)
         sender.sendMessage("Value of '$fieldName' for ${target.name}: ".blue() + value.toString().green())
+    }
+
+    @Subcommand("generateusers")
+    fun onGenerate(sender: CommandSender, amountArg: Int?) {
+        val amount = (amountArg ?: 500).coerceIn(1, 5000)
+        sender.sendMessage("Starting generation of $amount fake users...".blue())
+
+        CompletableFuture.runAsync {
+            try {
+                val databaseCollection = DatabaseManager.getServerCollection()
+                val database = DatabaseManager.getServerData()
+
+                val userCollection = DatabaseManager.getUserCollection()
+
+                val packageNames = CurrencySystemService.getCategories().values
+                    .flatMap { it.items.values.mapNotNull { si -> si.name } }
+                    .ifEmpty { listOf("TestPackage", "StarterPack", "Rank-Upgrade", "KeysBundle") }
+
+                var created = 0
+                val now = System.currentTimeMillis()
+                val sixtyDaysMs = 60L * 24 * 60 * 60 * 1000
+
+                repeat(amount) {
+                    val uuid = UUID.randomUUID()
+                    val name = "TestUser${Random.nextInt(100_000, 999_999)}"
+
+                    val user = User.create(uuid, name, userCollection)
+
+                    val purchased = Random.nextInt(1, 1001).toDouble()
+
+                    val totalSpent = Random.nextInt(0, purchased.toInt() + 1).toDouble()
+                    val spentEntriesCount = if (totalSpent <= 0.0) 0 else Random.nextInt(1, 5)
+                    val spentSplits = mutableListOf<Double>()
+                    var remaining = totalSpent
+                    repeat(spentEntriesCount) { idx ->
+                        val remainingSlots = spentEntriesCount - idx
+                        val take = if (remainingSlots == 1) remaining else {
+                            val maxTake = (remaining / remainingSlots * 2).coerceAtLeast(1.0)
+                            Random.nextDouble(1.0, maxTake.coerceAtMost(remaining))
+                        }
+                        spentSplits.add(kotlin.math.min(take, remaining))
+                        remaining -= spentSplits.last()
+                    }
+
+                    user.creditLogs.add(0, CreditLog(CreditAction.ADDED, purchased, "Test purchase", now - Random.nextLong(0, sixtyDaysMs)))
+
+                    var spentSoFar = 0.0
+                    for (s in spentSplits) {
+                        val timestamp = now - Random.nextLong(0, sixtyDaysMs)
+                        user.creditLogs.add(0, CreditLog(CreditAction.SPENT, s, "Test spend", timestamp))
+                        spentSoFar += s
+
+
+                        if (Random.nextBoolean()) {
+                            val timestamp = System.currentTimeMillis()
+                            val pkgName = packageNames.random()
+                            val amount = Random.nextInt(1, 1000)
+
+                            val purchase = PackagePurchase(pkgName, amount, timestamp)
+                            database.packagePurchases.add(purchase)
+                        }
+
+                    }
+
+                    user.credits = (purchased - spentSoFar).coerceAtLeast(0.0)
+                    user.balance = Random.nextInt(0, 2000).toDouble()
+
+                    UserManager.save(user)
+                    created++
+                }
+
+                database.save(databaseCollection)
+
+                sender.sendMessage("Generation complete: created $created fake users.".blue())
+                Logger.info("Currency test data: created $created fake users for load testing.")
+            } catch (ex: Exception) {
+                sender.sendMessage("Failed generating test data: ${ex.message}".red())
+                Logger.warn("Failed generating test data: ${ex.message}")
+                ex.printStackTrace()
+            }
+        }
     }
 
 

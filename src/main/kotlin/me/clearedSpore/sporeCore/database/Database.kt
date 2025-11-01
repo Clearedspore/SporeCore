@@ -1,5 +1,6 @@
 package me.clearedSpore.sporeCore.database
 
+import me.clearedSpore.sporeCore.currency.`object`.PackagePurchase
 import me.clearedSpore.sporeCore.database.util.DocReader
 import me.clearedSpore.sporeCore.database.util.DocWriter
 import me.clearedSpore.sporeCore.features.kit.`object`.Kit
@@ -15,7 +16,8 @@ data class Database(
     val id: String = "server",
     var spawn: Location? = null,
     var warps: MutableList<Warp> = mutableListOf(),
-    var kits: MutableList<Kit> = mutableListOf()
+    var kits: MutableList<Kit> = mutableListOf(),
+    var packagePurchases: MutableList<PackagePurchase> = mutableListOf()
 ) {
 
     private fun locationToString(loc: Location?): String? =
@@ -40,6 +42,12 @@ data class Database(
         .put("location", locationToString(warp.location))
         .build()
 
+    private fun packagePurchaseToDocument(packagePurchase: PackagePurchase): Document = DocWriter()
+        .put("packageName", packagePurchase.packageName)
+        .put("amount", packagePurchase.amount)
+        .put("timestamp", packagePurchase.timestamp)
+        .build()
+
     private fun kitToDocument(kit: Kit): Document = DocWriter()
         .put("name", kit.name)
         .put("id", kit.id)
@@ -56,6 +64,7 @@ data class Database(
         .put("spawn", locationToString(spawn))
         .putList("warps", warps.map { warpToDocument(it) })
         .putList("kits", kits.map { kitToDocument(it) })
+        .putList("packagePurchases", packagePurchases.map { packagePurchaseToDocument(it) })
         .build()
 
     fun save(collection: NitriteCollection) {
@@ -79,6 +88,7 @@ data class Database(
             val doc = DocReader(docRaw)
             val warpDocs = doc.documents("warps")
             val kitDocs = doc.documents("kits")
+            val packageDocs = doc.documents("packagePurchases")
             return Database(
                 id = doc.string("id") ?: "server",
                 spawn = doc.string("spawn")?.let { stringToLocation(it) },
@@ -98,6 +108,12 @@ data class Database(
                     val cooldown = d.get("cooldown") as? Long
                     val displayItem = d.get("displayItem") as? Material
                     Kit(name, id, inventory, armor, offhand, permission, cooldown, displayItem)
+                }.toMutableList(),
+                packagePurchases = packageDocs.mapNotNull { d ->
+                    val packageName = d.get("packageName") as? String ?: return@mapNotNull null
+                    val amount = d.get("amount") as? Int ?: return@mapNotNull null
+                    val timestamp = d.get("timestamp") as? Long ?: return@mapNotNull null
+                    PackagePurchase(packageName, amount, timestamp)
                 }.toMutableList()
             )
         }

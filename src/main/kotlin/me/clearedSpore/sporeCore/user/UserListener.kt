@@ -4,6 +4,8 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
+import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.util.Tasks
@@ -23,7 +25,7 @@ class UserListener : Listener {
         val player = event.player
         val user = UserManager.get(player) ?: return
 
-        // First join setup
+
         if (!user.hasJoinedBefore) {
             user.hasJoinedBefore = true
             user.firstJoin = LocalDateTime.now()
@@ -31,18 +33,41 @@ class UserListener : Listener {
 
             val starter = SporeCore.instance.coreConfig.economy.starterBalance
             EconomyService.add(user, starter, "Starter balance")
+
+            val config = SporeCore.instance.coreConfig
+            val kitService = SporeCore.instance.kitService
+
+            if (config.kits.firstJoinKit.isNotEmpty()) {
+                val kitName = config.kits.firstJoinKit.firstPart()
+                val shouldClear = config.kits.firstJoinKit.hasFlag("clear")
+                val kits = kitService.getAllKits()
+
+                val kit = kits.find { it.name.equals(kitName, ignoreCase = true) }
+
+                if(kit == null){
+                    Logger.error("Failed to give death kit to ${player.name}")
+                    return
+                }
+
+
+                if (shouldClear) {
+                    player.inventory.clear()
+                }
+
+                kitService.giveKit(player, kitName)
+            }
         }
 
-        // Track name changes
+
         if (user.playerName != player.name) {
             user.playerName = player.name
         }
 
-        // Record join timestamp
+
         user.lastJoin = System.currentTimeMillis()
         UserManager.startAutoSave(user)
 
-        Logger.infoDB("Loaded user data for ${player.name} (${player.uniqueId}) on login")
+        Logger.infoDB("Loaded user data for ${player.name} (${player.uniqueId})")
     }
 
     @EventHandler
@@ -88,6 +113,6 @@ class UserListener : Listener {
         UserManager.stopAutoSave(player.uniqueId)
         UserManager.remove(player.uniqueId)
 
-        Logger.infoDB("Saved and removed user ${player.name} (${player.uniqueId}) on quit (session: ${sessionDuration / 1000}s)")
+        Logger.infoDB("Saved and removed user ${player.name} (${player.uniqueId}) (session: ${sessionDuration / 1000}s)")
     }
 }

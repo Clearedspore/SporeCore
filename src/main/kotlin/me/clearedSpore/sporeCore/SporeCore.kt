@@ -1,13 +1,17 @@
 package me.clearedSpore.sporeCore
 
+import co.aikar.commands.BaseCommand
 import co.aikar.commands.Locales
 import co.aikar.commands.MessageKeys
 import co.aikar.commands.PaperCommandManager
+import co.aikar.commands.annotation.CommandAlias
+import co.aikar.commands.annotation.CommandPermission
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
+import me.clearedSpore.sporeAPI.util.ChatInput
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
@@ -16,6 +20,8 @@ import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.acf.ConfirmCondition
 import me.clearedSpore.sporeCore.acf.CooldownCondition
 import me.clearedSpore.sporeCore.commands.*
+import me.clearedSpore.sporeCore.commands.currency.CurrencyCommand
+import me.clearedSpore.sporeCore.commands.currency.CurrencyShopCommand
 import me.clearedSpore.sporeCore.commands.economy.BalTopCommand
 import me.clearedSpore.sporeCore.commands.economy.EcoLogsCommand
 import me.clearedSpore.sporeCore.commands.economy.EconomyCommand
@@ -30,15 +36,18 @@ import me.clearedSpore.sporeCore.commands.spawn.SetSpawnCommand
 import me.clearedSpore.sporeCore.commands.spawn.SpawnCommand
 import me.clearedSpore.sporeCore.commands.teleport.*
 import me.clearedSpore.sporeCore.commands.utilitymenus.*
+import me.clearedSpore.sporeCore.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.database.Database
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.features.kit.KitService
+import me.clearedSpore.sporeCore.features.stats.PlaytimeTracker
 import me.clearedSpore.sporeCore.features.warp.WarpService
 import me.clearedSpore.sporeCore.hook.PlaceholderAPIHook
 import me.clearedSpore.sporeCore.listener.ChatEvent
+import me.clearedSpore.sporeCore.listener.DeathListener
 import me.clearedSpore.sporeCore.listener.LoggerEvent
 import me.clearedSpore.sporeCore.user.UserListener
 import me.clearedSpore.sporeCore.user.UserManager
@@ -47,10 +56,15 @@ import net.milkbowl.vault.economy.Economy
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Material
+import org.bukkit.command.CommandSender
+import org.bukkit.command.PluginCommand
+import org.bukkit.command.SimpleCommandMap
 import org.bukkit.entity.Player
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.lang.reflect.Field
+import kotlin.math.sin
 
 
 class SporeCore : JavaPlugin() {
@@ -60,9 +74,11 @@ class SporeCore : JavaPlugin() {
     }
 
     lateinit var commandManager: PaperCommandManager
-    lateinit var coreConfig: CoreConfig
+    lateinit var chatInput: ChatInput
 
+    lateinit var coreConfig: CoreConfig
     lateinit var database: Database
+
     lateinit var warpService: WarpService
     lateinit var homeService: HomeService
     lateinit var kitService: KitService
@@ -79,8 +95,13 @@ class SporeCore : JavaPlugin() {
         setupACF()
         Task.initialize(this)
         Perm.registerAll()
+        chatInput = ChatInput(this)
 
         setupEconomy()
+
+        if(coreConfig.features.currency.enabled){
+            CurrencySystemService.initialize()
+        }
 
         DatabaseManager.init(dataFolder)
         database = DatabaseManager.getServerData()
@@ -103,6 +124,7 @@ class SporeCore : JavaPlugin() {
             kitService = KitService()
         }
 
+        PlaytimeTracker.start()
         Cooldown.createCooldown("msg_cooldown", 2)
 
         registerListeners()
@@ -113,6 +135,7 @@ class SporeCore : JavaPlugin() {
     }
 
     override fun onDisable() {
+        PlaytimeTracker.stop()
         Logger.infoDB("Saving all user data before shutdown...")
         UserManager.saveAllUsers()
         Logger.infoDB("All user data saved. Goodbye!")
@@ -145,6 +168,7 @@ class SporeCore : JavaPlugin() {
     fun registerListeners(){
         server.pluginManager.registerEvents(LoggerEvent(), this)
         server.pluginManager.registerEvents(ChatEvent(), this)
+        server.pluginManager.registerEvents(DeathListener(), this)
     }
 
     fun loadConfig(): CoreConfig {
@@ -305,7 +329,31 @@ class SporeCore : JavaPlugin() {
             commandManager.registerCommand(StatsCommand())
         }
 
+
+        if (features.currency.enabled) {
+            val singular = CurrencySystemService.config.currencySettings.singularName.lowercase()
+            val plural = CurrencySystemService.config.currencySettings.pluralName.lowercase()
+            val aliases = listOf("currency", singular, plural)
+
+            for (alias in aliases.distinct()) {
+                commandManager.commandReplacements.addReplacement("currencyalias", alias)
+                commandManager.registerCommand(CurrencyCommand())
+            }
+
+            val shopAliases = CurrencySystemService.config.currencySettings.shopCommand
+
+            if (shopAliases.isNotEmpty()) {
+                for (alias in shopAliases.distinct()) {
+                    commandManager.commandReplacements.addReplacement("currencyshopalias", alias)
+                    commandManager.registerCommand(CurrencyShopCommand())
+                }
+            }
+
+            Logger.info("Registered currency aliases: ${aliases.joinToString(", ")}")
+        }
+
     }
+
 
     fun registerCompletions(){
         commandManager.commandCompletions.registerCompletion("gamemodes") { context ->

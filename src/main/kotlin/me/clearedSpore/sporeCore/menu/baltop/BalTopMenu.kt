@@ -9,28 +9,30 @@ import me.clearedSpore.sporeCore.menu.baltop.item.NoBalancesItem
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryClickEvent
+import kotlin.math.max
 
 
 class BalTopMenu(private val viewer: Player) : BasePaginatedMenu(SporeCore.instance, true) {
 
-    override fun getMenuName(): String = "Baltop (Page ${page + 1})"
+    override fun getMenuName(): String = "Baltop"
     override fun getRows(): Int = 6
 
     override fun createItems() {
-        val topList = EconomyService.top().join()
+        val maxPlayers = SporeCore.instance.coreConfig.economy.maxPlayers
+        val topList = EconomyService.top(maxPlayers).join()
 
         if (topList.isEmpty()) {
             addItem(NoBalancesItem())
             return
         }
+        
+        addSearchItem(5, 6, SporeCore.instance.chatInput)
 
         topList.forEachIndexed { index, (player, balance) ->
             val displayName = player.name?.takeIf { it.isNotEmpty() } ?: "Unknown"
             addItem(BalTopItem(index + 1, displayName, balance))
         }
     }
-
-
 
     override fun onInventoryClickEvent(
         clicker: Player,

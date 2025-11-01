@@ -1,6 +1,7 @@
 package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeCore.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
@@ -95,6 +96,19 @@ object UserManager {
         CompletableFuture.supplyAsync {
             get(uuid)?.balance
         }
+
+    fun getCredits(uuid: UUID): CompletableFuture<Double?> =
+        CompletableFuture.supplyAsync {
+            get(uuid)?.credits
+        }
+
+    fun getTotalCreditsSpent(uuid: UUID): CompletableFuture<Double?> =
+        CompletableFuture.supplyAsync {
+            get(uuid)?.creditLogs
+                ?.filter { it.action == CreditAction.SPENT }
+                ?.sumOf { it.amount }
+        }
+
 
     fun setBalance(uuid: UUID, amount: Double): CompletableFuture<Void> =
         CompletableFuture.runAsync {

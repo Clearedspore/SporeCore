@@ -3,12 +3,14 @@ package me.clearedSpore.sporeCore
 import de.exlll.configlib.Comment
 import de.exlll.configlib.Configuration
 import me.clearedSpore.sporeCore.features.eco.`object`.BalanceFormat
+import org.checkerframework.checker.builder.qual.CalledMethods
 import org.intellij.lang.annotations.JdkConstants
 import javax.swing.text.StyledEditorKit
 
 
 @Configuration
 data class CoreConfig(
+
     var general: GeneralConfig = GeneralConfig(),
 
     @Comment(
@@ -19,10 +21,25 @@ data class CoreConfig(
     )
     var features: FeaturesConfig = FeaturesConfig(),
 
-    var economy: EconomyConfig = EconomyConfig()
+    var economy: EconomyConfig = EconomyConfig(),
+
+    var kits: KitsConfig = KitsConfig()
 
 )
 
+@Configuration
+data class KitsConfig(
+
+    @Comment(
+        "Which kit should a player receive when they join for the first time and when.",
+        "They die leave this empty if you don't want a kit selected.",
+        "If you want to clear the players inventory before giving the kit",
+        "Add |clear after it. Example:",
+        "starter|clear"
+    )
+    var firstJoinKit: String = "starter",
+    var deathKit: String = ""
+)
 
 @Configuration
 data class GeneralConfig(
@@ -110,6 +127,13 @@ data class EconomyConfig(
     var topMenu: Boolean = true,
 
     @Comment(
+        "How many players it will show in the baltop menu.",
+        "If you set the max amount too high it can cause server lag",
+        "This is not recommended to change!"
+    )
+    var maxPlayers: Int = 250,
+
+    @Comment(
         "Allow players to pay each other via /pay."
     )
     var paying: Boolean = true,
@@ -150,7 +174,24 @@ data class FeaturesConfig(
 
     var kits: Boolean = true,
 
-    var stats: Boolean = true
+    var stats: Boolean = true,
+
+    @Comment(
+        "The currency feature is a separate currency that you",
+        "can use as a 'premium' shop. You can modify the currency",
+        "and add a shop in the (currency).yml file.",
+        "If you change the file name and you don't have a file",
+        "with that name it will automatically generate a new one."
+    )
+    var currency: CurrencyConfig = CurrencyConfig()
+)
+
+@Configuration
+data class CurrencyConfig(
+
+    var enabled: Boolean = true,
+
+    var configFile: String = "credits.yml"
 )
 
 
