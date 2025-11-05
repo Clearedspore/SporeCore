@@ -19,6 +19,7 @@ object Perm {
     //chat
     const val CHAT = MAIN + "chat."
     const val COLORED_CHAT = CHAT + "colored"
+    const val CHATCOLOR = CHAT + "color"
 
 
     //gamemode
@@ -73,6 +74,9 @@ object Perm {
     const val SPEED = MAIN + "speed"
     const val SPEED_OTHERS = MAIN + "speed.others"
     const val REBOOT = MAIN + "reboot"
+    const val BROADCAST = MAIN + "broadcast"
+    const val TRASH = MAIN + "trash"
+    const val TRASH_OTHERS = MAIN + "trash.others"
 
     //warps
     const val WARP = MAIN + "warp."

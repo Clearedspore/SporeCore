@@ -4,8 +4,6 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.Locales
 import co.aikar.commands.MessageKeys
 import co.aikar.commands.PaperCommandManager
-import co.aikar.commands.annotation.CommandAlias
-import co.aikar.commands.annotation.CommandPermission
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
@@ -15,7 +13,6 @@ import me.clearedSpore.sporeAPI.util.ChatInput
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
-import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.acf.ConfirmCondition
 import me.clearedSpore.sporeCore.acf.CooldownCondition
@@ -53,19 +50,17 @@ import me.clearedSpore.sporeCore.listener.LoggerEvent
 import me.clearedSpore.sporeCore.user.UserListener
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
+import net.milkbowl.vault.chat.Chat
 import net.milkbowl.vault.economy.Economy
+import net.milkbowl.vault.permission.Permission
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Material
-import org.bukkit.command.CommandSender
-import org.bukkit.command.PluginCommand
-import org.bukkit.command.SimpleCommandMap
 import org.bukkit.entity.Player
+import org.bukkit.plugin.RegisteredServiceProvider
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import java.lang.reflect.Field
-import kotlin.math.sin
 
 
 class SporeCore : JavaPlugin() {
@@ -84,12 +79,22 @@ class SporeCore : JavaPlugin() {
     lateinit var homeService: HomeService
     lateinit var kitService: KitService
 
+    var chat: Chat? = null
+    var perms: Permission? = null
     var eco: Economy? = null
 
+    var totalCommands: Int = 0
+    
     override fun onEnable() {
+        totalCommands = 0
         instance = this
         coreConfig = loadConfig()
         Logger.initialize(coreConfig.general.prefix)
+
+        setupEconomy()
+        setupChat()
+        setupPermissions()
+
         Logger.info("Loading SporeCore")
         Message.init(true)
         commandManager = PaperCommandManager(this)
@@ -98,7 +103,6 @@ class SporeCore : JavaPlugin() {
         Perm.registerAll()
         chatInput = ChatInput(this)
 
-        setupEconomy()
 
         if(coreConfig.features.currency.enabled){
             CurrencySystemService.initialize()
@@ -166,6 +170,16 @@ class SporeCore : JavaPlugin() {
         }
     }
 
+    fun setupChat() {
+        val rsp = server.servicesManager.getRegistration(Chat::class.java)
+        chat = rsp?.provider
+    }
+
+    fun setupPermissions() {
+        val rsp = server.servicesManager.getRegistration(Permission::class.java)
+        perms = rsp?.provider
+    }
+
     fun registerListeners(){
         server.pluginManager.registerEvents(LoggerEvent(), this)
         server.pluginManager.registerEvents(ChatEvent(), this)
@@ -230,90 +244,96 @@ class SporeCore : JavaPlugin() {
         commandManager.registerDependency(HomeService::class.java, homeService)
         commandManager.registerDependency(KitService::class.java, kitService)
 
-        commandManager.registerCommand(AdventureCommand())
-        commandManager.registerCommand(CreativeCommand())
-        commandManager.registerCommand(GamemodeCommand())
-        commandManager.registerCommand(SpectatorCommand())
-        commandManager.registerCommand(SurvivalCommand())
+        registerCommand(AdventureCommand())
+        registerCommand(CreativeCommand())
+        registerCommand(GamemodeCommand())
+        registerCommand(SpectatorCommand())
+        registerCommand(SurvivalCommand())
 
         if(features.teleportRequest) {
-            commandManager.registerCommand(TpaAcceptCommand())
-            commandManager.registerCommand(TpaCommand())
-            commandManager.registerCommand(TpaHereCommand())
-            commandManager.registerCommand(TpaDenyCommand())
+            registerCommand(TpaAcceptCommand())
+            registerCommand(TpaCommand())
+            registerCommand(TpaHereCommand())
+            registerCommand(TpaDenyCommand())
         }
 
-        commandManager.registerCommand(TeleportCommand())
-        commandManager.registerCommand(TpAllCommand())
-        commandManager.registerCommand(TpCoordsCommand())
-        commandManager.registerCommand(TphereCommand())
+        registerCommand(TeleportCommand())
+        registerCommand(TpAllCommand())
+        registerCommand(TpCoordsCommand())
+        registerCommand(TphereCommand())
 
-        commandManager.registerCommand(HealCommand())
-        commandManager.registerCommand(FeedCommand())
-        commandManager.registerCommand(RepairCommand())
-        commandManager.registerCommand(RepairAllCommand())
-        commandManager.registerCommand(FlyCommand())
-        commandManager.registerCommand(GodCommand())
-        commandManager.registerCommand(ClearinvCommand())
+        registerCommand(HealCommand())
+        registerCommand(FeedCommand())
+        registerCommand(RepairCommand())
+        registerCommand(RepairAllCommand())
+        registerCommand(FlyCommand())
+        registerCommand(GodCommand())
+        registerCommand(ClearinvCommand())
 
         if(features.privateMessages){
-            commandManager.registerCommand(PrivateMessageCommand())
-            commandManager.registerCommand(ReplyCommand())
+            registerCommand(PrivateMessageCommand())
+            registerCommand(ReplyCommand())
         }
 
         if(features.utilityMenus){
-            commandManager.registerCommand(AnvilCommand())
-            commandManager.registerCommand(CartographyTableCommand())
-            commandManager.registerCommand(EnchantmentTableCommand())
-            commandManager.registerCommand(GrindstoneCommand())
-            commandManager.registerCommand(LoomCommand())
-            commandManager.registerCommand(SmithingTableCommand())
-            commandManager.registerCommand(StoneCutterCommand())
-            commandManager.registerCommand(WorkbenchCommand())
+            registerCommand(AnvilCommand())
+            registerCommand(CartographyTableCommand())
+            registerCommand(EnchantmentTableCommand())
+            registerCommand(GrindstoneCommand())
+            registerCommand(LoomCommand())
+            registerCommand(SmithingTableCommand())
+            registerCommand(StoneCutterCommand())
+            registerCommand(WorkbenchCommand())
         }
 
         if(features.utilityMenus){
-            commandManager.registerCommand(SpawnCommand())
-            commandManager.registerCommand(SetSpawnCommand())
+            registerCommand(SpawnCommand())
+            registerCommand(SetSpawnCommand())
         }
 
-        commandManager.registerCommand(CoreCommand())
+        registerCommand(CoreCommand())
 
         if(features.settings) {
-            commandManager.registerCommand(SettingCommand())
+            registerCommand(SettingCommand())
         }
 
         if(features.warps){
-            commandManager.registerCommand(WarpCommand())
+            registerCommand(WarpCommand())
         }
 
         if(features.homes){
-            commandManager.registerCommand(HomeCommand())
-            commandManager.registerCommand(CreateHomeCommand())
-            commandManager.registerCommand(DelHomeCommand())
+            registerCommand(HomeCommand())
+            registerCommand(CreateHomeCommand())
+            registerCommand(DelHomeCommand())
         }
 
         if(coreConfig.economy.enabled){
-            commandManager.registerCommand(EconomyCommand())
-            commandManager.registerCommand(PayCommand())
-            commandManager.registerCommand(BalTopCommand())
-            commandManager.registerCommand(EcoLogsCommand())
+            registerCommand(EconomyCommand())
+            registerCommand(PayCommand())
+            registerCommand(BalTopCommand())
+            registerCommand(EcoLogsCommand())
         }
 
-        commandManager.registerCommand(PlayerTimeCommand())
-        commandManager.registerCommand(PlayerWeatherCommand())
+        registerCommand(PlayerTimeCommand())
+        registerCommand(PlayerWeatherCommand())
 
         if(features.kits){
-            commandManager.registerCommand(KitCommand())
+            registerCommand(KitCommand())
         }
 
         if(features.stats){
-            commandManager.registerCommand(StatsCommand())
+            registerCommand(StatsCommand())
         }
 
-        commandManager.registerCommand(BackCommand())
-        commandManager.registerCommand(SpeedCommand())
-        commandManager.registerCommand(RebootCommand())
+        registerCommand(BackCommand())
+        registerCommand(SpeedCommand())
+        registerCommand(RebootCommand())
+        registerCommand(BroadcastCommand())
+        registerCommand(TrashCommand())
+
+        if(coreConfig.chat.chatColor.enabled){
+            registerCommand(ChatColorCommand())
+        }
 
         if (features.currency.enabled) {
             val singular = CurrencySystemService.config.currencySettings.singularName.lowercase()
@@ -322,7 +342,7 @@ class SporeCore : JavaPlugin() {
 
             for (alias in aliases.distinct()) {
                 commandManager.commandReplacements.addReplacement("currencyalias", alias)
-                commandManager.registerCommand(CurrencyCommand())
+                registerCommand(CurrencyCommand())
             }
 
             val shopAliases = CurrencySystemService.config.currencySettings.shopCommand
@@ -330,13 +350,20 @@ class SporeCore : JavaPlugin() {
             if (shopAliases.isNotEmpty()) {
                 for (alias in shopAliases.distinct()) {
                     commandManager.commandReplacements.addReplacement("currencyshopalias", alias)
-                    commandManager.registerCommand(CurrencyShopCommand())
+                    registerCommand(CurrencyShopCommand())
                 }
             }
 
             Logger.info("Registered currency aliases: ${aliases.joinToString(", ")}")
         }
 
+        Logger.info("Loaded $totalCommands commands")
+
+    }
+    
+    fun registerCommand(command: BaseCommand){
+        commandManager.registerCommand(command)
+        totalCommands++
     }
 
     fun setupACF() {
@@ -454,6 +481,14 @@ class SporeCore : JavaPlugin() {
                 .filter { it!!.startsWith(input.lowercase()) }
                 .take(50)
                 .toList()
+        }
+
+        commandManager.commandCompletions.registerCompletion("predefinedBroadcasts") { context ->
+            coreConfig.broadcastConfig.predefinedBroadcasts.keys.toList()
+        }
+
+        commandManager.commandCompletions.registerCompletion("colors") { context ->
+            coreConfig.chat.chatColor.colors.keys.toList()
         }
 
     }

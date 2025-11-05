@@ -11,9 +11,12 @@ import me.clearedSpore.sporeCore.features.homes.`object`.Home
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.database.util.DocReader
 import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.features.chat.`object`.ChatColor
+import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
+import org.dizitart.no2.collection.Document
 import org.dizitart.no2.collection.NitriteCollection
 import org.dizitart.no2.filters.FluentFilter
 import java.time.Instant
@@ -40,7 +43,9 @@ data class User(
     var credits: Double = 0.0,
     var creditLogs: MutableList<CreditLog> = mutableListOf(),
     var creditsSpent: MutableList<CreditLog> = mutableListOf(),
-    var lastLocation: Location? = null
+    var lastLocation: Location? = null,
+    var chatColor: ChatColor? = null,
+    var chatFormat: ChatFormat? = null
 ) {
     val uuid: UUID get() = UUID.fromString(uuidStr)
     val player: Player? get() = Bukkit.getPlayer(uuid)
@@ -64,6 +69,22 @@ data class User(
         .putDocuments("creditLogs", creditLogs.map { it.toDocument() })
         .putDocuments("creditsSpent", creditsSpent.map { it.toDocument() })
         .putLocation("lastLocation", lastLocation)
+        .put("chatColor", chatColor?.toDocument())
+        .put("chatFormat", chatFormat?.toDocument())
+        .build()
+
+    fun ChatColor.toDocument(): Document = DocWriter()
+        .putString("name", name)
+        .putString("colorString", colorString)
+        .build()
+
+    fun ChatFormat.toDocument(): Document = DocWriter()
+        .putBoolean("bold", bold)
+        .putBoolean("italic", italic)
+        .putBoolean("underline", underline)
+        .putBoolean("striketrough", striketrough)
+        .putBoolean("magic", magic)
+        .putBoolean("none", none)
         .build()
 
     companion object {
@@ -102,7 +123,9 @@ data class User(
                 credits = doc.double("credits"),
                 creditLogs = doc.documents("creditLogs").mapNotNull { CreditLog.fromDocument(it) }.toMutableList(),
                 creditsSpent = doc.documents("creditsSpent").mapNotNull { CreditLog.fromDocument(it) }.toMutableList(),
-                lastLocation = doc.location("lastLocation")
+                lastLocation = doc.location("lastLocation"),
+                chatColor = ChatColor.fromDocument(doc.document("chatColor")),
+                chatFormat = ChatFormat.fromDocument(doc.document("chatFormat"))
             )
         }
 
@@ -125,7 +148,9 @@ data class User(
                 credits = 0.0,
                 creditLogs = mutableListOf(),
                 creditsSpent = mutableListOf(),
-                lastLocation = null
+                lastLocation = null,
+                chatColor = null,
+                chatFormat = null
             )
 
             collection.insert(user.toDocument())

@@ -65,6 +65,8 @@ class DocReader(val doc: Document) {
             k to (v as T)
         }?.toMap() ?: emptyMap()
 
+    fun document(key: String): Document? =
+        (doc.get(key) as? Document)
 
     fun documents(key: String): List<Document> =
         (doc.get(key) as? List<*>)?.filterIsInstance<Document>() ?: emptyList()
