@@ -1,5 +1,5 @@
 name: SporeCore
-version: '2.0'
+version: '2.1'
 main: me.clearedSpore.sporeCore.SporeCore
 api-version: '1.17'
 authors: [ ClearedSpore ]
