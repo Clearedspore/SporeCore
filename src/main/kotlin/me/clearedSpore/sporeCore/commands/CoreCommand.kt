@@ -8,20 +8,20 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.currency.CurrencySystemService
-import me.clearedSpore.sporeCore.currency.`object`.CreditAction
-import me.clearedSpore.sporeCore.currency.`object`.CreditLog
-import me.clearedSpore.sporeCore.currency.`object`.PackagePurchase
-import me.clearedSpore.sporeCore.database.Database
+import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
+import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.eco.EconomyService
+import me.clearedSpore.sporeCore.features.punishment.PunishmentService
+import me.clearedSpore.sporeCore.features.punishment.config.PunishmentLogConfig
 import me.clearedSpore.sporeCore.features.stats.StatService
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
@@ -29,9 +29,6 @@ import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.dizitart.no2.collection.Document
-import java.awt.Color.red
-import java.awt.Color.yellow
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -61,9 +58,14 @@ class CoreCommand : BaseCommand() {
                     CurrencySystemService.reload()
                 }
 
+                if(plugin.coreConfig.features.punishments){
+                    PunishmentService.load()
+                }
+
                 val duration = System.currentTimeMillis() - startTime
                 sender.sendMessage("Reload complete. Took ${duration}ms.".blue())
-                Logger.info("SporeCore reloaded in ${duration}ms.")
+                Logger.info("SporeCore reloaded in ${duration}ms, by ${sender.name}.")
+                Logger.log(sender, Perm.ADMIN_LOG, "reloaded the plugin", false)
             }
 
             .exceptionally { ex ->
