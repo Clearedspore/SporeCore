@@ -2,12 +2,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.gradleup.shadow") version "8.3.0"
+    id("io.github.goooler.shadow") version "8.1.8"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 group = "me.clearedSpore"
-version = "2.2"
+version = "2.3"
 
 repositories {
     mavenCentral()
@@ -34,27 +34,35 @@ dependencies {
         exclude(group = "org.yaml", module = "snakeyaml")
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
-    implementation("com.github.Clearedspore:SporeAPI:1.8.4")
+    implementation("com.github.Clearedspore:SporeAPI:1.8.5")
     implementation("org.dizitart:nitrite:4.3.2")
     implementation(platform("org.dizitart:nitrite-bom:4.3.2"))
     implementation("org.dizitart:nitrite-mvstore-adapter:4.3.2")
 
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+
     compileOnly("me.clip:placeholderapi:2.11.6")
 }
 
-tasks.shadowJar {
-    relocate("co.aikar.commands", "me.clearedspore.sporeCore.shaded.acf")
-    relocate("co.aikar.locales", "me.clearedspore.sporeCore.shaded.acf.locales")
+tasks {
+    shadowJar {
+        relocate("co.aikar.commands", "me.clearedspore.sporeCore.shaded.acf")
+        relocate("co.aikar.locales", "me.clearedspore.sporeCore.shaded.acf.locales")
 
 
-    manifest {
-        attributes(
-            "Implementation-Title" to project.name,
-            "Implementation-Version" to project.version
-        )
+        manifest {
+            attributes(
+                "Implementation-Title" to project.name,
+                "Implementation-Version" to project.version
+            )
+        }
+
+        archiveFileName.set("${project.name}-${project.version}.jar")
     }
 
-    archiveFileName.set("${project.name}-${project.version}.jar")
+    build {
+        dependsOn(shadowJar)
+    }
 }
 
 val targetJavaVersion = 21

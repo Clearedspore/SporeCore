@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.currency.`object`
+package me.clearedSpore.sporeCore.features.currency.`object`
 
 
 data class PackagePurchase(

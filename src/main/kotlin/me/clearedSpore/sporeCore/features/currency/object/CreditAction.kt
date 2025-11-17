@@ -1,9 +1,8 @@
-package me.clearedSpore.sporeCore.currency.`object`
+package me.clearedSpore.sporeCore.features.currency.`object`
 
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeCore.currency.CurrencySystemService
-import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
+import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 
 
 enum class CreditAction {

@@ -1,12 +1,12 @@
-package me.clearedSpore.sporeCore.currency.menu.main
+package me.clearedSpore.sporeCore.features.currency.menu.main
 
 import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.menu.Menu
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.currency.CurrencySystemService
-import me.clearedSpore.sporeCore.currency.menu.main.item.CategoryItem
+import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
+import me.clearedSpore.sporeCore.features.currency.menu.main.item.CategoryItem
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.currency.menu.category
+package me.clearedSpore.sporeCore.features.currency.menu.category
 
 import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.menu.Menu
@@ -6,11 +6,10 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.currency.CurrencySystemService
-import me.clearedSpore.sporeCore.currency.config.ShopCategoryConfig
-import me.clearedSpore.sporeCore.currency.menu.main.CurrencyMainMenu
+import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
+import me.clearedSpore.sporeCore.features.currency.config.ShopCategoryConfig
+import me.clearedSpore.sporeCore.features.currency.menu.main.CurrencyMainMenu
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
-import me.clearedSpore.sporeCore.menu.util.NoUserItem
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.Material

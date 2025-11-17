@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.currency
+package me.clearedSpore.sporeCore.features.currency
 
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
@@ -8,14 +8,13 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.commands.currency.CurrencyCommand
 import me.clearedSpore.sporeCore.commands.currency.CurrencyShopCommand
-import me.clearedSpore.sporeCore.currency.config.*
-import me.clearedSpore.sporeCore.currency.`object`.CreditAction
-import me.clearedSpore.sporeCore.currency.`object`.CreditLog
-import me.clearedSpore.sporeCore.currency.`object`.PackagePurchase
+import me.clearedSpore.sporeCore.features.currency.config.*
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
+import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.user.User

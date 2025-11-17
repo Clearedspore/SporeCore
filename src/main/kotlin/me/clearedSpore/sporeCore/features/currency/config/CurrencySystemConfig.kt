@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.currency.config
+package me.clearedSpore.sporeCore.features.currency.config
 
 import de.exlll.configlib.Comment
 import de.exlll.configlib.Configuration

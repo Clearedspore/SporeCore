@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.currency.`object`
+package me.clearedSpore.sporeCore.features.currency.`object`
 
 import me.clearedSpore.sporeCore.database.util.DocWriter
 import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
