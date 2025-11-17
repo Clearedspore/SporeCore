@@ -82,6 +82,26 @@ object Perm {
     const val UPDATECHEKER = MAIN + "updatechecker"
     const val SUDO = MAIN + "sudo"
 
+    //punishments
+    const val PUNISHMENTS = MAIN + "punishments"
+    const val PUNISH_LOG = "$PUNISHMENTS.notify"
+
+    const val PUNISH = "$PUNISHMENTS.punish"
+    const val MUTE = "$PUNISHMENTS.mute"
+    const val TEMP_MUTE = "$PUNISHMENTS.tempmute"
+    const val BAN = "$PUNISHMENTS.ban"
+    const val TEMP_BAN = "$PUNISHMENTS.tempban"
+    const val WARN = "$PUNISHMENTS.warn"
+    const val TEMP_WARN = "$PUNISHMENTS.tempwarn"
+    const val KICK = "$PUNISHMENTS.kick"
+    const val UNBAN = "$PUNISHMENTS.unban"
+    const val UNMUTE = "$PUNISHMENTS.unmute"
+    const val UNWARN = "$PUNISHMENTS.unwarn"
+    const val HISTORY = "$PUNISHMENTS.history"
+    const val HISTORY_OTHERS = "$PUNISHMENTS.history.others"
+    const val ALTS = "$PUNISHMENTS.alts"
+    const val ALTS_DEEP = "$PUNISHMENTS.alts.deep"
+
     //warps
     const val WARP = MAIN + "warp."
     const val WARP_CREATE = WARP + "create"

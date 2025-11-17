@@ -1,16 +1,20 @@
 package me.clearedSpore.sporeCore.user
 
+import lombok.extern.java.Log
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
-import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
+import me.clearedSpore.sporeCore.features.punishment.PunishmentService
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -31,18 +35,70 @@ class UserListener : Listener {
         val player = event.player
         val user = UserManager.get(player) ?: return
 
-
         if (user.playerName != player.name) {
             user.playerName = player.name
         }
 
+        val ip = event.address.hostAddress
+        user.lastIp = ip
+        if (!user.ipHistory.contains(ip)) user.ipHistory.add(ip)
 
-        user.lastJoin = LocalDateTime.now()
-            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        val ban = user.getActivePunishment(PunishmentType.BAN)
+            ?: user.getActivePunishment(PunishmentType.TEMPBAN)
+
+        if (ban != null) {
+            val message = PunishmentService.buildMessage(
+                PunishmentService.getMessage(ban.type),
+                ban
+            )
+            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, message)
+
+            if (PunishmentService.config.settings.notifyTry) {
+                val tryTemplate = when (ban.type) {
+                    PunishmentType.BAN -> PunishmentService.config.logs.tryBan
+                    PunishmentType.TEMPBAN -> PunishmentService.config.logs.tryTempBan
+                    else -> null
+                }
+                tryTemplate?.let {
+                    val formatted = PunishmentService.buildTryMessage(it, ban, user)
+                    Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
+                }
+            }
+            return
+        }
+
+        val altsOnIp = UserManager.getAltsByLastIp(ip, excludeUuid = user.uuid)
+        val bannedAlt = altsOnIp.firstOrNull { it.isBanned() }
+
+        if (bannedAlt != null) {
+            val altPunishment = bannedAlt.getActivePunishment(PunishmentType.BAN)
+                ?: bannedAlt.getActivePunishment(PunishmentType.TEMPBAN)
+
+            if (altPunishment != null) {
+                if (PunishmentService.config.alts.autoBan) {
+                    val evasionScreen = PunishmentService.buildAltEvasionScreen(user, altPunishment)
+                    event.disallow(PlayerLoginEvent.Result.KICK_OTHER, evasionScreen.joinToString("\n"))
+                }
+
+                if (PunishmentService.config.alts.notifyStaff) {
+                    val tryMessage = PunishmentService.buildAltTryMessage(user, altPunishment)
+                    Message.broadcastMessageWithPermission(tryMessage, Perm.PUNISH_LOG)
+                    Logger.info(tryMessage)
+                }
+
+                return
+            }
+        }
+
+        user.lastJoin = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+        UserManager.save(user)
         UserManager.startAutoSave(user)
 
         Logger.infoDB("Loaded user data for ${player.name} (${player.uniqueId})")
     }
+
+
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
@@ -83,7 +139,6 @@ class UserListener : Listener {
             }
 
 
-
             val kitConfig = SporeCore.instance.coreConfig.kits.firstJoinKit
             if (kitConfig.isNotEmpty()) {
                 val kitName = kitConfig.firstPart()
@@ -100,7 +155,7 @@ class UserListener : Listener {
             }
         }
 
-        if(joinConfig.spawnOnJoin && db.spawn != null){
+        if (joinConfig.spawnOnJoin && db.spawn != null) {
             player.teleport(db.spawn!!)
         }
 
@@ -121,16 +176,16 @@ class UserListener : Listener {
         }
 
 
-        Tasks.runLater(Runnable{
-        if(joinConfig.message.isNotEmpty()){
-            joinConfig.message.forEach { message ->
-                val msg = message.replace("%player%", player.name).translate()
-                player.sendMessage(msg)
+        Tasks.runLater(Runnable {
+            if (joinConfig.message.isNotEmpty()) {
+                joinConfig.message.forEach { message ->
+                    val msg = message.replace("%player%", player.name).translate()
+                    player.sendMessage(msg)
+                }
             }
-        }
         }, 2)
 
-        if(joinConfig.gamemode.isNotBlank()) {
+        if (joinConfig.gamemode.isNotBlank()) {
             runCatching {
                 val gamemode = GameMode.valueOf(joinConfig.gamemode.uppercase())
                 player.gameMode = gamemode

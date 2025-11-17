@@ -29,19 +29,33 @@ import me.clearedSpore.sporeCore.commands.gamemode.*
 import me.clearedSpore.sporeCore.commands.home.CreateHomeCommand
 import me.clearedSpore.sporeCore.commands.home.DelHomeCommand
 import me.clearedSpore.sporeCore.commands.home.HomeCommand
+import me.clearedSpore.sporeCore.commands.moderation.AltsCommand
 import me.clearedSpore.sporeCore.commands.privatemessages.PrivateMessageCommand
 import me.clearedSpore.sporeCore.commands.privatemessages.ReplyCommand
+import me.clearedSpore.sporeCore.commands.moderation.BanCmd
+import me.clearedSpore.sporeCore.commands.moderation.HistoryCommand
+import me.clearedSpore.sporeCore.commands.moderation.KickCmd
+import me.clearedSpore.sporeCore.commands.moderation.MuteCmd
+import me.clearedSpore.sporeCore.commands.moderation.PunishCommand
+import me.clearedSpore.sporeCore.commands.moderation.TempBanCmd
+import me.clearedSpore.sporeCore.commands.moderation.TempMuteCmd
+import me.clearedSpore.sporeCore.commands.moderation.TempWarnCmd
+import me.clearedSpore.sporeCore.commands.moderation.UnBanCommand
+import me.clearedSpore.sporeCore.commands.moderation.UnMuteCommand
+import me.clearedSpore.sporeCore.commands.moderation.WarnCmd
 import me.clearedSpore.sporeCore.commands.spawn.SetSpawnCommand
 import me.clearedSpore.sporeCore.commands.spawn.SpawnCommand
 import me.clearedSpore.sporeCore.commands.teleport.*
 import me.clearedSpore.sporeCore.commands.utilitymenus.*
-import me.clearedSpore.sporeCore.currency.CurrencySystemService
+import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.database.Database
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
 import me.clearedSpore.sporeCore.features.homes.HomeService
 import me.clearedSpore.sporeCore.features.kit.KitService
+import me.clearedSpore.sporeCore.features.punishment.PunishmentService
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.stats.PlaytimeTracker
 import me.clearedSpore.sporeCore.features.warp.WarpService
 import me.clearedSpore.sporeCore.hook.PlaceholderAPIHook
@@ -65,6 +79,8 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import kotlin.coroutines.coroutineContext
+import kotlin.math.max
 
 
 class SporeCore : JavaPlugin() {
@@ -136,6 +152,8 @@ class SporeCore : JavaPlugin() {
             kitService = KitService()
         }
 
+        setupPunishments()
+
         PlaytimeTracker.start()
         Cooldown.createCooldown("msg_cooldown", 2)
 
@@ -182,6 +200,26 @@ class SporeCore : JavaPlugin() {
         chat = rsp?.provider
     }
 
+    fun setupPunishments(){
+        val enabled = coreConfig.features.punishments
+
+        if(enabled){
+            registerCommand(PunishCommand())
+            registerCommand(BanCmd())
+            registerCommand(TempBanCmd())
+            registerCommand(WarnCmd())
+            registerCommand(TempWarnCmd())
+            registerCommand(MuteCmd())
+            registerCommand(TempMuteCmd())
+            registerCommand(KickCmd())
+            registerCommand(UnMuteCommand())
+            registerCommand(UnBanCommand())
+            registerCommand(HistoryCommand())
+            registerCommand(AltsCommand())
+            PunishmentService.load()
+        }
+    }
+
     fun setupPermissions() {
         val rsp = server.servicesManager.getRegistration(Permission::class.java)
         perms = rsp?.provider
@@ -219,6 +257,7 @@ class SporeCore : JavaPlugin() {
         if (::homeService.isInitialized) features.add("§bHomes")
         if (coreConfig.economy.enabled) features.add("§eEconomy")
         if(::kitService.isInitialized) features.add("§9Kits")
+        if(PunishmentService.loaded) features.add("§cPunishments")
         val featureLine = if (features.isNotEmpty()) features.joinToString(" §7| ") else "§7No features enabled"
 
         val banner = listOf(
@@ -538,6 +577,33 @@ class SporeCore : JavaPlugin() {
             available.filter { it.startsWith(input.lowercase()) }
         }
 
+
+        commandManager.commandCompletions.registerCompletion("punishtypes") { _ ->
+            PunishmentType.values().map { it.displayName }
+        }
+
+        commandManager.commandCompletions.registerCompletion("reasons") { context ->
+            PunishmentService.config.reasons.categories
+                .flatMap { it.value.keys }
+                .toList()
+        }
+
+
+        commandManager.commandCompletions.registerCompletion("times") { context ->
+            val input = context.input.trim()
+            val base = input.toIntOrNull()
+
+            if (base != null) {
+                return@registerCompletion listOf("${base}s", "${base}m", "${base}h", "${base}d")
+            }
+
+            listOf("10s", "30s", "1m", "5m", "10m", "30m", "1h", "1d", "7d")
+        }
+
+
+        commandManager.commandCompletions.registerCompletion("removalReasons") { context ->
+            PunishmentService.config.removalReasons.reasons.toList()
+        }
 
 
         commandManager.registerItemCompletions()

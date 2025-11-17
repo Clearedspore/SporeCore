@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
@@ -16,6 +16,8 @@ object UserManager {
     private val users = mutableMapOf<UUID, User>()
     private val scheduler = Executors.newScheduledThreadPool(1)
     private val autoSaveTasks = mutableMapOf<UUID, ScheduledFuture<*>>()
+    private val consoleUUID = UUID.nameUUIDFromBytes("Console".toByteArray())
+
 
     private val userCollection get() = DatabaseManager.getUserCollection()
 
@@ -24,13 +26,23 @@ object UserManager {
 
         val loaded = User.load(uuid, userCollection)
         if (loaded != null) {
-            loaded.playerName = name ?: Bukkit.getOfflinePlayer(uuid).name ?: loaded.playerName.ifEmpty { "Unknown" }
+            val finalName = name ?: run {
+                val offlinePlayer = Bukkit.getOfflinePlayer(uuid)
+                if (offlinePlayer.hasPlayedBefore()) offlinePlayer.name ?: "Unknown"
+                else "Unknown"
+            }
+            loaded.playerName = finalName
             users[uuid] = loaded
             return loaded
         }
 
-        val finalName = name ?: Bukkit.getOfflinePlayer(uuid).name
-        if (!finalName.isNullOrBlank()) {
+        val finalName = name ?: run {
+            val offlinePlayer = Bukkit.getOfflinePlayer(uuid)
+            if (offlinePlayer.hasPlayedBefore()) offlinePlayer.name ?: "Unknown"
+            else "Unknown"
+        }
+
+        if (finalName.isNotBlank()) {
             val existingByName = userCollection.find().firstOrNull { doc ->
                 doc.get("playerName", String::class.java)?.equals(finalName, ignoreCase = true) == true
             }
@@ -58,9 +70,17 @@ object UserManager {
         val offlinePlayer = Bukkit.getOfflinePlayer(uuid)
         if (!offlinePlayer.hasPlayedBefore()) return null
 
-        val newUser = User.create(uuid, finalName ?: "Unknown", userCollection)
+        val newUser = User.create(uuid, finalName, userCollection)
         users[uuid] = newUser
         return newUser
+    }
+
+
+    fun getConsoleUser(): User {
+        return users[consoleUUID] ?: User(
+            uuidStr = consoleUUID.toString(),
+            playerName = "Console"
+        ).also { users[consoleUUID] = it }
     }
 
 
@@ -70,6 +90,26 @@ object UserManager {
             runCatching { UUID.fromString(id) }.getOrNull()
         }.toList()
     }
+
+    fun getAltsByLastIp(ip: String, excludeUuid: UUID? = null): List<User> {
+        return getAllStoredUUIDsFromDB()
+            .mapNotNull { get(it) }
+            .filter { it.lastIp == ip && it.uuid != excludeUuid }
+    }
+
+    fun getAltsDeep(user: User): List<User> {
+        val userIps = user.ipHistory.toSet()
+
+        return getAllStoredUUIDsFromDB()
+            .mapNotNull { get(it) }
+            .filter { other ->
+                other.uuid != user.uuid &&
+                        other.ipHistory.any { it in userIps }
+            }
+    }
+
+
+
 
 
     fun get(player: Player): User? = get(player.uniqueId, player.name)

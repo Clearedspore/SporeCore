@@ -347,6 +347,8 @@ data class FeaturesConfig(
 
     var chatColor: Boolean = true,
 
+    var punishments: Boolean = true,
+
     @Comment(
         "The currency feature is a separate currency that you",
         "can use as a 'premium' shop. You can modify the currency",

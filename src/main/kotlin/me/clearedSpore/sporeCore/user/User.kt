@@ -3,16 +3,19 @@ package me.clearedSpore.sporeCore.user
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.currency.`object`.CreditAction
-import me.clearedSpore.sporeCore.currency.`object`.CreditLog
-import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
-import me.clearedSpore.sporeCore.features.eco.`object`.EconomyLog
-import me.clearedSpore.sporeCore.features.homes.`object`.Home
-import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.database.util.DocReader
 import me.clearedSpore.sporeCore.database.util.DocWriter
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatColor
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
+import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
+import me.clearedSpore.sporeCore.features.eco.`object`.EconomyLog
+import me.clearedSpore.sporeCore.features.homes.`object`.Home
+import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.user.UserManager.getAllStoredUUIDsFromDB
+import me.clearedSpore.sporeCore.user.settings.Setting
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
@@ -45,10 +48,20 @@ data class User(
     var creditsSpent: MutableList<CreditLog> = mutableListOf(),
     var lastLocation: Location? = null,
     var chatColor: ChatColor? = null,
-    var chatFormat: ChatFormat? = null
+    var chatFormat: ChatFormat? = null,
+    var punishments: MutableList<Punishment> = mutableListOf(),
+    var lastIp: String? = null,
+    var ipHistory: MutableList<String> = mutableListOf()
 ) {
     val uuid: UUID get() = UUID.fromString(uuidStr)
     val player: Player? get() = Bukkit.getPlayer(uuid)
+    val isConsole: Boolean
+        get() = uuidStr.equals("CONSOLE", ignoreCase = true) || playerName.equals("CONSOLE", ignoreCase = true)
+
+    fun isOnline(): Boolean {
+        return player?.isOnline == true
+    }
+
 
     fun toDocument() = DocWriter()
         .put("uuidStr", uuidStr)
@@ -71,6 +84,9 @@ data class User(
         .putLocation("lastLocation", lastLocation)
         .put("chatColor", chatColor?.toDocument())
         .put("chatFormat", chatFormat?.toDocument())
+        .putDocuments("punishments", punishments.map { it.toDocument() })
+        .putString("lastIp", lastIp ?: "")
+        .putList("ipHistory", ipHistory)
         .build()
 
     fun ChatColor.toDocument(): Document = DocWriter()
@@ -118,14 +134,20 @@ data class User(
                 totalPlaytime = doc.long("totalPlaytime"),
                 playtimeHistory = doc.list("playtimeHistory").mapNotNull {
                     val parts = it.toString().split(":")
-                    if (parts.size == 2) parts[0].toLongOrNull()?.let { a -> parts[1].toLongOrNull()?.let { b -> a to b } } else null
+                    if (parts.size == 2) parts[0].toLongOrNull()
+                        ?.let { a -> parts[1].toLongOrNull()?.let { b -> a to b } } else null
                 }.toMutableList(),
                 credits = doc.double("credits"),
                 creditLogs = doc.documents("creditLogs").mapNotNull { CreditLog.fromDocument(it) }.toMutableList(),
                 creditsSpent = doc.documents("creditsSpent").mapNotNull { CreditLog.fromDocument(it) }.toMutableList(),
                 lastLocation = doc.location("lastLocation"),
                 chatColor = ChatColor.fromDocument(doc.document("chatColor")),
-                chatFormat = ChatFormat.fromDocument(doc.document("chatFormat"))
+                chatFormat = ChatFormat.fromDocument(doc.document("chatFormat")),
+                punishments = doc.documents("punishments").mapNotNull { punDoc ->
+                    Punishment.fromDocument(punDoc)
+                }.toMutableList(),
+                lastIp = doc.string("lastIp"),
+                ipHistory = doc.list("ipHistory").filterIsInstance<String>().toMutableList(),
             )
         }
 
@@ -150,7 +172,8 @@ data class User(
                 creditsSpent = mutableListOf(),
                 lastLocation = null,
                 chatColor = null,
-                chatFormat = null
+                chatFormat = null,
+                punishments = mutableListOf()
             )
 
             collection.insert(user.toDocument())
@@ -209,18 +232,40 @@ data class User(
             }
         }
 
+    fun sendMessage(message: String) {
+        val formatted = message.translate()
+
+        when {
+            isConsole -> {
+                Bukkit.getConsoleSender().sendMessage(formatted)
+            }
+
+            player != null -> {
+                player!!.sendMessage(formatted)
+            }
+
+            else -> {
+                pendingMessages.add(message)
+                UserManager.save(this, silent = true)
+            }
+        }
+    }
+
+
     fun save(collection: NitriteCollection, silent: Boolean = false) {
         val filter = FluentFilter.where("uuidStr").eq(uuidStr)
         val result = collection.update(filter, toDocument())
         if (result.affectedCount == 0) {
             collection.insert(toDocument())
         }
-        if(!silent) {
+        if (!silent) {
             Logger.infoDB("Saved user $playerName ($uuidStr)")
         }
     }
 
-    fun setSetting(setting: Setting, value: Boolean) { playerSettings[setting.key] = value }
+    fun setSetting(setting: Setting, value: Boolean) {
+        playerSettings[setting.key] = value
+    }
 
     fun isSettingEnabled(setting: Setting): Boolean {
         return playerSettings[setting.key] ?: setting.defaultValue
@@ -239,13 +284,132 @@ data class User(
         if (economyLogs.size > 100) economyLogs.removeLast()
     }
 
+
+
+    fun kick(message: String? = null): Boolean {
+        val player = this.player ?: return false
+        return try {
+            if (message.isNullOrBlank()) {
+                player.kickPlayer(null)
+            } else {
+                player.kickPlayer(message.translate())
+            }
+            true
+        } catch (e: Exception) {
+            Logger.warn("Failed to kick ${player.name}: ${e.message}")
+            false
+        }
+    }
+
+
     fun logCredit(action: CreditAction, amount: Double, reason: String = "") {
         creditLogs.add(0, CreditLog(action, amount, reason, System.currentTimeMillis()))
         if (creditLogs.size > 100) creditLogs.removeLast()
     }
 
 
-    fun queueMessage(msg: String){
+    fun isBanned(): Boolean = getActivePunishment(PunishmentType.BAN) != null
+
+    fun isMuted(): Boolean = getActivePunishment(PunishmentType.MUTE) != null
+
+    fun getActivePunishment(type: PunishmentType): Punishment? {
+        val now = Date()
+
+        val relatedTypes = when (type) {
+            PunishmentType.BAN, PunishmentType.TEMPBAN -> listOf(PunishmentType.BAN, PunishmentType.TEMPBAN)
+            PunishmentType.MUTE, PunishmentType.TEMPMUTE -> listOf(PunishmentType.MUTE, PunishmentType.TEMPMUTE)
+            PunishmentType.WARN, PunishmentType.TEMPWARN -> listOf(PunishmentType.WARN, PunishmentType.TEMPWARN)
+            else -> listOf(type)
+        }
+
+        return punishments
+            .filter { it.type in relatedTypes && it.removalDate == null }
+            .firstOrNull { it.expireDate == null || it.expireDate.after(now) }
+    }
+
+
+    fun getPunishmentsByType(type: PunishmentType): List<Punishment> {
+        val relatedTypes = when (type) {
+            PunishmentType.BAN, PunishmentType.TEMPBAN -> listOf(PunishmentType.BAN, PunishmentType.TEMPBAN)
+            PunishmentType.MUTE, PunishmentType.TEMPMUTE -> listOf(PunishmentType.MUTE, PunishmentType.TEMPMUTE)
+            PunishmentType.WARN, PunishmentType.TEMPWARN -> listOf(PunishmentType.WARN, PunishmentType.TEMPWARN)
+            else -> listOf(type)
+        }
+
+        return punishments.filter { it.type in relatedTypes }
+    }
+
+
+    fun unban(remover: User, reason: String): Punishment? {
+        val punishment = getActivePunishment(PunishmentType.BAN) ?: return null
+        val updated = punishment.copy(
+            removalReason = reason,
+            removalUserUuid = remover.uuid,
+            removalDate = Date()
+        )
+        val index = punishments.indexOfFirst { it.id == punishment.id }
+        if (index != -1) punishments[index] = updated
+        UserManager.save(this)
+        return updated
+    }
+
+
+    fun unmute(remover: User, reason: String): Punishment? {
+        val activeMute = getActivePunishment(PunishmentType.MUTE) ?: return null
+
+        val now = Date()
+
+        val updated = activeMute.copy(
+            expireDate = now,
+            removalReason = reason,
+            removalUserUuid = remover.uuid,
+            removalDate = now
+        )
+
+        punishments.removeIf { it.id == activeMute.id }
+        punishments.add(updated)
+
+        UserManager.save(this)
+        return updated
+    }
+
+
+    fun getLastPunishment(type: PunishmentType? = null): Punishment? {
+        val filtered = if (type != null) {
+            val relatedTypes = when (type) {
+                PunishmentType.BAN, PunishmentType.TEMPBAN -> listOf(PunishmentType.BAN, PunishmentType.TEMPBAN)
+                PunishmentType.MUTE, PunishmentType.TEMPMUTE -> listOf(PunishmentType.MUTE, PunishmentType.TEMPMUTE)
+                PunishmentType.WARN, PunishmentType.TEMPWARN -> listOf(PunishmentType.WARN, PunishmentType.TEMPWARN)
+                else -> listOf(type)
+            }
+            punishments.filter { it.type in relatedTypes }
+        } else {
+            punishments
+        }
+
+        return filtered.maxByOrNull { punishment: Punishment -> punishment.punishDate.time }
+    }
+
+
+    fun unwarn(remover: User, warnId: String, reason: String): Boolean {
+        val warn = punishments.firstOrNull {
+            (it.type == PunishmentType.WARN || it.type == PunishmentType.TEMPWARN) && it.id == warnId
+        } ?: return false
+
+        val updated = warn.copy(
+            removalReason = reason,
+            removalUserUuid = remover.uuid,
+            removalDate = Date()
+        )
+
+        punishments.removeIf { it.id == warn.id }
+        punishments.add(updated)
+
+        UserManager.save(this)
+        return true
+    }
+
+    fun queueMessage(msg: String) {
         pendingMessages.add(msg)
         UserManager.save(this)
     }
