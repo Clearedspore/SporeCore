@@ -8,6 +8,7 @@ import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.menu.util.confirm.TPAConfirmMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
+import me.clearedSpore.sporeCore.util.PlayerUtil.actionBar
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
 import org.bukkit.entity.Player
 
@@ -27,9 +28,15 @@ object TeleportRequestService {
             return
         }
 
+        val requesterUser = UserManager.get(requester)
         val targetUser = UserManager.get(target)
 
-        if(targetUser == null){
+        if (requesterUser == null) {
+            Logger.error("Failed to load user for ${requester.name}")
+            return
+        }
+
+        if (targetUser == null) {
             requester.userJoinFail()
             return
         }
@@ -45,29 +52,34 @@ object TeleportRequestService {
             return
         }
 
+        val request = Request(requester, target, type)
+        pendingRequests[target] = request
 
         val executeRequest = {
-            pendingRequests[target] = Request(requester, target, type)
-            requester.sendSuccessMessage("Teleport request sent to ${target.name}.")
-            target.sendSuccessMessage(
-                when (type) {
-                    RequestType.TPA -> "${requester.name} wants to teleport to you. Use /tpaaccept or /tpadeny."
-                    RequestType.TPAHERE -> "${requester.name} wants you to teleport to them. Use /tpaaccept or /tpadeny."
+            requester.actionBar("Teleport request sent to ${target.name}.")
+            when (type) {
+                RequestType.TPA -> {
+                    if (targetUser.isSettingEnabled(Setting.AUTO_TELEPORT)) {
+                        accept(target)
+                        target.actionBar("Accepted ${requester.name}'s request (Auto-TP)")
+                        pendingRequests.remove(target)
+                    } else {
+                        target.sendSuccessMessage("${requester.name} wants to teleport to you. Use /tpaaccept or /tpadeny.")
+                    }
                 }
-            )
+                RequestType.TPAHERE -> {
+                    target.sendSuccessMessage("${requester.name} wants you to teleport to them. Use /tpaaccept or /tpadeny.")
+                }
+            }
         }
 
-        val requesterUser = UserManager.get(requester)
-        if(requesterUser == null){
-            Logger.error("Failed to load user for ${requester.name}")
-            return
-        }
         if (requesterUser.isSettingEnabled(Setting.CONFIRM_TPA)) {
-            TPAConfirmMenu(requester, target, executeRequest).open(requester)
+            TPAConfirmMenu(requester, target, executeRequest as () -> Unit).open(requester)
         } else {
             executeRequest()
         }
     }
+
 
     fun accept(target: Player) {
         val request = pendingRequests[target]
@@ -89,14 +101,14 @@ object TeleportRequestService {
             when (request.type) {
                 RequestType.TPA -> {
                     request.requester.awaitTeleport(target.location)
-                    request.requester.sendSuccessMessage("${target.name} accepted your teleport request.")
-                    target.sendSuccessMessage("You accepted ${request.requester.name}'s teleport request.")
+                    request.requester.actionBar("${target.name} accepted your teleport request.")
+                    target.actionBar("Accepted ${request.requester.name}'s teleport request.")
                 }
 
                 RequestType.TPAHERE -> {
                     target.awaitTeleport(request.requester.location)
-                    target.sendSuccessMessage("You accepted ${request.requester.name}'s teleport request.")
-                    request.requester.sendSuccessMessage("${target.name} accepted your teleport request.")
+                    target.actionBar("Accepted ${request.requester.name}'s teleport request.")
+                    request.requester.actionBar("${target.name} accepted your teleport request.")
                 }
             }
         }

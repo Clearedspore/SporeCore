@@ -17,7 +17,7 @@ enum class Setting(
     CHAT_ENABLED(
         key = "chat-enabled",
         defaultValue = true,
-        displayName = "Chat Enabled",
+        displayName = "Chat enabled",
         item = Material.PAPER,
         lore = listOf(
             "If you can see chat messages sent by players",
@@ -28,7 +28,7 @@ enum class Setting(
     TELEPORT_REQUESTS(
         key = "teleport-requests",
         defaultValue = true,
-        displayName = "Teleport Requests",
+        displayName = "Teleport requests",
         item = Material.ENDER_EYE,
         lore = listOf(
             "If players can send you teleport requests"
@@ -36,10 +36,21 @@ enum class Setting(
         configKey = "teleportRequest"
     ),
 
+    AUTO_TELEPORT(
+        key = "auto-teleport",
+        defaultValue = false,
+        displayName = "Auto teleport",
+        item = Material.LIME_WOOL,
+        lore = listOf(
+            "Should the system automatically accept any /tpa request?"
+        ),
+        configKey = "teleportRequest"
+    ),
+
     PRIVATE_MESSAGES(
         key = "private-msgs",
         defaultValue = true,
-        displayName = "Private Messages",
+        displayName = "Private messages",
         item = Material.WRITTEN_BOOK,
         lore = listOf(
             "If players can send you private messages",
@@ -79,13 +90,51 @@ enum class Setting(
     CURRENCY_LOGS(
         key = "currency-logs",
         defaultValue = true,
-        displayName = "Currency Logs",
+        displayName = "Currency logs",
         item = Material.GOLD_INGOT,
         lore = listOf(
             "If you can see the custom currency logs."
         ),
         permission = Perm.CURRENCY_NOTIFY,
         configKey = "currency.enabled"
+    ),
+
+    PUNISHMENT_LOGS(
+        key = "punishment-logs",
+        defaultValue = true,
+        displayName = "Punishment logs",
+        item = Material.RED_WOOL,
+        lore = listOf(
+            "If you can see punishment logs."
+        ),
+        permission = Perm.PUNISH_LOG,
+        configKey = "punishments"
+    ),
+
+    TRY_LOGS(
+        key = "try-logs",
+        defaultValue = true,
+        displayName = "Try logs",
+        item = Material.BLUE_WOOL,
+        lore = listOf(
+            "If you want to receive a message when someone",
+            "tries to join while being banned."
+        ),
+        permission = Perm.PUNISH_LOG,
+        configKey = "punishments"
+    ),
+
+    CHANNEL_MESSAGES(
+        key = "channel-messages",
+        defaultValue = true,
+        displayName = "Channel messages",
+        item = Material.PAPER,
+        lore = listOf(
+            "If you want to receive a message when someone",
+            "types in a chat channel"
+        ),
+        permission = Perm.CHANNEL_ALLOW,
+        configKey = "channels"
     ),
 
     ;
