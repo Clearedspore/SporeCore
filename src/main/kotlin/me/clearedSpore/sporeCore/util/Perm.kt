@@ -15,6 +15,7 @@ object Perm {
     const val TELEPORT_BYPASS = BYPASS + "teleport"
     const val PM_BYPASS = BYPASS + "privatemessage"
     const val CHAT_BYPASS = BYPASS + "chat"
+    const val CLEAR_CHAT_BYPASS = BYPASS + "clearchat"
 
     //chat
     const val CHAT = MAIN + "chat."
@@ -81,8 +82,13 @@ object Perm {
     const val GIVE = MAIN + "give"
     const val UPDATECHEKER = MAIN + "updatechecker"
     const val SUDO = MAIN + "sudo"
+    const val PING = MAIN + "ping"
+    const val PING_OTHERS = MAIN + "ping.others"
+    const val WHOIS = MAIN + "whois"
 
-    //punishments
+    const val CHANNEL_ALLOW = "sporecore.channel.allow"
+
+    //moderation
     const val PUNISHMENTS = MAIN + "punishments"
     const val PUNISH_LOG = "$PUNISHMENTS.notify"
 
@@ -101,6 +107,10 @@ object Perm {
     const val HISTORY_OTHERS = "$PUNISHMENTS.history.others"
     const val ALTS = "$PUNISHMENTS.alts"
     const val ALTS_DEEP = "$PUNISHMENTS.alts.deep"
+
+    const val STAFF = "staff"
+
+    const val CLEAR_CHAT = "clearchat"
 
     //warps
     const val WARP = MAIN + "warp."

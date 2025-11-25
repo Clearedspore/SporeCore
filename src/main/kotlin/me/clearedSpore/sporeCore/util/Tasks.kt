@@ -10,6 +10,8 @@ object Tasks {
     fun run(runnable: Runnable): BukkitTask =
         Bukkit.getScheduler().runTask(SporeCore.instance, runnable)
 
+    fun runSync(runnable: Runnable): BukkitTask =
+        Bukkit.getScheduler().runTask(SporeCore.instance, runnable)
 
     fun runAsync(runnable: Runnable): BukkitTask =
         Bukkit.getScheduler().runTaskAsynchronously(SporeCore.instance, runnable)
