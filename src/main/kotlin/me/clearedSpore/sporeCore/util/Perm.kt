@@ -110,7 +110,7 @@ object Perm {
 
     const val STAFF = "staff"
 
-    const val CLEAR_CHAT = "clearchat"
+    const val CLEAR_CHAT = MAIN + "clearchat"
 
     //warps
     const val WARP = MAIN + "warp."
