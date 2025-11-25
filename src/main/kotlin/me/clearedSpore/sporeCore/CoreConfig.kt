@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore
 import de.exlll.configlib.Comment
 import de.exlll.configlib.Configuration
 import it.unimi.dsi.fastutil.booleans.BooleanList
+import me.clearedSpore.sporeCore.features.chat.channel.`object`.Channel
 import me.clearedSpore.sporeCore.features.eco.`object`.BalanceFormat
 import java.awt.Color
 
@@ -105,7 +106,9 @@ data class ChatConfig(
         "  '%rankprefix% %player_name%: %message%'",
         "  → Outputs: [Admin] Steve: Hello everyone!"
     )
-    var formatting: ChatFormatterConfig = ChatFormatterConfig()
+    var formatting: ChatFormatterConfig = ChatFormatterConfig(),
+
+    var channels: ChatChannelsConfig = ChatChannelsConfig()
 )
 
 @Configuration
@@ -115,6 +118,37 @@ data class ChatFormatterConfig(
 
     var format: String = "%rankprefix% %player_name% %ranksuffix%: %message%"
 )
+
+@Configuration
+data class ChatChannelsConfig(
+
+    @Comment(
+        "Add new chat channels you can use for ranked players",
+        "The message would be the message everyone receives when",
+        "you send a message in the channel.",
+        "IN ORDER TO TYPE IN ANY CHANNEL THE PLAYER",
+        "MUST HAVE THE sporecore.channel.allow PERMISSION!!",
+        "Placeholders:",
+        "%player% -> Player that sends the message",
+        "%message% -> The message from the player"
+    )
+    var channels: MutableMap<String, ChannelConfig> = mutableMapOf(
+        "staff" to ChannelConfig("Staff", "staff", "sporecore.channel.staff", "&b&lStaff", "&b&lStaff &7-> &9%player%&f: %message%", listOf("staffchat", "sc"), "#"),
+        "admin" to ChannelConfig("Admin", "admin", "sporecore.channel.admin", "&c&lAdmin", "&c&lAdmin &7-> &c%player%&f: %message%", listOf("adminchat", "ac"), "@")
+    )
+)
+
+@Configuration
+data class ChannelConfig(
+    var name: String = "Staff",
+    var id: String = "staff",
+    var permission: String = "sporecore.channel.staff",
+    var prefix: String = "&b&lStaff",
+    var message: String = "&b&lStaff &7-> &9%player%&f: %message%",
+    var commands: List<String> = listOf("staff", "sc"),
+    var symbol: String = "#"
+)
+
 
 @Configuration
 data class ChatColorConfig(
@@ -345,9 +379,9 @@ data class FeaturesConfig(
 
     var stats: Boolean = true,
 
-    var chatColor: Boolean = true,
-
     var punishments: Boolean = true,
+
+    var channels: Boolean = true,
 
     @Comment(
         "The currency feature is a separate currency that you",

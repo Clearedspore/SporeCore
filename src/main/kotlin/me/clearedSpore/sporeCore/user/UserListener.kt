@@ -14,6 +14,7 @@ import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
@@ -39,6 +40,13 @@ class UserListener : Listener {
             user.playerName = player.name
         }
 
+        if(user.hasJoinedBefore == false){
+            val firstServerIP = event.hostname
+            user.firstServerIP = firstServerIP
+        }
+
+        val features = SporeCore.instance.coreConfig.features
+
         val ip = event.address.hostAddress
         user.lastIp = ip
         if (!user.ipHistory.contains(ip)) user.ipHistory.add(ip)
@@ -46,7 +54,7 @@ class UserListener : Listener {
         val ban = user.getActivePunishment(PunishmentType.BAN)
             ?: user.getActivePunishment(PunishmentType.TEMPBAN)
 
-        if (ban != null) {
+        if (ban != null && features.punishments) {
             val message = PunishmentService.buildMessage(
                 PunishmentService.getMessage(ban.type),
                 ban
@@ -61,7 +69,14 @@ class UserListener : Listener {
                 }
                 tryTemplate?.let {
                     val formatted = PunishmentService.buildTryMessage(it, ban, user)
-                    Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
+                    for(player in Bukkit.getOnlinePlayers()){
+                        if(player.hasPermission(Perm.PUNISH_LOG)) {
+                            val user = UserManager.get(player)
+                            if(user != null && user.isSettingEnabled(Setting.TRY_LOGS)) {
+                                player.sendMessage(formatted.translate())
+                            }
+                        }
+                    }
                 }
             }
             return
@@ -70,7 +85,7 @@ class UserListener : Listener {
         val altsOnIp = UserManager.getAltsByLastIp(ip, excludeUuid = user.uuid)
         val bannedAlt = altsOnIp.firstOrNull { it.isBanned() }
 
-        if (bannedAlt != null) {
+        if (bannedAlt != null && features.punishments) {
             val altPunishment = bannedAlt.getActivePunishment(PunishmentType.BAN)
                 ?: bannedAlt.getActivePunishment(PunishmentType.TEMPBAN)
 
@@ -90,6 +105,7 @@ class UserListener : Listener {
             }
         }
 
+        user.lastServerIP = event.hostname
         user.lastJoin = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
         UserManager.save(user)
@@ -106,20 +122,7 @@ class UserListener : Listener {
         val user = UserManager.getIfLoaded(player.uniqueId) ?: return
         val joinConfig = SporeCore.instance.coreConfig.join
         val db = DatabaseManager.getServerData()
-
-        if (user.pendingPayments.isNotEmpty()) {
-            Tasks.runLater(Runnable {
-                player.sendMessage("")
-                user.pendingPayments.forEach { (senderName, total) ->
-                    val formattedAmount = EconomyService.format(total)
-                    player.sendMessage("While you were away you received ${formattedAmount.green()}".blue() + " from ${senderName.white()}".blue())
-                }
-                player.sendMessage("")
-                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
-                user.pendingPayments.clear()
-                UserManager.save(user)
-            }, 1)
-        }
+        val features = SporeCore.instance.coreConfig.features
 
         if (!user.hasJoinedBefore) {
             user.hasJoinedBefore = true
@@ -128,8 +131,10 @@ class UserListener : Listener {
 
             db.totalJoins = db.totalJoins + 1
 
+            if(SporeCore.instance.coreConfig.economy.enabled){
             val starter = SporeCore.instance.coreConfig.economy.starterBalance
             EconomyService.add(user, starter, "Starter balance")
+                }
 
             joinConfig.firstJoinMessage.forEach { msg ->
                 val formatted = msg.replace("%player%", player.name)
@@ -140,7 +145,7 @@ class UserListener : Listener {
 
 
             val kitConfig = SporeCore.instance.coreConfig.kits.firstJoinKit
-            if (kitConfig.isNotEmpty()) {
+            if (kitConfig.isNotEmpty() && features.kits) {
                 val kitName = kitConfig.firstPart()
                 val shouldClear = kitConfig.hasFlag("clear")
                 val kit = SporeCore.instance.kitService.getAllKits()
@@ -154,6 +159,21 @@ class UserListener : Listener {
                 }
             }
         }
+
+        if (user.pendingPayments.isNotEmpty() && SporeCore.instance.coreConfig.economy.enabled) {
+            Tasks.runLater(Runnable {
+                player.sendMessage("")
+                user.pendingPayments.forEach { (senderName, total) ->
+                    val formattedAmount = EconomyService.format(total)
+                    player.sendMessage("While you were away you received ${formattedAmount.green()}".blue() + " from ${senderName.white()}".blue())
+                }
+                player.sendMessage("")
+                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
+                user.pendingPayments.clear()
+                UserManager.save(user)
+            }, 1)
+        }
+
 
         if (joinConfig.spawnOnJoin && db.spawn != null) {
             player.teleport(db.spawn!!)

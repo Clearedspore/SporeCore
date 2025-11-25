@@ -1,24 +1,17 @@
 package me.clearedSpore.sporeCore
 
-import co.aikar.commands.BaseCommand
-import co.aikar.commands.InvalidCommandArgument
-import co.aikar.commands.Locales
-import co.aikar.commands.MessageKeys
-import co.aikar.commands.PaperCommandManager
+import co.aikar.commands.*
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
+import me.clearedSpore.sporeAPI.util.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
-import me.clearedSpore.sporeAPI.util.ChatInput
-import me.clearedSpore.sporeAPI.util.Cooldown
-import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Message
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.acf.ConfirmCondition
 import me.clearedSpore.sporeCore.acf.CooldownCondition
 import me.clearedSpore.sporeCore.acf.ItemCompletions.registerItemCompletions
 import me.clearedSpore.sporeCore.commands.*
+import me.clearedSpore.sporeCore.commands.channel.ChannelCommand
 import me.clearedSpore.sporeCore.commands.currency.CurrencyCommand
 import me.clearedSpore.sporeCore.commands.currency.CurrencyShopCommand
 import me.clearedSpore.sporeCore.commands.economy.BalTopCommand
@@ -29,27 +22,17 @@ import me.clearedSpore.sporeCore.commands.gamemode.*
 import me.clearedSpore.sporeCore.commands.home.CreateHomeCommand
 import me.clearedSpore.sporeCore.commands.home.DelHomeCommand
 import me.clearedSpore.sporeCore.commands.home.HomeCommand
-import me.clearedSpore.sporeCore.commands.moderation.AltsCommand
+import me.clearedSpore.sporeCore.commands.moderation.*
 import me.clearedSpore.sporeCore.commands.privatemessages.PrivateMessageCommand
 import me.clearedSpore.sporeCore.commands.privatemessages.ReplyCommand
-import me.clearedSpore.sporeCore.commands.moderation.BanCmd
-import me.clearedSpore.sporeCore.commands.moderation.HistoryCommand
-import me.clearedSpore.sporeCore.commands.moderation.KickCmd
-import me.clearedSpore.sporeCore.commands.moderation.MuteCmd
-import me.clearedSpore.sporeCore.commands.moderation.PunishCommand
-import me.clearedSpore.sporeCore.commands.moderation.TempBanCmd
-import me.clearedSpore.sporeCore.commands.moderation.TempMuteCmd
-import me.clearedSpore.sporeCore.commands.moderation.TempWarnCmd
-import me.clearedSpore.sporeCore.commands.moderation.UnBanCommand
-import me.clearedSpore.sporeCore.commands.moderation.UnMuteCommand
-import me.clearedSpore.sporeCore.commands.moderation.WarnCmd
 import me.clearedSpore.sporeCore.commands.spawn.SetSpawnCommand
 import me.clearedSpore.sporeCore.commands.spawn.SpawnCommand
 import me.clearedSpore.sporeCore.commands.teleport.*
 import me.clearedSpore.sporeCore.commands.utilitymenus.*
-import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.database.Database
 import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
+import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
 import me.clearedSpore.sporeCore.features.homes.HomeService
@@ -59,7 +42,7 @@ import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.stats.PlaytimeTracker
 import me.clearedSpore.sporeCore.features.warp.WarpService
 import me.clearedSpore.sporeCore.hook.PlaceholderAPIHook
-import me.clearedSpore.sporeCore.listener.ChatEvent
+import me.clearedSpore.sporeCore.listener.ChatListener
 import me.clearedSpore.sporeCore.listener.DeathListener
 import me.clearedSpore.sporeCore.listener.LocationListener
 import me.clearedSpore.sporeCore.listener.LoggerEvent
@@ -79,8 +62,6 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.ServicePriority
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
-import kotlin.coroutines.coroutineContext
-import kotlin.math.max
 
 
 class SporeCore : JavaPlugin() {
@@ -99,13 +80,12 @@ class SporeCore : JavaPlugin() {
     lateinit var homeService: HomeService
     lateinit var kitService: KitService
     lateinit var updateChecker: UpdateChecker
-
     var chat: Chat? = null
     var perms: Permission? = null
     var eco: Economy? = null
 
     var totalCommands: Int = 0
-    
+
     override fun onEnable() {
         totalCommands = 0
         instance = this
@@ -113,8 +93,12 @@ class SporeCore : JavaPlugin() {
         Logger.initialize(coreConfig.general.prefix)
 
         setupEconomy()
-        setupChat()
-        setupPermissions()
+        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+            setupChat()
+            setupPermissions()
+        } else {
+            Logger.warn("Vault not installed. Disabling Chat and Permissions")
+        }
 
         Logger.info("Loading SporeCore")
         Message.init(true)
@@ -127,9 +111,7 @@ class SporeCore : JavaPlugin() {
 
         updateChecker = UpdateChecker()
 
-        if(coreConfig.features.currency.enabled){
-            CurrencySystemService.initialize()
-        }
+        CurrencySystemService.initialize()
 
         DatabaseManager.init(dataFolder)
         database = DatabaseManager.getServerData()
@@ -140,15 +122,15 @@ class SporeCore : JavaPlugin() {
             Logger.info("Successfully integrated with PlaceholderAPI")
         }
 
-        if(coreConfig.features.warps){
+        if (coreConfig.features.warps) {
             warpService = WarpService()
         }
 
-        if(coreConfig.features.homes){
+        if (coreConfig.features.homes) {
             homeService = HomeService()
         }
 
-        if(coreConfig.features.kits){
+        if (coreConfig.features.kits) {
             kitService = KitService()
         }
 
@@ -165,6 +147,7 @@ class SporeCore : JavaPlugin() {
     }
 
     override fun onDisable() {
+
         PlaytimeTracker.stop()
         Logger.infoDB("Saving all user data before shutdown...")
         UserManager.saveAllUsers()
@@ -174,7 +157,7 @@ class SporeCore : JavaPlugin() {
     }
 
 
-    fun setupEconomy(){
+    fun setupEconomy() {
         if (coreConfig.economy.enabled) {
             if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
                 Logger.warn("Vault not found! Disabling economy.")
@@ -200,10 +183,10 @@ class SporeCore : JavaPlugin() {
         chat = rsp?.provider
     }
 
-    fun setupPunishments(){
+    fun setupPunishments() {
         val enabled = coreConfig.features.punishments
 
-        if(enabled){
+        if (enabled) {
             registerCommand(PunishCommand())
             registerCommand(BanCmd())
             registerCommand(TempBanCmd())
@@ -216,6 +199,7 @@ class SporeCore : JavaPlugin() {
             registerCommand(UnBanCommand())
             registerCommand(HistoryCommand())
             registerCommand(AltsCommand())
+            registerCommand(ClearChatCommand())
             PunishmentService.load()
         }
     }
@@ -225,9 +209,9 @@ class SporeCore : JavaPlugin() {
         perms = rsp?.provider
     }
 
-    fun registerListeners(){
+    fun registerListeners() {
         server.pluginManager.registerEvents(LoggerEvent(), this)
-        server.pluginManager.registerEvents(ChatEvent(), this)
+        server.pluginManager.registerEvents(ChatListener(), this)
         server.pluginManager.registerEvents(DeathListener(), this)
         server.pluginManager.registerEvents(LocationListener(), this)
     }
@@ -256,8 +240,8 @@ class SporeCore : JavaPlugin() {
         if (::warpService.isInitialized) features.add("§aWarps")
         if (::homeService.isInitialized) features.add("§bHomes")
         if (coreConfig.economy.enabled) features.add("§eEconomy")
-        if(::kitService.isInitialized) features.add("§9Kits")
-        if(PunishmentService.loaded) features.add("§cPunishments")
+        if (::kitService.isInitialized) features.add("§9Kits")
+        if (PunishmentService.loaded) features.add("§cPunishments")
         val featureLine = if (features.isNotEmpty()) features.joinToString(" §7| ") else "§7No features enabled"
 
         val banner = listOf(
@@ -281,14 +265,19 @@ class SporeCore : JavaPlugin() {
         }
     }
 
-
-    fun registerCommands(){
+    fun registerCommands() {
 
         val features = coreConfig.features
 
-        commandManager.registerDependency(WarpService::class.java, warpService)
-        commandManager.registerDependency(HomeService::class.java, homeService)
-        commandManager.registerDependency(KitService::class.java, kitService)
+        if(features.warps) {
+            commandManager.registerDependency(WarpService::class.java, warpService)
+        }
+        if(features.homes) {
+            commandManager.registerDependency(HomeService::class.java, homeService)
+        }
+        if(features.kits) {
+            commandManager.registerDependency(KitService::class.java, kitService)
+        }
 
         registerCommand(AdventureCommand())
         registerCommand(CreativeCommand())
@@ -296,7 +285,7 @@ class SporeCore : JavaPlugin() {
         registerCommand(SpectatorCommand())
         registerCommand(SurvivalCommand())
 
-        if(features.teleportRequest) {
+        if (features.teleportRequest) {
             registerCommand(TpaAcceptCommand())
             registerCommand(TpaCommand())
             registerCommand(TpaHereCommand())
@@ -316,12 +305,12 @@ class SporeCore : JavaPlugin() {
         registerCommand(GodCommand())
         registerCommand(ClearinvCommand())
 
-        if(features.privateMessages){
+        if (features.privateMessages) {
             registerCommand(PrivateMessageCommand())
             registerCommand(ReplyCommand())
         }
 
-        if(features.utilityMenus){
+        if (features.utilityMenus) {
             registerCommand(AnvilCommand())
             registerCommand(CartographyTableCommand())
             registerCommand(EnchantmentTableCommand())
@@ -332,28 +321,28 @@ class SporeCore : JavaPlugin() {
             registerCommand(WorkbenchCommand())
         }
 
-        if(features.utilityMenus){
+        if (features.utilityMenus) {
             registerCommand(SpawnCommand())
             registerCommand(SetSpawnCommand())
         }
 
         registerCommand(CoreCommand())
 
-        if(features.settings) {
+        if (features.settings) {
             registerCommand(SettingCommand())
         }
 
-        if(features.warps){
+        if (features.warps) {
             registerCommand(WarpCommand())
         }
 
-        if(features.homes){
+        if (features.homes) {
             registerCommand(HomeCommand())
             registerCommand(CreateHomeCommand())
             registerCommand(DelHomeCommand())
         }
 
-        if(coreConfig.economy.enabled){
+        if (coreConfig.economy.enabled) {
             registerCommand(EconomyCommand())
             registerCommand(PayCommand())
             registerCommand(BalTopCommand())
@@ -363,11 +352,11 @@ class SporeCore : JavaPlugin() {
         registerCommand(PlayerTimeCommand())
         registerCommand(PlayerWeatherCommand())
 
-        if(features.kits){
+        if (features.kits) {
             registerCommand(KitCommand())
         }
 
-        if(features.stats){
+        if (features.stats) {
             registerCommand(StatsCommand())
         }
 
@@ -379,9 +368,26 @@ class SporeCore : JavaPlugin() {
         registerCommand(EditItemCommand())
         registerCommand(ItemCommand())
         registerCommand(SudoCommand())
+        registerCommand(PingCommand())
+        registerCommand(WhoisCommand())
 
-        if(coreConfig.chat.chatColor.enabled){
+        if (coreConfig.chat.chatColor.enabled) {
             registerCommand(ChatColorCommand())
+        }
+
+
+        if (features.channels) {
+            for (channel in ChatChannelService.getChannels()) {
+                val cmd = ChannelCommand(channel)
+                cmd.requiredPermissions.add(channel.permission)
+
+                val combinedAlias = channel.commands.joinToString("|")
+                commandManager.commandReplacements.addReplacement("channelalias", combinedAlias)
+
+                registerCommand(cmd)
+                Logger.info("Registered ${channel.id} channel")
+                totalCommands++
+            }
         }
 
         if (features.currency.enabled) {
@@ -408,8 +414,8 @@ class SporeCore : JavaPlugin() {
         Logger.info("Loaded $totalCommands commands")
 
     }
-    
-    fun registerCommand(command: BaseCommand){
+
+    fun registerCommand(command: BaseCommand) {
         commandManager.registerCommand(command)
         totalCommands++
     }
@@ -420,15 +426,31 @@ class SporeCore : JavaPlugin() {
         val locales = commandManager.locales
 
         locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_HEADER, "$prefix &fAvailable Commands:")
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_FORMAT, "&e/{command} &7{parameters} &f- {description}")
+        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_FORMAT, "/{command} &7{parameters} &f- {description}".blue())
 
         locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_HEADER, "$prefix &fCommand Help for &e/{command}")
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_COMMAND_FORMAT, "Usage: &f/{command} {parameters}".blue())
-        locales.addMessage(Locales.ENGLISH, MessageKeys.HELP_DETAILED_PARAMETER_FORMAT, "&7- &f{parameter} &7({description})")
+        locales.addMessage(
+            Locales.ENGLISH,
+            MessageKeys.HELP_DETAILED_COMMAND_FORMAT,
+            "Usage: &f/{command} {parameters}".blue()
+        )
+        locales.addMessage(
+            Locales.ENGLISH,
+            MessageKeys.HELP_DETAILED_PARAMETER_FORMAT,
+            "&7- &f{parameter} &7({description})"
+        )
 
         locales.addMessage(Locales.ENGLISH, MessageKeys.INVALID_SYNTAX, "$prefix" + "Use &e{command} &f{syntax}".blue())
-        locales.addMessage(Locales.ENGLISH, MessageKeys.PERMISSION_DENIED, "$prefix" + "You don't have permission to use this command!".red())
-        locales.addMessage(Locales.ENGLISH, MessageKeys.UNKNOWN_COMMAND, "$prefix" + "That command does not exist!".red())
+        locales.addMessage(
+            Locales.ENGLISH,
+            MessageKeys.PERMISSION_DENIED,
+            "$prefix" + "You don't have permission to use this command!".red()
+        )
+        locales.addMessage(
+            Locales.ENGLISH,
+            MessageKeys.UNKNOWN_COMMAND,
+            "$prefix" + "That command does not exist!".red()
+        )
 
         ConfirmCondition.register(commandManager)
         CooldownCondition.register(commandManager)
@@ -455,10 +477,12 @@ class SporeCore : JavaPlugin() {
             }
         }
 
+        commandManager.enableUnstableAPI("help");
+
     }
 
 
-    fun registerCompletions(){
+    fun registerCompletions() {
         commandManager.commandCompletions.registerCompletion("gamemodes") { context ->
             val sender = context.sender
             GameMode.values()
@@ -474,18 +498,20 @@ class SporeCore : JavaPlugin() {
                 .map { it.name.lowercase() }
         }
 
-        commandManager.commandCompletions.registerCompletion("warps") { context ->
-            val player = context.player
-            if (player == null) return@registerCompletion emptyList<String>()
+        if(coreConfig.features.warps) {
+            commandManager.commandCompletions.registerCompletion("warps") { context ->
+                val player = context.player
+                if (player == null) return@registerCompletion emptyList<String>()
 
-            try {
-                warpService.getAllWarps()
-                    .filter { warp ->
-                        warp.permission == null || player.hasPermission(warp.permission)
-                    }
-                    .map { it.name }
-            } catch (e: Exception) {
-                emptyList<String>()
+                try {
+                    warpService.getAllWarps()
+                        .filter { warp ->
+                            warp.permission == null || player.hasPermission(warp.permission)
+                        }
+                        .map { it.name }
+                } catch (e: Exception) {
+                    emptyList<String>()
+                }
             }
         }
 
@@ -526,7 +552,7 @@ class SporeCore : JavaPlugin() {
 
             val user = UserManager.get(sender)
 
-            if(user == null){
+            if (user == null) {
                 return@registerCompletion emptyList()
             }
 

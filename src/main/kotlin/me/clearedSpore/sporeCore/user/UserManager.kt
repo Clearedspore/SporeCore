@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore.user
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -19,7 +20,7 @@ object UserManager {
     private val consoleUUID = UUID.nameUUIDFromBytes("Console".toByteArray())
 
 
-    private val userCollection get() = DatabaseManager.getUserCollection()
+    internal val userCollection get() = DatabaseManager.getUserCollection()
 
     fun get(uuid: UUID, name: String? = null): User? {
         users[uuid]?.let { return it }
@@ -83,6 +84,9 @@ object UserManager {
         ).also { users[consoleUUID] = it }
     }
 
+    fun updateCache(user: User) {
+        users[user.uuid] = user
+    }
 
     fun getAllStoredUUIDsFromDB(): List<UUID> {
         return userCollection.find().mapNotNull {
@@ -109,9 +113,6 @@ object UserManager {
     }
 
 
-
-
-
     fun get(player: Player): User? = get(player.uniqueId, player.name)
     fun get(player: OfflinePlayer): User? = get(player.uniqueId, player.name)
 
@@ -123,7 +124,9 @@ object UserManager {
         }
 
     fun save(user: User, silent: Boolean = false) {
-        user.save(userCollection, silent)
+        Tasks.runAsync {
+            user.save(userCollection, silent)
+        }
     }
 
     fun remove(uuid: UUID) {

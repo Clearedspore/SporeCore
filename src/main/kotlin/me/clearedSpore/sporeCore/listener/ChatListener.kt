@@ -1,11 +1,16 @@
 package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.util.CC.translate
+import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
-import me.clearedSpore.sporeCore.features.chat.ChatColorService
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
+import me.clearedSpore.sporeCore.features.chat.color.ChatColorService
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
+import me.clearedSpore.sporeCore.features.punishment.PunishmentService
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
@@ -16,7 +21,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.AsyncPlayerChatEvent
 
-class ChatEvent : Listener {
+class ChatListener : Listener {
 
     @EventHandler
     fun onChat(event: AsyncPlayerChatEvent) {
@@ -28,10 +33,77 @@ class ChatEvent : Listener {
         }
 
 
-        if (!senderUser.isSettingEnabled(Setting.CHAT_ENABLED)) {
+        if (!senderUser.isSettingEnabled(Setting.CHAT_ENABLED) && SporeCore.instance.coreConfig.features.settings) {
             player.sendErrorMessage("You can't send messages while having chat disabled!")
             event.isCancelled = true
             return
+        }
+
+        if (senderUser.isMuted() && SporeCore.instance.coreConfig.features.punishments) {
+            val mute = senderUser.getActivePunishment(PunishmentType.MUTE) ?: run {
+                event.isCancelled = true
+                return
+            }
+
+            val msg = PunishmentService.getMessage(mute.type)
+            val formatted = PunishmentService.buildMessage(msg, mute)
+            player.sendMessage(formatted)
+
+            event.isCancelled = true
+            event.recipients.clear()
+
+            if (PunishmentService.config.settings.notifyTry) {
+                val tryMsgTemplate = when (mute.type) {
+                    PunishmentType.MUTE -> PunishmentService.config.logs.tryMute
+                    PunishmentType.TEMPMUTE -> PunishmentService.config.logs.tryTempMute
+                    else -> null
+                }
+
+                tryMsgTemplate?.let {
+                    val broadcastMsg = PunishmentService.buildTryMessage(it, mute, senderUser)
+                    Message.broadcastMessageWithPermission(broadcastMsg, Perm.PUNISH_LOG)
+                }
+            }
+
+            return
+        }
+
+        val msg = event.message
+        if (msg.isNotEmpty() && SporeCore.instance.coreConfig.features.channels) {
+            val symbol = msg.substring(0, 1)
+            val channel = ChatChannelService.getChannelBySymbol(symbol)
+
+            if (channel != null) {
+                if (player.hasPermission(channel.permission)) {
+                    val cleanedMessage = msg.substring(1)
+                    ChatChannelService.sendChannelMessage(player, cleanedMessage, channel)
+                    event.isCancelled = true
+                    return
+                }
+            }
+        }
+
+        val userChannelId = senderUser.channel
+        if (userChannelId != null && SporeCore.instance.coreConfig.features.channels) {
+            val channel = ChatChannelService.getChannelByName(userChannelId)
+            if (channel != null) {
+                if (!player.hasPermission(channel.permission) || !player.hasPermission(Perm.CHANNEL_ALLOW)) {
+                    player.sendErrorMessage("You don't have permission to type in this channel!")
+                    player.sendErrorMessage("Your channel has been set to global!")
+                    val user = UserManager.get(player)
+                    if (user != null) {
+                        ChatChannelService.resetChannel(user)
+                    }
+                    event.isCancelled = true
+                    return
+                }
+
+                ChatChannelService.sendChannelMessage(player, event.message, channel)
+                event.isCancelled = true
+                return
+            } else {
+                Logger.error("Failed to find channel with id '$userChannelId'")
+            }
         }
 
 
@@ -62,7 +134,7 @@ class ChatEvent : Listener {
         }
 
 
-        val chatColor = if (config.features.chatColor && config.chat.chatColor.enabled)
+        val chatColor = if (config.chat.chatColor.enabled)
             ChatColorService.getColor(senderUser)
         else null
         val appliedColor = chatColor?.colorString ?: ""
