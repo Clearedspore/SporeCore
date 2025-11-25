@@ -15,6 +15,7 @@ import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
+import me.clearedSpore.sporeCore.util.Util.noTranslate
 import org.bukkit.Bukkit
 import org.bukkit.Sound
 import org.bukkit.entity.Player
@@ -56,10 +57,10 @@ class PrivateMessageCommand : BaseCommand() {
         PMService.setLastSender(player, target)
 
         Cooldown.addCooldown("msg_cooldown", player.uniqueId)
-        player.sendMessage("You » ${target.name} ".blue() + message.white())
+        player.sendMessage("You » ${target.name} &f".blue() + message.noTranslate())
         player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f)
 
-        target.sendMessage("${player.name} » You ".blue() + message.white())
+        target.sendMessage("${player.name} » You &f".blue() + message.noTranslate())
         target.playSound(target, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
     }
 }
