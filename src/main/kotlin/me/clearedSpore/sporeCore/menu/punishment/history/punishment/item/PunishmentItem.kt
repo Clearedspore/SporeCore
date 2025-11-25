@@ -51,107 +51,63 @@ class PunishmentItem(
     }
 
     override fun onClickEvent(clicker: Player, clickType: ClickType) {
+        if (!clickType.isRightClick) return
+
         val type = punishment.type
-        val permission: String = when(type) {
-            PunishmentType.TEMPMUTE, PunishmentType.MUTE -> Perm.UNMUTE
+        val permission = when(type) {
+            PunishmentType.MUTE, PunishmentType.TEMPMUTE -> Perm.UNMUTE
             PunishmentType.BAN, PunishmentType.TEMPBAN -> Perm.UNBAN
             PunishmentType.WARN, PunishmentType.TEMPWARN -> Perm.UNWARN
-            else -> ""
+            else -> return
         }
 
+        if (!clicker.hasPermission(permission)) return
+        if (!punishment.isActive()) return
 
-        if(clickType.isRightClick) {
-            if (!clicker.hasPermission(permission)) return
-            if (!punishment.isActive()) return
+        val user = UserManager.get(target) ?: return
+        val remover = UserManager.get(clicker) ?: return
 
-            val user = UserManager.get(target)
-            if(user == null){
-                return
+        SporeCore.instance.chatInput.awaitChatInput(clicker) { input ->
+            val reason = input.takeIf { it.isNotBlank() } ?: run {
+                clicker.sendMessage("You must provide a reason")
+                return@awaitChatInput
             }
 
-            val clickerUser = UserManager.get(clicker)
-            if(clickerUser == null){
-                return
+            val success = when(type) {
+                PunishmentType.MUTE, PunishmentType.TEMPMUTE ->
+                    user.unmute(remover, punishment.id, reason)
+
+                PunishmentType.BAN, PunishmentType.TEMPBAN ->
+                    user.unban(remover, punishment.id, reason)
+
+                PunishmentType.WARN, PunishmentType.TEMPWARN ->
+                    user.unwarn(remover, punishment.id, reason)
+
+                else -> false
             }
 
-            when (type) {
-                PunishmentType.TEMPMUTE, PunishmentType.MUTE -> {
-                    val activePunishment = user.getActivePunishment(PunishmentType.MUTE)
-                    if (activePunishment != null) {
-                        SporeCore.instance.chatInput.awaitChatInput(clicker) { input ->
-                            val reason = input.takeIf { it.isNotBlank() }
-                            if (reason == null) {
-                                clicker.sendMessage("You must provide a reason")
-                                return@awaitChatInput
-                            }
-
-                            val msg = PunishmentService.config.logs.unMute
-                            val formatted = PunishmentService.buildRemovalMessage(
-                                msg,
-                                activePunishment,
-                                clickerUser,
-                                user
-                            )
-
-                            Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
-                            user.unmute(clickerUser, reason)
-                            clicker.sendMessage("Successfully unmuted ${user.playerName}.".blue())
-                        }
-                    }
-                }
-
-                PunishmentType.BAN, PunishmentType.TEMPBAN -> {
-                    val activePunishment = user.getActivePunishment(PunishmentType.BAN)
-                    if (activePunishment != null) {
-                        SporeCore.instance.chatInput.awaitChatInput(clicker) { input ->
-                            val reason = input.takeIf { it.isNotBlank() }
-                            if (reason == null) {
-                                clicker.sendMessage("You must provide a reason")
-                                return@awaitChatInput
-                            }
-
-                            val msg = PunishmentService.config.logs.unBan
-                            val formatted = PunishmentService.buildRemovalMessage(
-                                msg,
-                                activePunishment,
-                                clickerUser,
-                                user
-                            )
-
-                            Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
-                            user.unban(clickerUser, reason)
-                            clicker.sendMessage("Successfully unbanned ${user.playerName}.".blue())
-                        }
-                    }
-                }
-                PunishmentType.WARN, PunishmentType.TEMPWARN -> {
-                    val activePunishment = user.getActivePunishment(PunishmentType.WARN)
-                    if (activePunishment != null) {
-                        SporeCore.instance.chatInput.awaitChatInput(clicker) { input ->
-                            val reason = input.takeIf { it.isNotBlank() }
-                            if (reason == null) {
-                                clicker.sendMessage("You must provide a reason")
-                                return@awaitChatInput
-                            }
-
-                            val msg = PunishmentService.config.logs.unWarn
-                            val formatted = PunishmentService.buildRemovalMessage(
-                                msg,
-                                activePunishment,
-                                clickerUser,
-                                user
-                            )
-
-                            Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
-                            user.unwarn(clickerUser, punishment.id, reason)
-                            clicker.sendMessage("Successfully unwarned ${user.playerName}.".blue())
-                        }
-                    }
-                }
-                else -> {
-                    clicker.sendMessage("Failed to remove punishment".red())
-                }
+            if (!success) {
+                clicker.sendMessage("Failed to remove punishment".red())
+                return@awaitChatInput
             }
+
+            val logMsg = when(type) {
+                PunishmentType.MUTE, PunishmentType.TEMPMUTE -> PunishmentService.config.logs.unMute
+                PunishmentType.BAN, PunishmentType.TEMPBAN -> PunishmentService.config.logs.unBan
+                PunishmentType.WARN, PunishmentType.TEMPWARN -> PunishmentService.config.logs.unWarn
+                else -> return@awaitChatInput
+            }
+
+            val formatted = PunishmentService.buildRemovalMessage(
+                logMsg,
+                punishment,
+                user,
+                remover,
+                reason
+            )
+
+            Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
+            clicker.sendMessage("Successfully removed punishment from ${user.playerName}.".blue())
         }
     }
 }

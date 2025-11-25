@@ -11,17 +11,17 @@ import org.dizitart.no2.collection.Document
 import java.util.*
 
 data class Punishment(
-    val id: String = UUID.randomUUID().toString(),
-    val type: PunishmentType,
-    val userUuid: UUID,
-    val punisherUuid: UUID,
-    val expireDate: Date? = null,
-    val punishDate: Date = Date(),
-    val reason: String,
-    val offense: String,
-    val removalReason: String? = null,
-    val removalUserUuid: UUID? = null,
-    val removalDate: Date? = null
+    var id: String = UUID.randomUUID().toString(),
+    var type: PunishmentType,
+    var userUuid: UUID,
+    var punisherUuid: UUID,
+    var expireDate: Date? = null,
+    var punishDate: Date = Date(),
+    var reason: String,
+    var offense: String,
+    var removalReason: String? = null,
+    var removalUserUuid: UUID? = null,
+    var removalDate: Date? = null
 ) {
 
     fun getUser(): User? = UserManager.get(userUuid)
@@ -129,7 +129,7 @@ data class Punishment(
     fun isActive(): Boolean {
         val now = Date()
         if (removalDate != null) return false
-        if (expireDate != null && expireDate.before(now)) return false
+        if (expireDate != null && expireDate!!.before(now)) return false
         return true
     }
 

@@ -88,7 +88,12 @@ data class SettingsConfig(
         "Permission required to see who punished or removed a punishment.",
         "Players without this permission will see 'Hidden' instead of staff names."
     )
-    var viewPunisherPermission: String = "sporecore.punishments.viewpunisher"
+    var viewPunisherPermission: String = "sporecore.punishments.viewpunisher",
+
+    @Comment(
+        "How many lines will it spam to clear the chat?"
+    )
+    var clearLines: Int = 100
 )
 
 @Configuration

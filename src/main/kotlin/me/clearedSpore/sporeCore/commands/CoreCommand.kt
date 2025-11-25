@@ -1,7 +1,9 @@
 package me.clearedSpore.sporeCore.commands
 
 import co.aikar.commands.BaseCommand
+import co.aikar.commands.CommandHelp
 import co.aikar.commands.annotation.*
+import co.aikar.commands.annotation.Optional
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
@@ -9,28 +11,34 @@ import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
+import me.clearedSpore.sporeAPI.util.CC.yellow
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
+import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
 import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
-import me.clearedSpore.sporeCore.database.DatabaseManager
-import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
-import me.clearedSpore.sporeCore.features.punishment.config.PunishmentLogConfig
+import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.stats.StatService
+import me.clearedSpore.sporeCore.menu.rollback.StaffRollbackPreviewMenu
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
+import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.io.File
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
 
@@ -38,6 +46,11 @@ import kotlin.random.Random
 class CoreCommand : BaseCommand() {
 
     private val startTime = System.currentTimeMillis()
+
+    @Default()
+    fun onHelp(help: CommandHelp){
+        help.showHelp()
+    }
 
     @Subcommand("reload")
     @CommandPermission(Perm.ADMIN)
@@ -58,7 +71,7 @@ class CoreCommand : BaseCommand() {
                     CurrencySystemService.reload()
                 }
 
-                if(plugin.coreConfig.features.punishments){
+                if (plugin.coreConfig.features.punishments) {
                     PunishmentService.load()
                 }
 
@@ -97,7 +110,6 @@ class CoreCommand : BaseCommand() {
             }
         }
     }
-
 
 
     private fun reloadEconomy(): CompletableFuture<Void> {
@@ -148,13 +160,13 @@ class CoreCommand : BaseCommand() {
 
     @Subcommand("checkupdate")
     @CommandPermission(Perm.UPDATECHEKER)
-    fun onCheck(sender: CommandSender){
+    fun onCheck(sender: CommandSender) {
         val plugin = SporeCore.instance
         val checker = plugin.updateChecker
         checker.checkForUpdates()
 
 
-        if(checker.updateAvailable){
+        if (checker.updateAvailable) {
             sender.sendMessage("[SporeCore] &fA new update is available!".blue())
             sender.sendMessage("[SporeCore] &fCurrent version: &e${plugin.description.version}".blue())
             sender.sendMessage("[SporeCore] &fLatest version: &e${checker.latestVersion}".blue())
@@ -214,13 +226,120 @@ class CoreCommand : BaseCommand() {
         sender.sendMessage("Value of '$fieldName' for ${target.name}: ".blue() + value.toString().green())
     }
 
+    @Subcommand("staffrollback")
+    @CommandPermission("*")
+    @Syntax("<staff> <time>")
+    @CommandCompletion("@players @times")
+    fun onStaffRollback(sender: CommandSender, staffName: String, timeArg: String, @Optional confirm: String?) {
+        val start = System.currentTimeMillis()
+        sender.sendMessage("Processing...".blue())
+
+        Tasks.runAsync {
+            val staffPlayer = Bukkit.getOfflinePlayers()
+                .firstOrNull { it.name.equals(staffName, ignoreCase = true) }
+
+            if (staffPlayer == null) {
+                sender.sendMessage("Staff member '$staffName' not found.".red())
+                return@runAsync
+            }
+
+            val millisBack = TimeUtil.parseDuration(timeArg)
+            if (millisBack <= 0) {
+                sender.sendMessage("Invalid time: '$timeArg'.".red())
+                return@runAsync
+            }
+
+            val cutoff = System.currentTimeMillis() - millisBack
+
+            val staffUser = UserManager.get(staffPlayer.uniqueId)
+            if (staffUser == null) {
+                sender.sendMessage("Staff member not found in database.".red())
+                return@runAsync
+            }
+
+            val statsToRollback = staffUser.staffStats
+                .filter { it.date.time >= cutoff }
+                .filter { it.type in setOf(
+                    PunishmentType.BAN, PunishmentType.TEMPBAN,
+                    PunishmentType.MUTE, PunishmentType.TEMPMUTE,
+                    PunishmentType.WARN, PunishmentType.TEMPWARN
+                ) }
+                .sortedByDescending { it.date.time }
+
+            if (statsToRollback.isEmpty()) {
+                sender.sendMessage("No punishments by $staffName within $timeArg.".red())
+                return@runAsync
+            }
+
+            if (confirm == null || confirm != "confirm") {
+                if (sender is Player) {
+                    val viewer = sender
+
+                    Tasks.runSync {
+                        if (statsToRollback.isEmpty()) {
+                            sender.sendMessage("No punishments by $staffName within $timeArg.".red())
+                            return@runSync
+                        }
+                        val menu = StaffRollbackPreviewMenu(viewer, staffPlayer, timeArg, statsToRollback)
+                        menu.open(viewer)
+                    }
+
+                    return@runAsync
+                } else {
+                    sender.sendMessage("Console must use confirm to execute rollbacks.".red())
+                    sender.sendMessage("Run /sporecore staffrollback $staffName $timeArg confirm".blue())
+                    sender.sendMessage("To confirm".blue())
+                    return@runAsync
+                }
+            }
+
+            val senderUser: User = if (sender is Player) {
+                UserManager.get(sender) ?: run {
+                    sender.userFail()
+                    return@runAsync
+                }
+            } else {
+                UserManager.getConsoleUser()
+            }
+
+            var rollbackCount = 0
+            statsToRollback.forEach { stat ->
+                val targetUser = UserManager.get(stat.targetUuid) ?: return@forEach
+
+                val punishment = targetUser.punishments.firstOrNull { it.id == stat.punishmentId } ?: return@forEach
+
+                val removed = when (punishment.type) {
+                    PunishmentType.BAN, PunishmentType.TEMPBAN ->
+                        targetUser.unban(UserManager.getConsoleUser(), punishment.id, "Staff rollback - Issued by ${senderUser.playerName}")
+                    PunishmentType.MUTE, PunishmentType.TEMPMUTE ->
+                        targetUser.unmute(UserManager.getConsoleUser(), punishment.id, "Staff rollback - Issued by ${senderUser.playerName}")
+                    PunishmentType.WARN, PunishmentType.TEMPWARN ->
+                        targetUser.unwarn(UserManager.getConsoleUser(), punishment.id, "Staff rollback - Issued by ${senderUser.playerName}")
+                    else -> false
+                }
+
+                if (removed) rollbackCount++
+                UserManager.save(targetUser)
+            }
+
+            val end = System.currentTimeMillis()
+            sender.sendMessage(
+                "Rolled back $rollbackCount punishments from $staffName in the last $timeArg (took ${end - start}ms).".blue()
+            )
+            Logger.log(sender, Perm.ADMIN_LOG, "rolled back punishments made by $staffName", true)
+        }
+    }
+
+
+
+
 
     @Subcommand("dumpdb")
     @CommandPermission(Perm.ADMIN)
     fun onDumpDB(sender: CommandSender) {
         sender.sendMessage("Dumping database to JSON...".blue())
 
-        CompletableFuture.runAsync {
+        Tasks.runAsync {
             try {
                 val plugin = SporeCore.instance
                 val file = File(plugin.dataFolder, "database_dump.json")
@@ -263,7 +382,7 @@ class CoreCommand : BaseCommand() {
     @Private
     fun onGenerate(sender: CommandSender, amountArg: Int?) {
 
-        if(sender is Player){
+        if (sender is Player) {
             sender.sendMessage("You can only run this command trough console!".red())
             return
         }
@@ -271,7 +390,7 @@ class CoreCommand : BaseCommand() {
         val amount = (amountArg ?: 500).coerceIn(1, 5000)
         sender.sendMessage("Starting generation of $amount fake users...".blue())
 
-        CompletableFuture.runAsync {
+        Tasks.runAsync {
             try {
                 val databaseCollection = DatabaseManager.getServerCollection()
                 val database = DatabaseManager.getServerData()
@@ -308,7 +427,10 @@ class CoreCommand : BaseCommand() {
                         remaining -= spentSplits.last()
                     }
 
-                    user.creditLogs.add(0, CreditLog(CreditAction.ADDED, purchased, "Test purchase", now - Random.nextLong(0, sixtyDaysMs)))
+                    user.creditLogs.add(
+                        0,
+                        CreditLog(CreditAction.ADDED, purchased, "Test purchase", now - Random.nextLong(0, sixtyDaysMs))
+                    )
 
                     var spentSoFar = 0.0
                     for (s in spentSplits) {
@@ -399,7 +521,7 @@ class CoreCommand : BaseCommand() {
 
         val user = UserManager.get(target.uniqueId)
 
-        if(user == null){
+        if (user == null) {
             sender.userJoinFail()
             return
         }
@@ -408,17 +530,21 @@ class CoreCommand : BaseCommand() {
         sender.sendMessage("UUID: ".white() + target.uniqueId.toString().green() + " (uuidStr)".gray())
         sender.sendMessage("First Join: ".white() + (user.firstJoin ?: "Unknown").green() + " (firstJoin)".gray())
         sender.sendMessage("Homes: ".white() + user.homes.size.toString().green() + " (homes)".gray())
-        sender.sendMessage("Pending Messages: ".white() + user.pendingMessages.size.toString().green() + " (pendingMessages)".gray())
+        sender.sendMessage(
+            "Pending Messages: ".white() + user.pendingMessages.size.toString().green() + " (pendingMessages)".gray()
+        )
         sender.sendMessage("Balance: ".white() + EconomyService.format(user.balance).green() + " (balance)".gray())
         sender.sendMessage("Last join: ".white() + user.lastJoin?.green() + " (lastJoin)".gray())
-        sender.sendMessage("Playtime: ".white() + StatService.getTotalPlaytime(user).toString().green() + " (totalPlaytime)".gray())
+        sender.sendMessage(
+            "Playtime: ".white() + StatService.getTotalPlaytime(user).toString().green() + " (totalPlaytime)".gray()
+        )
         sender.sendMessage("Credits: ".white() + user.credits.toString().gray() + " (credits)".gray())
-        sender.sendMessage("Credits Spent: ".white() + user.creditsSpent.toString().gray() + " (creditsSpent)".gray())
+        sender.sendMessage("Credits Spent: ".white() + user.creditsSpent + " (creditsSpent)".gray())
         sender.sendMessage("Last Location: ".white() + (user.lastLocation?.let { loc ->
             "X: ${"%.1f".format(loc.x)}, Y: ${"%.1f".format(loc.y)}, Z: ${"%.1f".format(loc.z)}, World: ${loc.world?.name}"
         } ?: "None").green() + " (lastLocation)".gray())
         sender.sendMessage("Pending Payments: ".white() + " (pendingPayments)".gray())
-        if(user.pendingPayments.isNotEmpty()) {
+        if (user.pendingPayments.isNotEmpty()) {
             user.pendingPayments.forEach { (senderName, total) ->
                 val formattedAmount = EconomyService.format(total)
                 sender.sendMessage("   ${formattedAmount.green()} from ${senderName.white()}".blue())

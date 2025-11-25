@@ -38,9 +38,7 @@ class UnBanCommand : BaseCommand() {
         }
 
         val senderUser: User? = when (sender) {
-            is Player -> UserManager.get(sender)?.also {
-                if (it == null) sender.userFail()
-            }
+            is Player -> UserManager.get(sender) ?: run { sender.userFail(); return }
             is ConsoleCommandSender -> UserManager.getConsoleUser()
             else -> null
         }
@@ -49,16 +47,25 @@ class UnBanCommand : BaseCommand() {
             sender.sendMessage("Unable to resolve sender user.".red())
             return
         }
-        val msg = PunishmentService.config.logs.unBan
 
-        if(targetUser.getActivePunishment(PunishmentType.BAN) == null){
+        val active = targetUser.getActivePunishment(PunishmentType.BAN)
+            ?: targetUser.getActivePunishment(PunishmentType.TEMPBAN)
+
+        if (active == null) {
             sender.sendMessage("${target.name} is not currently banned.".red())
             return
         }
+        val success = targetUser.unban(senderUser, active.id, reason)
 
-        val updatedPunishment = targetUser.unban(senderUser, reason)
-        if (updatedPunishment != null) {
-            val formatted = PunishmentService.buildRemovalMessage(msg, updatedPunishment, senderUser, targetUser)
+        if (success) {
+            val msg = PunishmentService.config.logs.unBan
+            val formatted = PunishmentService.buildRemovalMessage(
+                msg,
+                active,
+                targetUser,
+                senderUser,
+                reason
+            )
             Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
             sender.sendMessage("Successfully unbanned ${target.name}.".blue())
         } else {

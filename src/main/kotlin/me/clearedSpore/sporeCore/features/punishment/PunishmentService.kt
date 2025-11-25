@@ -15,9 +15,10 @@ import me.clearedSpore.sporeCore.features.punishment.config.ReasonDefinition
 import me.clearedSpore.sporeCore.features.punishment.config.ReasonEntry
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
-import me.clearedSpore.sporeCore.listener.PunishmentListener
+import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
+import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import java.io.File
@@ -37,8 +38,6 @@ object PunishmentService {
 
     fun load() {
         loadConfig()
-
-        Bukkit.getPluginManager().registerEvents(PunishmentListener(), SporeCore.instance)
     }
 
     private fun loadConfig(): PunishmentConfig {
@@ -156,8 +155,29 @@ object PunishmentService {
             offense = offenseKey
         )
 
+        punisher.staffStats.add(
+            StaffPunishmentStats(
+                targetUuid = targetUser.uuid,
+                type = type,
+                date = now,
+                punishmentId = punishment.id,
+                reason = reason
+            )
+        )
+
         targetUser.punishments.add(punishment)
-        UserManager.save(targetUser)
+        UserManager.updateCache(targetUser)
+
+        if (type == PunishmentType.BAN || type == PunishmentType.TEMPBAN || type == PunishmentType.KICK) {
+            targetUser.save(UserManager.userCollection, silent = false)
+        } else {
+            UserManager.save(targetUser)
+        }
+
+
+        if(targetUser != punisher) {
+            UserManager.save(punisher)
+        }
         logPunishment(punishment)
         punisher.sendMessage("Successfully punished ${targetUser.playerName.blue()} for $reason.".blue())
 
@@ -173,7 +193,37 @@ object PunishmentService {
         }
     }
 
+    fun removePunishment(
+        target: User,
+        sender: User,
+        punishmentId: String,
+        reason: String
+    ): Boolean {
+        val punishment = target.punishments.firstOrNull { it.id == punishmentId } ?: return false
 
+        punishment.removalUserUuid = sender.uuid
+        punishment.removalReason = reason
+        punishment.removalDate = Date()
+
+        UserManager.save(target)
+        return true
+    }
+
+    fun removePunishment(
+        punishment: Punishment,
+        senderUser: User,
+        targetUser: User
+    ): Boolean {
+        return when (punishment.type) {
+            PunishmentType.BAN, PunishmentType.TEMPBAN ->
+                targetUser.unban(senderUser, punishment.id, "Rollback")
+            PunishmentType.MUTE, PunishmentType.TEMPMUTE ->
+                targetUser.unmute(senderUser, punishment.id, "Rollback")
+            PunishmentType.WARN, PunishmentType.TEMPWARN ->
+                targetUser.unwarn(senderUser, punishment.id, "Rollback")
+            else -> false
+        }
+    }
 
 
     private fun handleKickPunishment(target: User, punisher: User, punishment: Punishment) {
@@ -221,12 +271,12 @@ object PunishmentService {
             .translate()
     }
 
-    fun buildRemovalMessage(template: String, punishment: Punishment, user: User, senderUser: User): String {
+    fun buildRemovalMessage(template: String, punishment: Punishment, user: User, senderUser: User, reason: String): String {
         val timeLeft = punishment.getDurationFormatted()
         return template
             .replace("%target%", user.playerName)
             .replace("%user%",  senderUser.playerName)
-            .replace("%reason%", punishment.removalReason.toString())
+            .replace("%reason%", reason)
             .replace("%time%", timeLeft)
             .translate()
     }
@@ -281,7 +331,15 @@ object PunishmentService {
             .replace("%reason%", punishment.reason)
             .replace("%time%", timeFormatted)
 
-        Message.broadcastMessageWithPermission(message.translate(), Perm.PUNISH_LOG)
+        for(player in Bukkit.getOnlinePlayers()){
+            if(player.hasPermission(Perm.PUNISH_LOG)) {
+                val user = UserManager.get(player)
+                if(user != null && user.isSettingEnabled(Setting.PUNISHMENT_LOGS)) {
+                    player.sendMessage(message.translate())
+                }
+            }
+        }
+
     }
 
     private data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
