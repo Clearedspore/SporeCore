@@ -11,12 +11,12 @@ import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
 import org.bukkit.Material
+import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.ItemStack
 
 class HomeItem(
-    private val player: Player,
     private val user: User,
     private val home: Home
 ) : Item() {
@@ -39,14 +39,14 @@ class HomeItem(
         when {
             clickType.isLeftClick -> {
                 clicker.closeInventory()
-                player.awaitTeleport(home.location)
+                clicker.teleport(home.location)
             }
             clickType.isRightClick && clickType.isShiftClick -> {
-                ConfirmMenu(player) {
+                ConfirmMenu(clicker) {
                     homeService.deleteHome(user, home.name)
-                    player.sendSuccessMessage("Home ${home.name} has successfully been deleted!")
+                    clicker.sendSuccessMessage("Home ${home.name} has successfully been deleted!")
 
-                }.open(player)
+                }.open(clicker)
             }
         }
     }

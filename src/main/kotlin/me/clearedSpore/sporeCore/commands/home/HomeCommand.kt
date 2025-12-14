@@ -30,7 +30,7 @@ class HomeCommand() : BaseCommand() {
         }
 
         if (homeArg.isNullOrEmpty()) {
-            HomesMenu(player).open(player)
+            HomesMenu(player, player).open(player)
             return
         }
 
@@ -76,33 +76,18 @@ class HomeCommand() : BaseCommand() {
 
     @Subcommand("admin goto")
     @CommandPermission(Perm.ADMIN)
-    @CommandCompletion("@players @playerhomes")
+    @CommandCompletion("@players")
     @Syntax("<player> <home>")
-    fun adminGoto(sender: Player, targetName: String, homeName: String) {
+    fun adminGoto(sender: Player, targetName: String) {
         val offlinePlayer = Bukkit.getOfflinePlayer(targetName)
 
-        val user = UserManager.get(offlinePlayer.uniqueId)
-
-        if(user == null){
-            sender.userJoinFail()
-            return
-        }
-
-        val home = homeService.getHome(user, homeName)
-
-        if (home == null) {
-            sender.sendErrorMessage("Home '$homeName' not found for ${offlinePlayer.name ?: targetName}.")
-            return
-        }
-
-        sender.teleport(home.location)
-        sender.sendSuccessMessage("Teleported to ${offlinePlayer.name ?: targetName}'s home '${home.name}'.")
+        HomesMenu(sender, offlinePlayer, "$targetName's homes").open(sender)
     }
 
 
     @Subcommand("admin delete")
     @CommandPermission(Perm.ADMIN)
-    @CommandCompletion("@players @playerhomes")
+    @CommandCompletion("@players")
     @Syntax("<player> <home>")
     fun adminDelete(sender: Player, targetName: String, homeName: String) {
         val offlinePlayer = Bukkit.getOfflinePlayer(targetName)
