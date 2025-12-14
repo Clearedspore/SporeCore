@@ -4,17 +4,21 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.CommandHelp
 import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
+import com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
-import me.clearedSpore.sporeAPI.util.CC.yellow
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
+import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.database.DatabaseManager
@@ -25,21 +29,29 @@ import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
 import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
 import me.clearedSpore.sporeCore.features.eco.EconomyService
+import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
-import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.stats.StatService
+import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.menu.rollback.StaffRollbackPreviewMenu
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Tasks
+import me.clearedSpore.sporeCore.util.button.CallbackRegistry
+import me.clearedSpore.sporeCore.util.button.TextButton
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
+import net.kyori.adventure.text.event.HoverEvent
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.io.File
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import kotlin.random.Random
 
 @CommandAlias("sporecore|core")
@@ -73,6 +85,10 @@ class CoreCommand : BaseCommand() {
 
                 if (plugin.coreConfig.features.punishments) {
                     PunishmentService.load()
+                }
+
+                if(plugin.coreConfig.features.modes){
+                    ModeService.initialize()
                 }
 
                 val duration = System.currentTimeMillis() - startTime
@@ -327,11 +343,23 @@ class CoreCommand : BaseCommand() {
                 "Rolled back $rollbackCount punishments from $staffName in the last $timeArg (took ${end - start}ms).".blue()
             )
             Logger.log(sender, Perm.ADMIN_LOG, "rolled back punishments made by $staffName", true)
+            val config = SporeCore.instance.coreConfig.discord
+            val webhook = Webhook(config.staffRollback)
+            if(config.staffRollbackPing.isNullOrBlank()) {
+                webhook.setMessage("${sender.name} has rolled back $rollbackCount punishments from $staffName in the last $timeArg")
+            } else {
+                val ping = config.staffRollbackPing
+                webhook.setMessage(
+                    "$ping ${sender.name} has rolled back $rollbackCount punishments from $staffName in the last $timeArg"
+                )
+            }
+                webhook.setUsername("SporeCore Logs")
+                    .setProfileURL("https://cdn.modrinth.com/data/8X4HqUuD/980c64224cb4fb48829d90a0d51c36b565ad8a05_96.webp")
+
+            webhook.send()
+
         }
     }
-
-
-
 
 
     @Subcommand("dumpdb")
@@ -346,6 +374,7 @@ class CoreCommand : BaseCommand() {
 
                 val userCollection = DatabaseManager.getUserCollection()
                 val serverCollection = DatabaseManager.getServerCollection()
+                val inventoryCollection = DatabaseManager.getInventoryCollection()
 
                 val dump: MutableMap<String, List<Map<String, Any>>> = mutableMapOf()
 
@@ -355,6 +384,11 @@ class CoreCommand : BaseCommand() {
                 }.toList()
 
                 dump["serverData"] = serverCollection.find().map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    (doc as Map<String, Any>).mapValues { it.value!! }
+                }.toList()
+
+                dump["inventories"] = inventoryCollection.find().map { doc ->
                     @Suppress("UNCHECKED_CAST")
                     (doc as Map<String, Any>).mapValues { it.value!! }
                 }.toList()
@@ -376,6 +410,46 @@ class CoreCommand : BaseCommand() {
         }
     }
 
+    @Subcommand("wiki")
+    @CommandCompletion("currency|punishments|channels|modes")
+    fun onWiki(sender: CommandSender, @Optional @Name("feature") feature: String?) {
+
+        val base = "https://spore-plugins.gitbook.io/sporecore/"
+
+        val pages = mapOf(
+            "currency" to "${base}custom-currency",
+            "punishments" to "${base}punishments",
+            "channels" to "${base}channels",
+            "modes" to "${base}features/modes"
+        )
+
+        if (feature.isNullOrEmpty()) {
+            sender.sendMessage("Wiki&7:&f $base".blue())
+            return
+        }
+
+        val key = feature.lowercase()
+        val url = pages[key]
+
+        if (url == null) {
+            sender.sendMessage("Unknown wiki page. Use: currency, punishments, channels, modes".red())
+            return
+        }
+
+        sender.sendMessage("Wiki for &e$key&7: &f$url".blue())
+    }
+
+    @Subcommand("simulate-lag")
+    @CommandPermission("*")
+    fun simulatelag(sender: CommandSender, ms: Long) {
+        sender.sendMessage("Server will now lag for " + ms + " milliseconds!".blue())
+
+        try {
+            Thread.sleep(ms)
+        } catch (e: InterruptedException) {
+            sender.sendRichMessage("Interrupted!".red())
+        }
+    }
 
     @Subcommand("generateusers")
     @CommandPermission("*")
@@ -511,6 +585,12 @@ class CoreCommand : BaseCommand() {
         }
     }
 
+    @Subcommand("callback")
+    @Syntax("<id>")
+    fun onCallback(sender: CommandSender, id: String) {
+        CallbackRegistry.execute(sender, id)
+    }
+
 
     @Subcommand("user info")
     @CommandPermission(Perm.ADMIN)
@@ -518,7 +598,6 @@ class CoreCommand : BaseCommand() {
     @CommandCompletion("@players")
     fun onUserInfo(sender: CommandSender, playerName: String) {
         val target = Bukkit.getOfflinePlayer(playerName)
-
         val user = UserManager.get(target.uniqueId)
 
         if (user == null) {
@@ -530,29 +609,84 @@ class CoreCommand : BaseCommand() {
         sender.sendMessage("UUID: ".white() + target.uniqueId.toString().green() + " (uuidStr)".gray())
         sender.sendMessage("First Join: ".white() + (user.firstJoin ?: "Unknown").green() + " (firstJoin)".gray())
         sender.sendMessage("Homes: ".white() + user.homes.size.toString().green() + " (homes)".gray())
-        sender.sendMessage(
-            "Pending Messages: ".white() + user.pendingMessages.size.toString().green() + " (pendingMessages)".gray()
-        )
+        sender.sendMessage("Pending Messages: ".white() + user.pendingMessages.size.toString().green() + " (pendingMessages)".gray())
         sender.sendMessage("Balance: ".white() + EconomyService.format(user.balance).green() + " (balance)".gray())
         sender.sendMessage("Last join: ".white() + user.lastJoin?.green() + " (lastJoin)".gray())
-        sender.sendMessage(
-            "Playtime: ".white() + StatService.getTotalPlaytime(user).toString().green() + " (totalPlaytime)".gray()
-        )
+        sender.sendMessage("Playtime: ".white() + StatService.getTotalPlaytime(user).toString().green() + " (totalPlaytime)".gray())
         sender.sendMessage("Credits: ".white() + user.credits.toString().gray() + " (credits)".gray())
         sender.sendMessage("Credits Spent: ".white() + user.creditsSpent + " (creditsSpent)".gray())
-        sender.sendMessage("Last Location: ".white() + (user.lastLocation?.let { loc ->
-            "X: ${"%.1f".format(loc.x)}, Y: ${"%.1f".format(loc.y)}, Z: ${"%.1f".format(loc.z)}, World: ${loc.world?.name}"
-        } ?: "None").green() + " (lastLocation)".gray())
-        sender.sendMessage("Pending Payments: ".white() + " (pendingPayments)".gray())
+
+        sender.sendMessage(
+            "Last Location: ".white() +
+                    (user.lastLocation?.let { loc ->
+                        "X: %.1f, Y: %.1f, Z: %.1f, World: ${loc.world?.name}"
+                            .format(loc.x, loc.y, loc.z)
+                    } ?: "None").green() + " (lastLocation)".gray()
+        )
+
+        sender.sendMessage("Pending Payments: ".white() + "(pendingPayments)".gray())
         if (user.pendingPayments.isNotEmpty()) {
             user.pendingPayments.forEach { (senderName, total) ->
-                val formattedAmount = EconomyService.format(total)
-                sender.sendMessage("   ${formattedAmount.green()} from ${senderName.white()}".blue())
+                sender.sendMessage("   ${EconomyService.format(total).green()} from ${senderName.white()}".blue())
             }
         } else {
             sender.sendMessage("   User has no pending payments".red())
         }
 
+        sender.sendMessage("Channel: ".white() + (user.channel ?: "Public").green() + " (channel)".gray())
+
+        sender.sendMessage("Pending inventories: ".white() + "(pendingInventories)".gray())
+
+        if (user.pendingInventories.isNotEmpty()) {
+            val button = TextButton("[Click to view]".blue())
+                .hoverEvent("Click to view all inventories")
+                .onClick { s ->
+                    displayPendingInventories(s, user)
+                }
+                .build(sender)
+
+            sender.sendMessage(button)
+        } else {
+            sender.sendMessage("   User has no pending inventories".red())
+        }
+    }
+
+
+    fun displayPendingInventories(sender: CommandSender, user: User) {
+        if (user.pendingInventories.isEmpty()) {
+            sender.sendMessage("   User has no pending inventories".red())
+            return
+        }
+
+        user.pendingInventories.forEachIndexed { index, id ->
+            val inventory = InventoryManager.getInventory(id)
+
+            if(inventory == null){
+                sender.sendErrorMessage("Failed to load inventory!")
+                return
+            }
+
+            sender.sendMessage("${index + 1}:")
+            sender.sendMessage("  ID: ".white() + "${inventory.id}\n".blue())
+            sender.sendMessage("  Timestamp: ".white() + "${inventory.formattedAge()}\n".blue())
+            sender.sendMessage("  Store reason: ".white() + " ${inventory.storeReason}\n".blue())
+            sender.sendMessage("  Rollback issuer: ".white() + "${inventory.rollbackIssuer}\n".blue())
+            sender.sendMessage("${index + 1}:")
+            val button = TextButton("  [Click to remove]".red())
+                .onClick {
+                    try {
+                        user.pendingInventories.remove(inventory.id)
+                        sender.sendMessage("Successfully removed the inventory.".blue())
+                        UserManager.save(user)
+                    } catch (e: Exception){
+                        sender.sendMessage("Failed to delete inventory!".red())
+                    }
+                }
+                .hoverEvent("Click to delete")
+                .build(sender)
+
+            sender.sendMessage(button)
+        }
     }
 
     private fun formatDuration(ms: Long): String {
