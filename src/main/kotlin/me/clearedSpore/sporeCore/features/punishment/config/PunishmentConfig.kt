@@ -12,6 +12,8 @@ data class PunishmentConfig(
 
     var alts: AltsConfig = AltsConfig(),
 
+    var discord: DiscordConfig = DiscordConfig(),
+
     @Comment(
         "You can set the screens or messages that",
         "players get when they are punished.",
@@ -37,6 +39,16 @@ data class PunishmentConfig(
         "command suggestions!!!"
     )
     var removalReasons: RemovalReasonConfig = RemovalReasonConfig()
+)
+
+@Configuration
+data class DiscordConfig(
+
+    @Comment(
+        "If the player needs to have their discord account",
+        "linked before being able to punish someone."
+    )
+    var requireLinked: Boolean = false
 )
 
 @Configuration

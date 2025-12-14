@@ -27,6 +27,17 @@ data class Punishment(
     fun getUser(): User? = UserManager.get(userUuid)
     fun getPunisher(): User? = UserManager.get(punisherUuid)
 
+    fun getPunisherPlayer(): Player? {
+        return org.bukkit.Bukkit.getPlayer(punisherUuid)
+    }
+
+    fun getPunisherDisplayName(): String {
+        return getPunisherPlayer()?.name
+            ?: getPunisher()?.playerName
+            ?: if (punisherUuid == SYSTEM_UUID) "Console" else "Unknown"
+    }
+
+
     fun getPunisherName(viewer: Player? = null): String {
         val permission = PunishmentService.config.settings.viewPunisherPermission
         return if (permission == null || viewer?.hasPermission(permission) == true) {

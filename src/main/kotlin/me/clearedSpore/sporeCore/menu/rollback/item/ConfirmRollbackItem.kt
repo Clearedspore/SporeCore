@@ -3,6 +3,8 @@ package me.clearedSpore.sporeCore.menu.rollback.item
 import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Webhook
+import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
@@ -61,6 +63,20 @@ class ConfirmRollbackItem(
                 "Rolled back $rollbackCount punishments from ${staff.name} in the last $timeArg (took ${end - start}ms).".blue()
             )
             Logger.log(clicker, Perm.ADMIN_LOG, "rolled back punishments made by ${staff.name}", true)
+            val config = SporeCore.instance.coreConfig.discord
+            val webhook = Webhook(config.staffRollback)
+            if(config.staffRollbackPing.isNullOrBlank()) {
+                webhook.setMessage("${clicker.name} has rolled back $rollbackCount punishments from ${staff.name} in the last $timeArg")
+            } else {
+                val ping = config.staffRollbackPing
+                webhook.setMessage(
+                    "$ping ${clicker.name} has rolled back $rollbackCount punishments from ${staff.name} in the last $timeArg"
+                )
+            }
+            webhook.setUsername("SporeCore Logs")
+                .setProfileURL("https://cdn.modrinth.com/data/8X4HqUuD/980c64224cb4fb48829d90a0d51c36b565ad8a05_96.webp")
+
+            webhook.send()
         }
     }
 }

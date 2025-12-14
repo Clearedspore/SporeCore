@@ -7,12 +7,12 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.punishment.config.PunishmentConfig
 import me.clearedSpore.sporeCore.features.punishment.config.ReasonDefinition
-import me.clearedSpore.sporeCore.features.punishment.config.ReasonEntry
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
@@ -21,6 +21,7 @@ import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -77,6 +78,69 @@ object PunishmentService {
         return config.reasons.categories[category.lowercase()] ?: emptyMap()
     }
 
+    fun logToDiscord(punishment: Punishment) {
+        val coreConfig = SporeCore.instance.coreConfig
+        val discordConfig = coreConfig.discord
+
+        if (!discordConfig.enabled || discordConfig.punishment.isNullOrBlank()) return
+
+        if(discordConfig.enabled && !SporeCore.instance.discordEnabled){
+            Logger.error("Failed to load discord: Discord config enabled but the service is not initialized!")
+            return
+        }
+
+
+        val staffUuid = punishment.punisherUuid
+        val staffOffline = Bukkit.getOfflinePlayer(staffUuid)
+        val target = Bukkit.getOfflinePlayer(punishment.userUuid)
+
+        val reason = punishment.reason
+        val type = punishment.type
+
+        val staffName = staffOffline.name ?: "Console"
+        val targetName = target.name ?: "Unknown"
+
+        val skinURL = DiscordService.getAvatarURL(target.uniqueId)
+
+        val issuer = punishment.getPunisher() ?: UserManager.getConsoleUser()
+        val issuerSkinURL = issuer.player?.let { DiscordService.getAvatarURL(issuer.uuid) } ?: "https://mc-heads.net/avatar/Console/100"
+        val linkedStaffId = issuer.discordID
+
+        if (config.discord.requireLinked && linkedStaffId == null && issuer.player != null) {
+            Logger.error("$staffName has not linked their Discord account!")
+            issuer.player?.sendMessage("You must have your Discord account linked!".red())
+            issuer.player?.sendMessage("Use /link to link it.".red())
+            return
+        }
+
+        try {
+            issuer.sendMessage("Punishing player...".blue())
+            val webhook = Webhook(discordConfig.punishment)
+
+            if (discordConfig.pingStaff && linkedStaffId != null) {
+                webhook.setMessage("<@$linkedStaffId>")
+            }
+
+            val embed = Webhook.Embed()
+                .setTitle("Punishment Issued")
+                .setColor(getPunishmentColor(type))
+                .setThumbnail(skinURL)
+                .setAuthor(staffName, issuerSkinURL)
+                .addField("Punisher", staffName, true)
+                .addField("Target", targetName, true)
+                .addField("Type", type.displayName ?: "Unknown", true)
+                .addField("Reason", reason, false)
+
+            webhook.addEmbed(embed)
+            webhook.setUsername(staffName)
+            webhook.setProfileURL(issuerSkinURL)
+            webhook.send()
+        } catch (ex: Exception) {
+            Logger.error("Failed to send punishment webhook: ${ex.message}")
+        }
+    }
+
+
 
     private fun Collection<MutableMap<String, ReasonDefinition>>.flattenToMap(): Map<String, ReasonDefinition> {
         val map = mutableMapOf<String, ReasonDefinition>()
@@ -93,6 +157,22 @@ object PunishmentService {
         return null
     }
 
+    private fun getPunishmentColor(type: PunishmentType): Int {
+        return when (type) {
+            PunishmentType.TEMPBAN,
+            PunishmentType.BAN -> 0xFF0000
+
+            PunishmentType.WARN,
+            PunishmentType.TEMPWARN -> 0xFFA500
+
+            PunishmentType.MUTE,
+            PunishmentType.TEMPMUTE -> 0x0000FF
+
+            PunishmentType.KICK -> 0xFFFF00
+
+            else -> 0x000000
+        }
+    }
 
 
     fun punish(
@@ -104,6 +184,14 @@ object PunishmentService {
     ) {
         if (recentPunishments.getIfPresent(targetUser.uuid) != null) {
             punisher.player?.sendMessage("That player was recently punished!".red())
+            return
+        }
+
+        val linkedDCID = punisher.discordID
+
+        if(linkedDCID == null && punisher is Player){
+            punisher.sendMessage("You must have your account linked before you can punish".red())
+            punisher.sendMessage("Run /link to link your account!".blue())
             return
         }
 
@@ -135,7 +223,7 @@ object PunishmentService {
             )
         }
 
-        if(targetUser.getActivePunishment(type) != null){
+        if (targetUser.getActivePunishment(type) != null) {
             punisher.sendMessage("That player is already punished!".red())
             return
         }
@@ -175,9 +263,11 @@ object PunishmentService {
         }
 
 
-        if(targetUser != punisher) {
+        if (targetUser != punisher) {
             UserManager.save(punisher)
         }
+
+        logToDiscord(punishment)
         logPunishment(punishment)
         punisher.sendMessage("Successfully punished ${targetUser.playerName.blue()} for $reason.".blue())
 
@@ -217,10 +307,13 @@ object PunishmentService {
         return when (punishment.type) {
             PunishmentType.BAN, PunishmentType.TEMPBAN ->
                 targetUser.unban(senderUser, punishment.id, "Rollback")
+
             PunishmentType.MUTE, PunishmentType.TEMPMUTE ->
                 targetUser.unmute(senderUser, punishment.id, "Rollback")
+
             PunishmentType.WARN, PunishmentType.TEMPWARN ->
                 targetUser.unwarn(senderUser, punishment.id, "Rollback")
+
             else -> false
         }
     }
@@ -271,11 +364,17 @@ object PunishmentService {
             .translate()
     }
 
-    fun buildRemovalMessage(template: String, punishment: Punishment, user: User, senderUser: User, reason: String): String {
+    fun buildRemovalMessage(
+        template: String,
+        punishment: Punishment,
+        user: User,
+        senderUser: User,
+        reason: String
+    ): String {
         val timeLeft = punishment.getDurationFormatted()
         return template
             .replace("%target%", user.playerName)
-            .replace("%user%",  senderUser.playerName)
+            .replace("%user%", senderUser.playerName)
             .replace("%reason%", reason)
             .replace("%time%", timeLeft)
             .translate()
@@ -331,10 +430,10 @@ object PunishmentService {
             .replace("%reason%", punishment.reason)
             .replace("%time%", timeFormatted)
 
-        for(player in Bukkit.getOnlinePlayers()){
-            if(player.hasPermission(Perm.PUNISH_LOG)) {
+        for (player in Bukkit.getOnlinePlayers()) {
+            if (player.hasPermission(Perm.PUNISH_LOG)) {
                 val user = UserManager.get(player)
-                if(user != null && user.isSettingEnabled(Setting.PUNISHMENT_LOGS)) {
+                if (user != null && user.isSettingEnabled(Setting.PUNISHMENT_LOGS)) {
                     player.sendMessage(message.translate())
                 }
             }
