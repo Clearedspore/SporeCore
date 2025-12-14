@@ -1,11 +1,11 @@
 package me.clearedSpore.sporeCore.database
 
+import me.clearedSpore.sporeAPI.util.ItemUtil
 import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
 import me.clearedSpore.sporeCore.database.util.DocReader
 import me.clearedSpore.sporeCore.database.util.DocWriter
 import me.clearedSpore.sporeCore.features.kit.`object`.Kit
 import me.clearedSpore.sporeCore.features.warp.`object`.Warp
-import me.clearedSpore.sporeCore.util.InventoryUtil
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
@@ -54,9 +54,9 @@ data class Database(
     private fun kitToDocument(kit: Kit): Document = DocWriter()
         .put("name", kit.name)
         .put("id", kit.id)
-        .put("inventory", InventoryUtil.itemStackListToBase64(kit.inventory))
-        .put("armor", InventoryUtil.itemStackListToBase64(kit.armor))
-        .put("offhand", InventoryUtil.itemStackToBase64(kit.offHand))
+        .put("inventory", ItemUtil.itemStackListToBase64(kit.inventory))
+        .put("armor", ItemUtil.itemStackListToBase64(kit.armor))
+        .put("offhand", ItemUtil.itemStackToBase64(kit.offHand))
         .put("permission", kit.permission)
         .put("cooldown", kit.cooldown)
         .put("displayItem", kit.displayItem)
@@ -105,9 +105,9 @@ data class Database(
                 kits = kitDocs.mapNotNull { d ->
                     val name = d.get("name") as? String ?: return@mapNotNull null
                     val id = d.get("id") as? String ?: return@mapNotNull null
-                    val inventory = InventoryUtil.itemStackListFromBase64(d.get("inventory") as? String)
-                    val armor = InventoryUtil.itemStackListFromBase64(d.get("armor") as? String)
-                    val offhand = InventoryUtil.itemStackFromBase64(d.get("offhand") as? String)
+                    val inventory = ItemUtil.itemStackListFromBase64(d.get("inventory") as? String)
+                    val armor = ItemUtil.itemStackListFromBase64(d.get("armor") as? String)
+                    val offhand = ItemUtil.itemStackFromBase64(d.get("offhand") as? String)
                     val permission = d.get("permission") as? String
                     val cooldown = when (val raw = d.get("cooldown")) {
                         is Long -> raw

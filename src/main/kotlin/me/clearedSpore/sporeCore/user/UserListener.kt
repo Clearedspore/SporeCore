@@ -1,19 +1,23 @@
 package me.clearedSpore.sporeCore.user
 
-import lombok.extern.java.Log
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
+import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.eco.EconomyService
+import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.features.vanish.VanishService
+import me.clearedSpore.sporeCore.inventory.InventoryManager
+import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Tasks
@@ -25,6 +29,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerLoginEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.dizitart.no2.filters.FluentFilter
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -105,7 +110,26 @@ class UserListener : Listener {
             }
         }
 
-        user.lastServerIP = event.hostname
+        if(features.invRollback) {
+            user.pendingInventories.forEach { id ->
+                if (InventoryManager.getInventory(id) == null) {
+                    val doc = InventoryManager.inventoryCollection
+                        .find(FluentFilter.where("id").eq(id))
+                        .firstOrNull()
+
+                    doc?.let {
+                        InventoryData.fromDocument(it)?.let { inv ->
+                            InventoryManager.putCached(inv)
+                        }
+                    }
+                }
+            }
+        }
+
+        player.virtualHost?.hostName?.lowercase()?.let {
+            user.lastServerIP = it
+        }
+
         user.lastJoin = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
         UserManager.save(user)
@@ -120,6 +144,7 @@ class UserListener : Listener {
     fun onJoin(event: PlayerJoinEvent) {
         val player = event.player
         val user = UserManager.getIfLoaded(player.uniqueId) ?: return
+        val config = SporeCore.instance.coreConfig
         val joinConfig = SporeCore.instance.coreConfig.join
         val db = DatabaseManager.getServerData()
         val features = SporeCore.instance.coreConfig.features
@@ -174,6 +199,30 @@ class UserListener : Listener {
             }, 1)
         }
 
+        if(features.invRollback && config.inventories.storeReasons.join){
+            InventoryManager.addPlayerInventory(player, "Join")
+        }
+
+        if(user.isSettingEnabled(Setting.STAFFMODE_ON_JOIN) && features.modes && player.hasPermission(Perm.MODE_ALLOW)){
+            val highest = ModeService.getHighestMode(player)
+            if(highest != null) {
+                ModeService.toggleMode(player)
+                player.sendMessage("Enabled ${highest.name} mode".blue())
+            }
+        }
+
+
+        if (config.features.vanish && VanishService.vanishedPlayers.isNotEmpty()) {
+            if (player.hasPermission(Perm.VANISH_SEE)) return
+
+            val vanishedPlayers = VanishService.vanishedPlayers
+                .mapNotNull { Bukkit.getPlayer(it) }
+
+            vanishedPlayers.forEach { vanished ->
+                player.hidePlayer(SporeCore.instance, vanished)
+            }
+        }
+
 
         if (joinConfig.spawnOnJoin && db.spawn != null) {
             player.teleport(db.spawn!!)
@@ -221,12 +270,26 @@ class UserListener : Listener {
     fun onQuit(event: PlayerQuitEvent) {
         val player = event.player
         val user = UserManager.getIfLoaded(player.uniqueId) ?: return
+        val config = SporeCore.instance.coreConfig
+        val features = SporeCore.instance.coreConfig.features
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val joinTime = user.lastJoin?.let {
             runCatching { LocalDateTime.parse(it, formatter).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() }
                 .getOrNull()
         } ?: System.currentTimeMillis()
+
+        if(features.invRollback && config.inventories.storeReasons.leave){
+            InventoryManager.addPlayerInventory(player, "Quit")
+        }
+
+        if(features.modes && ModeService.isInMode(player)){
+            val mode = ModeService.getPlayerMode(player)!!
+            if(mode.tpBack) {
+                ModeService.toggleMode(player)
+            }
+        }
+
 
         val quitTime = System.currentTimeMillis()
         user.totalPlaytime += quitTime - joinTime

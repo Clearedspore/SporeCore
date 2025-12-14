@@ -16,6 +16,7 @@ import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
+import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.user.settings.Setting
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -56,7 +57,10 @@ data class User(
     var ipHistory: MutableList<String> = mutableListOf(),
     var channel: String? = null,
     var staffStats: MutableList<StaffPunishmentStats> = mutableListOf(),
-    var lastServerIP: String? = null
+    var lastServerIP: String? = null,
+    var discordID: String? = null,
+    var pendingInventories: MutableSet<String> = mutableSetOf(),
+    var tpsBar: Boolean = false
 ) {
     val uuid: UUID get() = UUID.fromString(uuidStr)
     val player: Player? get() = Bukkit.getPlayer(uuid)
@@ -66,7 +70,6 @@ data class User(
     fun isOnline(): Boolean {
         return player?.isOnline == true
     }
-
 
     fun toDocument() = DocWriter()
         .put("uuidStr", uuidStr)
@@ -96,6 +99,9 @@ data class User(
         .put("channel", channel)
         .putDocuments("staffStats", staffStats.map { it.toDocument() })
         .put("lastServerIP", lastServerIP)
+        .put("discordID", discordID)
+        .putList("pendingInventories", pendingInventories.toList())
+        .putBoolean("tpsBar", tpsBar)
         .build()
 
     fun ChatColor.toDocument(): Document = DocWriter()
@@ -160,7 +166,12 @@ data class User(
                 ipHistory = doc.list("ipHistory").filterIsInstance<String>().toMutableList(),
                 channel = doc.string("channel"),
                 staffStats = doc.documents("staffStats").mapNotNull { StaffPunishmentStats.fromDocument(it) }.toMutableList(),
-                lastServerIP = doc.string("lastServerIP")
+                lastServerIP = doc.string("lastServerIP"),
+                discordID = doc.string("discordID"),
+                pendingInventories = doc.list("pendingInventories")
+                    .mapNotNull { it?.toString() }
+                    .toMutableSet(),
+                tpsBar = doc.boolean("tpsBar")
             )
         }
 
@@ -188,7 +199,10 @@ data class User(
                 chatFormat = null,
                 punishments = mutableListOf(),
                 channel = null,
-                staffStats = mutableListOf()
+                staffStats = mutableListOf(),
+                discordID = null,
+                tpsBar = false,
+                pendingInventories = mutableSetOf()
             )
 
             collection.insert(user.toDocument())
@@ -289,6 +303,7 @@ data class User(
     fun toggleSetting(setting: Setting): Boolean {
         val newValue = !isSettingEnabled(setting)
         setSetting(setting, newValue)
+        UserManager.save(this)
         return newValue
     }
 

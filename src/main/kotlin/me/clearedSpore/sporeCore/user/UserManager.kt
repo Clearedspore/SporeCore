@@ -1,8 +1,9 @@
 package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
+import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
@@ -76,7 +77,6 @@ object UserManager {
         return newUser
     }
 
-
     fun getConsoleUser(): User {
         return users[consoleUUID] ?: User(
             uuidStr = consoleUUID.toString(),
@@ -115,6 +115,10 @@ object UserManager {
 
     fun get(player: Player): User? = get(player.uniqueId, player.name)
     fun get(player: OfflinePlayer): User? = get(player.uniqueId, player.name)
+    fun get(playerName: String): User? {
+        val player = Bukkit.getOfflinePlayer(playerName)
+        return get(player.uniqueId, player.name)
+    }
 
     fun getIfLoaded(uuid: UUID): User? = users[uuid]
 
@@ -144,8 +148,6 @@ object UserManager {
     fun stopAutoSave(uuid: UUID) {
         autoSaveTasks.remove(uuid)?.cancel(false)
     }
-
-
 
     fun getBalance(uuid: UUID): CompletableFuture<Double?> =
         CompletableFuture.supplyAsync {
