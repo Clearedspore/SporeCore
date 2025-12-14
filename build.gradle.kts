@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "me.clearedSpore"
-version = "2.4"
+version = "2.5"
 
 repositories {
     mavenCentral()
@@ -16,14 +16,14 @@ repositories {
     maven("https://jitpack.io")
     maven("https://repo.gravemc.net/releases/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://nexus.scarsz.me/content/groups/public/")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.23")
-
+    implementation(kotlin("reflect"))
+    implementation(kotlin("stdlib"))
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
@@ -34,13 +34,14 @@ dependencies {
         exclude(group = "org.yaml", module = "snakeyaml")
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
-    implementation("com.github.Clearedspore:SporeAPI:1.8.5")
-    implementation("org.dizitart:nitrite:4.3.2")
-    implementation(platform("org.dizitart:nitrite-bom:4.3.2"))
-    implementation("org.dizitart:nitrite-mvstore-adapter:4.3.2")
+    implementation("com.github.Clearedspore:SporeAPI:2.1")
+    compileOnly("org.dizitart:nitrite:4.3.2")
+    compileOnly(platform("org.dizitart:nitrite-bom:4.3.2"))
+    compileOnly("org.dizitart:nitrite-mvstore-adapter:4.3.2")
 
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+    compileOnly("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
+    compileOnly("net.dv8tion:JDA:6.1.2")
     compileOnly("me.clip:placeholderapi:2.11.6")
 }
 

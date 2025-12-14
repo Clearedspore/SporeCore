@@ -1,5 +1,5 @@
 name: SporeCore
-version: '2.4'
+version: '2.5'
 main: me.clearedSpore.sporeCore.SporeCore
 api-version: '1.17'
 authors: [ ClearedSpore ]
@@ -7,3 +7,8 @@ authors: [ ClearedSpore ]
 softdepend:
   - Vault
   - PlaceholderAPI
+libraries:
+  - net.dv8tion:JDA:6.1.2
+  - org.dizitart:nitrite:4.3.2
+  - org.dizitart:nitrite-mvstore-adapter:4.3.2
+  - com.github.ben-manes.caffeine:caffeine:3.2.3
