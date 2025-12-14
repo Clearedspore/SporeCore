@@ -411,7 +411,7 @@ class CoreCommand : BaseCommand() {
     }
 
     @Subcommand("wiki")
-    @CommandCompletion("currency|punishments|channels|modes")
+    @CommandCompletion("currency|punishments|channels|modes|inventory|discord")
     fun onWiki(sender: CommandSender, @Optional @Name("feature") feature: String?) {
 
         val base = "https://spore-plugins.gitbook.io/sporecore/"
@@ -420,7 +420,9 @@ class CoreCommand : BaseCommand() {
             "currency" to "${base}custom-currency",
             "punishments" to "${base}punishments",
             "channels" to "${base}channels",
-            "modes" to "${base}features/modes"
+            "modes" to "${base}modes",
+            "inventory" to "${base}inventory",
+            "discord" to "${base}hooks/discord"
         )
 
         if (feature.isNullOrEmpty()) {
