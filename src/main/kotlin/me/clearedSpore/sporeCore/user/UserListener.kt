@@ -6,19 +6,22 @@ import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
-import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.eco.EconomyService
+import me.clearedSpore.sporeCore.features.logs.LogsService
+import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.features.setting.impl.StaffmodeOnJoinSetting
+import me.clearedSpore.sporeCore.features.setting.impl.TryLogSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
-import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
@@ -45,7 +48,7 @@ class UserListener : Listener {
             user.playerName = player.name
         }
 
-        if(user.hasJoinedBefore == false){
+        if (user.hasJoinedBefore == false) {
             val firstServerIP = event.hostname
             user.firstServerIP = firstServerIP
         }
@@ -74,10 +77,10 @@ class UserListener : Listener {
                 }
                 tryTemplate?.let {
                     val formatted = PunishmentService.buildTryMessage(it, ban, user)
-                    for(player in Bukkit.getOnlinePlayers()){
-                        if(player.hasPermission(Perm.PUNISH_LOG)) {
+                    for (player in Bukkit.getOnlinePlayers()) {
+                        if (player.hasPermission(Perm.PUNISH_LOG)) {
                             val user = UserManager.get(player)
-                            if(user != null && user.isSettingEnabled(Setting.TRY_LOGS)) {
+                            if (user != null && user.getSettingOrDefault(TryLogSetting())) {
                                 player.sendMessage(formatted.translate())
                             }
                         }
@@ -110,7 +113,7 @@ class UserListener : Listener {
             }
         }
 
-        if(features.invRollback) {
+        if (features.invRollback) {
             user.pendingInventories.forEach { id ->
                 if (InventoryManager.getInventory(id) == null) {
                     val doc = InventoryManager.inventoryCollection
@@ -139,7 +142,6 @@ class UserListener : Listener {
     }
 
 
-
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
         val player = event.player
@@ -156,10 +158,10 @@ class UserListener : Listener {
 
             db.totalJoins = db.totalJoins + 1
 
-            if(SporeCore.instance.coreConfig.economy.enabled){
-            val starter = SporeCore.instance.coreConfig.economy.starterBalance
-            EconomyService.add(user, starter, "Starter balance")
-                }
+            if (SporeCore.instance.coreConfig.economy.enabled) {
+                val starter = SporeCore.instance.coreConfig.economy.starterBalance
+                EconomyService.add(user, starter, "Starter balance")
+            }
 
             joinConfig.firstJoinMessage.forEach { msg ->
                 val formatted = msg.replace("%player%", player.name)
@@ -185,6 +187,15 @@ class UserListener : Listener {
             }
         }
 
+        val logConfig = config.logs
+        if (logConfig.joinLeave) {
+            LogsService.addLog(
+                player.uuidStr(),
+                "Joined the server",
+                LogType.JOIN_LEAVE
+            )
+        }
+
         if (user.pendingPayments.isNotEmpty() && SporeCore.instance.coreConfig.economy.enabled) {
             Tasks.runLater(Runnable {
                 player.sendMessage("")
@@ -199,13 +210,13 @@ class UserListener : Listener {
             }, 1)
         }
 
-        if(features.invRollback && config.inventories.storeReasons.join){
+        if (features.invRollback && config.inventories.storeReasons.join) {
             InventoryManager.addPlayerInventory(player, "Join")
         }
 
-        if(user.isSettingEnabled(Setting.STAFFMODE_ON_JOIN) && features.modes && player.hasPermission(Perm.MODE_ALLOW)){
+        if (user.getSettingOrDefault(StaffmodeOnJoinSetting()) && features.modes && player.hasPermission(Perm.MODE_ALLOW)) {
             val highest = ModeService.getHighestMode(player)
-            if(highest != null) {
+            if (highest != null) {
                 ModeService.toggleMode(player)
                 player.sendMessage("Enabled ${highest.name} mode".blue())
             }
@@ -279,17 +290,21 @@ class UserListener : Listener {
                 .getOrNull()
         } ?: System.currentTimeMillis()
 
-        if(features.invRollback && config.inventories.storeReasons.leave){
+        if (features.invRollback && config.inventories.storeReasons.leave) {
             InventoryManager.addPlayerInventory(player, "Quit")
         }
 
-        if(features.modes && ModeService.isInMode(player)){
+        if (features.modes && ModeService.isInMode(player)) {
             val mode = ModeService.getPlayerMode(player)!!
-            if(mode.tpBack) {
+            if (mode.tpBack) {
                 ModeService.toggleMode(player)
             }
         }
 
+        val logConfig = config.logs
+        if (logConfig.joinLeave) {
+            LogsService.addLog(player.uuidStr(), "Left the server", LogType.JOIN_LEAVE)
+        }
 
         val quitTime = System.currentTimeMillis()
         user.totalPlaytime += quitTime - joinTime

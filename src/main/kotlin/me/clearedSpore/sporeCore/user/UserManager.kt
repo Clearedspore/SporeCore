@@ -3,7 +3,6 @@ package me.clearedSpore.sporeCore.user
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
-import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
@@ -19,7 +18,6 @@ object UserManager {
     private val scheduler = Executors.newScheduledThreadPool(1)
     private val autoSaveTasks = mutableMapOf<UUID, ScheduledFuture<*>>()
     private val consoleUUID = UUID.nameUUIDFromBytes("Console".toByteArray())
-
 
     internal val userCollection get() = DatabaseManager.getUserCollection()
 
@@ -94,6 +92,25 @@ object UserManager {
             runCatching { UUID.fromString(id) }.getOrNull()
         }.toList()
     }
+
+    fun getUserByName(name: String): User? {
+        val doc = userCollection.find()
+            .firstOrNull { it.get("playerName", String::class.java)?.equals(name, ignoreCase = true) == true }
+            ?: return null
+
+        val uuidStr = doc.get("uuidStr", String::class.java) ?: return null
+        return get(UUID.fromString(uuidStr), name)
+    }
+
+
+    fun isLoaded(player: Player): Boolean {
+        return users.containsKey(player.uniqueId)
+    }
+
+    fun isLoaded(player: OfflinePlayer): Boolean {
+        return users.containsKey(player.uniqueId)
+    }
+
 
     fun getAltsByLastIp(ip: String, excludeUuid: UUID? = null): List<User> {
         return getAllStoredUUIDsFromDB()
