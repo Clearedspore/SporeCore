@@ -1,8 +1,9 @@
 package me.clearedSpore.sporeCore.acf
 
-import co.aikar.commands.*
+import co.aikar.commands.ConditionFailedException
+import co.aikar.commands.PaperCommandManager
 import org.bukkit.entity.Player
-import java.util.UUID
+import java.util.*
 
 object CooldownCondition {
     private val cooldowns = mutableMapOf<UUID, MutableMap<String, Long>>()

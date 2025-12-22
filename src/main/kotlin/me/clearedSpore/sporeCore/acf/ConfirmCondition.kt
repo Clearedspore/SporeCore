@@ -1,13 +1,9 @@
 package me.clearedSpore.sporeCore.acf
 
-import co.aikar.commands.BukkitCommandExecutionContext
-import co.aikar.commands.BukkitCommandIssuer
-import co.aikar.commands.ConditionContext
-import co.aikar.commands.ConditionFailedException
-import co.aikar.commands.PaperCommandManager
+import co.aikar.commands.*
 import me.clearedSpore.sporeAPI.util.CC.red
 import org.bukkit.entity.Player
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object ConfirmCondition {
@@ -15,10 +11,12 @@ object ConfirmCondition {
     private const val CONFIRM_TIMEOUT = 10_000L
 
     fun register(manager: PaperCommandManager) {
-        manager.commandConditions.addCondition(Player::class.java, "confirm") {
-                context: ConditionContext<BukkitCommandIssuer>,
-                execContext: BukkitCommandExecutionContext,
-                value: Player ->
+        manager.commandConditions.addCondition(
+            Player::class.java,
+            "confirm"
+        ) { context: ConditionContext<BukkitCommandIssuer>,
+            execContext: BukkitCommandExecutionContext,
+            value: Player ->
 
             val player = value
             val lastTime = pendingConfirms[player.uniqueId]
