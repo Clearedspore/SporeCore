@@ -1,7 +1,6 @@
 package me.clearedSpore.sporeCore.features.chat.channel.`object`
 
 
-
 data class Channel(
     var name: String,
     var id: String,

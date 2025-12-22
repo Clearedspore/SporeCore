@@ -5,11 +5,10 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.ChannelConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.chat.channel.`object`.Channel
+import me.clearedSpore.sporeCore.features.setting.impl.ChannelMessagesSetting
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.user.settings.Setting
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Util.noTranslate
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 
@@ -22,8 +21,8 @@ object ChatChannelService {
         UserManager.save(user)
     }
 
-    fun resetChannel(user: User){
-        user.channel = null
+    fun resetChannel(user: User) {
+        user.channel = ""
         UserManager.save(user)
     }
 
@@ -42,7 +41,7 @@ object ChatChannelService {
         for (recipient in Bukkit.getOnlinePlayers()) {
             if (recipient.hasPermission(permission) && recipient.hasPermission(Perm.CHANNEL_ALLOW)) {
                 val user = UserManager.get(recipient)
-                if (user != null && user.isSettingEnabled(Setting.CHANNEL_MESSAGES)) {
+                if (user != null && user.getSettingOrDefault(ChannelMessagesSetting())) {
                     recipient.sendMessage(formattedMessage)
                 }
             }
@@ -54,14 +53,14 @@ object ChatChannelService {
         return getChannels().firstOrNull { it.symbol == symbol }
     }
 
-    fun getChannelByName(channelID: String): Channel? {
+    fun getChannelByName(channelID: String?): Channel? {
+        if (channelID.isNullOrBlank()) return null
         val config = SporeCore.instance.coreConfig.chat.channels.channels
         val lower = channelID.lowercase()
-
         config[lower]?.let { return it.toChannel() }
-
         return config.values.firstOrNull { it.id.equals(lower, true) }?.toChannel()
     }
+
 
     fun getChannels(): List<Channel> {
         val config = SporeCore.instance.coreConfig.chat.channels
