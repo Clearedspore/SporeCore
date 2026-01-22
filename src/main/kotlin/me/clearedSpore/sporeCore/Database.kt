@@ -1,16 +1,18 @@
-package me.clearedSpore.sporeCore.database
+package me.clearedSpore.sporeCore
 
 import me.clearedSpore.sporeAPI.util.ItemUtil
-import me.clearedSpore.sporeCore.database.util.DocReader
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocReader
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
 import me.clearedSpore.sporeCore.features.kit.`object`.Kit
 import me.clearedSpore.sporeCore.features.warp.`object`.Warp
+import me.clearedSpore.sporeCore.util.BukkitSafe
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.dizitart.no2.collection.Document
 import org.dizitart.no2.collection.NitriteCollection
+import org.dizitart.no2.filters.FluentFilter
 
 data class Database(
     val id: String = "server",
@@ -72,7 +74,7 @@ data class Database(
         .build()
 
     fun save(collection: NitriteCollection) {
-        val filter = org.dizitart.no2.filters.FluentFilter.where("id").eq(id)
+        val filter = FluentFilter.where("id").eq(id)
         val doc = toDocument()
         val result = collection.update(filter, doc)
         if (result.affectedCount == 0) {
@@ -82,7 +84,7 @@ data class Database(
 
     companion object {
         fun load(collection: NitriteCollection): Database {
-            val docRaw = collection.find(org.dizitart.no2.filters.FluentFilter.where("id").eq("server")).firstOrNull()
+            val docRaw = collection.find(FluentFilter.where("id").eq("server")).firstOrNull()
             if (docRaw == null) {
                 val db = Database()
                 db.save(collection)

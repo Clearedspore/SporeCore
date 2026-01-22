@@ -45,14 +45,13 @@ import me.clearedSpore.sporeCore.commands.spawn.SpawnCommand
 import me.clearedSpore.sporeCore.commands.teleport.*
 import me.clearedSpore.sporeCore.commands.util.*
 import me.clearedSpore.sporeCore.commands.utilitymenus.*
-import me.clearedSpore.sporeCore.database.Database
-import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
 import me.clearedSpore.sporeCore.features.homes.HomeService
+import me.clearedSpore.sporeCore.features.investigation.`object`.enum.InvestigationPriority
 import me.clearedSpore.sporeCore.features.kit.KitService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
@@ -60,20 +59,21 @@ import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.mode.listener.ModeListener
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.features.reports.ReportService
 import me.clearedSpore.sporeCore.features.setting.SettingRegistry
 import me.clearedSpore.sporeCore.features.stats.PlaytimeTracker
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.features.warp.WarpService
 import me.clearedSpore.sporeCore.hook.PlaceholderAPIHook
 import me.clearedSpore.sporeCore.inventory.InventoryManager
-import me.clearedSpore.sporeCore.listener.*
+import me.clearedSpore.sporeCore.listener.InventoryListener
 import me.clearedSpore.sporeCore.task.ActionBarTicker
 import me.clearedSpore.sporeCore.task.TpsTask
 import me.clearedSpore.sporeCore.task.VanishTask
 import me.clearedSpore.sporeCore.user.UserListener
 import me.clearedSpore.sporeCore.user.UserManager
+import me.clearedSpore.sporeCore.util.ListenerRegistry
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
 import me.clearedSpore.sporeCore.util.UpdateChecker
 import net.milkbowl.vault.chat.Chat
 import net.milkbowl.vault.economy.Economy
@@ -100,12 +100,12 @@ class SporeCore : JavaPlugin() {
     }
 
     lateinit var commandManager: PaperCommandManager
-    lateinit var chatInput: ChatInput
 
     lateinit var coreConfig: CoreConfig
     lateinit var database: Database
 
-    lateinit var logService: LogsService
+    lateinit var listener: ListenerRegistry
+
     lateinit var resolver: TargetSelectorResolver
     lateinit var settingRegistry: SettingRegistry
     lateinit var warpService: WarpService
@@ -120,11 +120,17 @@ class SporeCore : JavaPlugin() {
     var totalCommands: Int = 0
     var discordEnabled: Boolean = false
 
+    var freshStartup = true
+
+
     override fun onEnable() {
         totalCommands = 0
         instance = this
         coreConfig = loadConfig()
-        Logger.initialize(coreConfig.general.prefix)
+        Logger.initialize(
+            coreConfig.general.prefix,
+            "This should not be happening. Please contact the developer ClearedSpore."
+        )
 
         setupEconomy()
         if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
@@ -138,9 +144,8 @@ class SporeCore : JavaPlugin() {
         Message.init(true)
         commandManager = PaperCommandManager(this)
         setupACF()
-        Task.initialize(this)
+        Task.onInitialize(this)
         Perm.registerAll()
-        chatInput = ChatInput(this)
 
         val pluginID = 28481
         Metrics(this, pluginID)
@@ -155,7 +160,7 @@ class SporeCore : JavaPlugin() {
 
         InventoryManager.startCleanupTask()
 
-        Tasks.run {
+        Task.run {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 PlaceholderAPIHook().register()
                 Logger.info("Successfully integrated with PlaceholderAPI")
@@ -202,24 +207,32 @@ class SporeCore : JavaPlugin() {
 
         TpsTask.start()
 
+        if(features.reports){
+            ReportService.startCleanupTask()
+        }
+
 
         setupPunishments()
 
         PlaytimeTracker.start()
         Cooldown.createCooldown("msg_cooldown", 2)
+        Cooldown.createCooldown("report", coreConfig.reports.reportCooldown)
 
+        listener = ListenerRegistry(this)
+        listener.registerAll()
         registerListeners()
         registerCompletions()
         registerCommands()
 
         logStartupBanner()
+        Task.runLater({ freshStartup = false }, 20)
     }
 
     override fun onDisable() {
         val features = coreConfig.features
 
         if (features.modes) {
-            ModeService.disableAll()
+            ModeService.forceRestoreAllInventoriesOnShutdown()
         }
 
         if (features.vanish) {
@@ -231,14 +244,17 @@ class SporeCore : JavaPlugin() {
             VanishTask.stop()
         }
 
+        ChatInputService.clear()
         TpsTask.stop()
-
         LogsService.cleanupLogs()
         LogsService.stopCleanupTask()
-
+        if(features.reports) {
+            ReportService.cleanupReports()
+            ReportService.stopCleanupTask()
+        }
         ActionBarTicker.stop()
-
         InventoryManager.stopCleanupTask()
+
 
         PlaytimeTracker.stop()
         Logger.infoDB("Saving all user data before shutdown...")
@@ -316,16 +332,16 @@ class SporeCore : JavaPlugin() {
 
 
     fun registerListeners() {
-        server.pluginManager.registerEvents(ChatListener(), this)
-        server.pluginManager.registerEvents(DeathListener(), this)
-        server.pluginManager.registerEvents(InventoryListener(), this)
-        server.pluginManager.registerEvents(CommandListener(), this)
-        server.pluginManager.registerEvents(FreezeListener(), this)
-        server.pluginManager.registerEvents(LocationListener(), this)
+        var manualListeners = 0
         server.pluginManager.registerEvents(TpsTask, this)
+        manualListeners++
         if (coreConfig.features.invRollback) {
             server.pluginManager.registerEvents(InventoryListener(), this)
+            manualListeners++
         }
+
+        Logger.info("Manually registered $manualListeners listeners")
+
     }
 
     fun loadConfig(): CoreConfig {
@@ -391,6 +407,9 @@ class SporeCore : JavaPlugin() {
         if (features.kits) {
             commandManager.registerDependency(KitService::class.java, kitService)
         }
+
+
+        registerCommand(PendingMSGCommand())
 
         registerCommand(AdventureCommand())
         registerCommand(CreativeCommand())
@@ -501,6 +520,10 @@ class SporeCore : JavaPlugin() {
             registerCommand(VanishCommand())
         }
 
+        if(features.investigation){
+            registerCommand(InvestigationCommand())
+        }
+
         if (features.modes) {
             registerCommand(ModeCommand())
             for (mode in ModeService.getModes()) {
@@ -520,6 +543,10 @@ class SporeCore : JavaPlugin() {
         registerCommand(InventoryManagerCommand())
         registerCommand(FreezeCommand())
         registerCommand(TPSBarCommand())
+
+        if(features.reports){
+            registerCommand(ReportCommand())
+        }
 
         if (features.channels) {
             for (channel in ChatChannelService.getChannels()) {
@@ -565,7 +592,7 @@ class SporeCore : JavaPlugin() {
     }
 
     fun setupACF() {
-        val prefix = "⚙ ".blue() + "SporeCore » ".white()
+        val prefix = "⚙ ".white() + "SporeCore &f» ".blue()
 
         val locales = commandManager.locales
 
@@ -614,19 +641,18 @@ class SporeCore : JavaPlugin() {
 
         registerTargetSelectors()
 
-        commandManager.commandContexts.registerContext(Enchantment::class.java) { c ->
-            val input = c.popFirstArg().lowercase()
-            val enchant = Enchantment.values().firstOrNull {
-                it.key.key.equals(input, true) || it.name.equals(input, true)
-            }
+        commandManager.getCommandContexts().registerContext(Enchantment::class.java, { context ->
+            val enchantment = Enchantment.getByName(context.popFirstArg())
+            if (enchantment == null) throw InvalidCommandArgument("Enchantment not found", false)
+            enchantment
+        })
 
-            if (enchant == null) {
-                throw InvalidCommandArgument("Invalid enchantment: $input")
-            }
 
-            enchant
-        }
-
+        commandManager.getCommandContexts().registerContext(InvestigationPriority::class.java, { context ->
+            val priority = InvestigationPriority.valueOf(context.popFirstArg())
+            if (priority == null) throw InvalidCommandArgument("Priority not found", false)
+            priority
+        })
 
         commandManager.commandContexts.registerContext(Attribute::class.java) { context ->
             val arg = context.popFirstArg()

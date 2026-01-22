@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.database.util
+package me.clearedSpore.sporeCore.util.doc
 
 import org.bukkit.Location
 import org.dizitart.no2.collection.Document
@@ -28,9 +28,10 @@ class DocWriter {
 
 
     fun putList(key: String, list: Collection<*>?): DocWriter {
-        if (!list.isNullOrEmpty()) doc.put(key, list)
+        doc.put(key, list ?: emptyList<Any>())
         return this
     }
+
 
     fun putMap(key: String, map: Map<*, *>?): DocWriter {
         if (!map.isNullOrEmpty()) doc.put(key, map)

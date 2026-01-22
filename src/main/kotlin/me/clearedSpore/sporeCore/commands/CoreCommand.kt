@@ -11,14 +11,16 @@ import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
+import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
@@ -35,7 +37,7 @@ import me.clearedSpore.sporeCore.menu.rollback.StaffRollbackPreviewMenu
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
+import me.clearedSpore.sporeCore.util.Util.niceName
 import me.clearedSpore.sporeCore.util.button.CallbackRegistry
 import me.clearedSpore.sporeCore.util.button.TextButton
 import org.bukkit.Bukkit
@@ -60,10 +62,11 @@ class CoreCommand : BaseCommand() {
     @CommandPermission(Perm.ADMIN)
     fun onReload(sender: CommandSender) {
         val plugin = SporeCore.instance
+        val config = plugin.coreConfig
         sender.sendMessage("Reloading SporeCore asynchronously...".blue())
 
         val startTime = System.currentTimeMillis()
-        Logger.initialize(plugin.coreConfig.general.prefix)
+        Logger.initialize(config.general.prefix)
         Message.init(true)
         reloadConfig(plugin, sender)
             .thenCompose { reloadEconomy() }
@@ -71,17 +74,19 @@ class CoreCommand : BaseCommand() {
             .thenCompose { reloadKits(plugin) }
             .thenCompose { reloadDatabase() }
             .thenRun {
-                if (plugin.coreConfig.features.currency.enabled) {
+                if (config.features.currency.enabled) {
                     CurrencySystemService.reload()
                 }
 
-                if (plugin.coreConfig.features.punishments) {
+                if (config.features.punishments) {
                     PunishmentService.load()
                 }
 
-                if (plugin.coreConfig.features.modes) {
+                if (config.features.modes) {
                     ModeService.initialize()
                 }
+
+                Cooldown.updateCooldownDuration("report", config.reports.reportCooldown)
 
                 val duration = System.currentTimeMillis() - startTime
                 sender.sendMessage("Reload complete. Took ${duration}ms.".blue())
@@ -242,7 +247,7 @@ class CoreCommand : BaseCommand() {
         val start = System.currentTimeMillis()
         sender.sendMessage("Processing...".blue())
 
-        Tasks.runAsync {
+        Task.runAsync {
             val staffPlayer = Bukkit.getOfflinePlayers()
                 .firstOrNull { it.name.equals(staffName, ignoreCase = true) }
 
@@ -285,7 +290,7 @@ class CoreCommand : BaseCommand() {
                 if (sender is Player) {
                     val viewer = sender
 
-                    Tasks.runSync {
+                    Task.runSync {
                         if (statsToRollback.isEmpty()) {
                             sender.sendMessage("No punishments by $staffName within $timeArg.".red())
                             return@runSync
@@ -316,7 +321,9 @@ class CoreCommand : BaseCommand() {
             statsToRollback.forEach { stat ->
                 val targetUser = UserManager.get(stat.targetUuid) ?: return@forEach
 
-                val punishment = targetUser.punishments.firstOrNull { it.id == stat.punishmentId } ?: return@forEach
+                val punishment = targetUser.punishments.firstOrNull {
+                    it.id == stat.punishmentId && it.isActive()
+                } ?: return@forEach
 
                 val removed = when (punishment.type) {
                     PunishmentType.BAN, PunishmentType.TEMPBAN ->
@@ -376,7 +383,7 @@ class CoreCommand : BaseCommand() {
     fun onDumpDB(sender: CommandSender) {
         sender.sendMessage("Dumping database to JSON...".blue())
 
-        Tasks.runAsync {
+        Task.runAsync {
             try {
                 val plugin = SporeCore.instance
                 val file = File(plugin.dataFolder, "database_dump.json")
@@ -385,17 +392,19 @@ class CoreCommand : BaseCommand() {
                 val serverCollection = DatabaseManager.getServerCollection()
                 val inventoryCollection = DatabaseManager.getInventoryCollection()
                 val logCollection = DatabaseManager.getLogsCollection()
+                val reportCollection = DatabaseManager.getReportCollection()
+                val investigationCollection = DatabaseManager.getInvestigationCollection()
 
                 val dump: MutableMap<String, List<Map<String, Any>>> = mutableMapOf()
 
                 dump["users"] = userCollection.find().map { doc ->
                     @Suppress("UNCHECKED_CAST")
-                    (doc as Map<String, Any>).mapValues { it.value!! }
+                    (doc as Map<String, Any>).mapValues { it.value }
                 }.toList()
 
                 dump["serverData"] = serverCollection.find().map { doc ->
                     @Suppress("UNCHECKED_CAST")
-                    (doc as Map<String, Any>).mapValues { it.value!! }
+                    (doc as Map<String, Any>).mapValues { it.value }
                 }.toList()
 
                 dump["inventories"] = inventoryCollection.find().map { doc ->
@@ -404,6 +413,16 @@ class CoreCommand : BaseCommand() {
                 }.toList()
 
                 dump["logs"] = logCollection.find().map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    (doc as Map<String, Any>).mapValues { it.value }
+                }.toList()
+
+                dump["reports"] = reportCollection.find().map { doc ->
+                    @Suppress("UNCHECKED_CAST")
+                    (doc as Map<String, Any>).mapValues { it.value }
+                }.toList()
+
+                dump["investigations"] = investigationCollection.find().map { doc ->
                     @Suppress("UNCHECKED_CAST")
                     (doc as Map<String, Any>).mapValues { it.value }
                 }.toList()
@@ -426,7 +445,8 @@ class CoreCommand : BaseCommand() {
     }
 
     @Subcommand("wiki")
-    @CommandCompletion("currency|punishments|channels|modes|inventory|discord|selector")
+    @CommandPermission("sporecore.wiki")
+    @CommandCompletion("currency|punishments|channels|modes|inventory|discord|selector|reports|investigation")
     fun onWiki(sender: CommandSender, @Optional @Name("feature") feature: String?) {
 
         val base = "https://spore-plugins.gitbook.io/sporecore/"
@@ -438,7 +458,9 @@ class CoreCommand : BaseCommand() {
             "modes" to "${base}modes",
             "inventory" to "${base}inventory",
             "discord" to "${base}hooks/discord",
-            "selector" to "${base}selector"
+            "selector" to "${base}selector",
+            "reports" to "${base}reports",
+            "investigation" to "${base}investigation"
         )
 
         if (feature.isNullOrEmpty()) {
@@ -482,7 +504,7 @@ class CoreCommand : BaseCommand() {
         val amount = (amountArg ?: 500).coerceIn(1, 5000)
         sender.sendMessage("Starting generation of $amount fake users...".blue())
 
-        Tasks.runAsync {
+        Task.runAsync {
             try {
                 val databaseCollection = DatabaseManager.getServerCollection()
                 val database = DatabaseManager.getServerData()
@@ -592,6 +614,7 @@ class CoreCommand : BaseCommand() {
                 Int::class.java -> value.toInt()
                 Double::class.java -> value.toDouble()
                 Float::class.java -> value.toFloat()
+                List::class.java -> value.toList()
                 else -> value
             }
             field.set(user, castValue)
@@ -605,6 +628,7 @@ class CoreCommand : BaseCommand() {
 
     @Subcommand("callback")
     @Syntax("<id>")
+    @Private
     fun onCallback(sender: CommandSender, id: String) {
         CallbackRegistry.execute(sender, id)
     }
@@ -623,6 +647,8 @@ class CoreCommand : BaseCommand() {
             return
         }
 
+        val config = SporeCore.instance.coreConfig
+
         sender.sendMessage("=== User Info for ${target.name} ===".blue())
         sender.sendMessage("UUID: ".white() + target.uniqueId.toString().green() + " (uuidStr)".gray())
         sender.sendMessage("First Join: ".white() + (user.firstJoin ?: "Unknown").green() + " (firstJoin)".gray())
@@ -636,7 +662,13 @@ class CoreCommand : BaseCommand() {
             "Playtime: ".white() + StatService.getTotalPlaytime(user).toString().green() + " (totalPlaytime)".gray()
         )
         sender.sendMessage("Credits: ".white() + user.credits.toString().gray() + " (credits)".gray())
-        sender.sendMessage("Credits Spent: ".white() + user.creditsSpent + " (creditsSpent)".gray())
+        sender.sendMessage("Credits Spent: ".white() + user.creditsSpent.toString().green() + " (creditsSpent)".gray())
+        sender.sendMessage("tpsBar: ".white() + user.tpsBar.toString().niceName().green() + " (tpsBar)".gray())
+        if(config.discord.enabled) {
+            sender.sendMessage("discord ID: ".white() + (user.discordID ?: "Not linked").green() + " (discordID)".gray())
+        }
+
+        sender.sendMessage("Past Reports: ".white() + user.pastReports.size.toString().green() + " (pastReports)".gray())
 
         sender.sendMessage(
             "Last Location: ".white() +

@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.database
+package me.clearedSpore.sporeCore
 
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -10,10 +10,14 @@ import java.io.File
 
 object DatabaseManager {
     private lateinit var db: Nitrite
+
     private lateinit var userCollection: NitriteCollection
     private lateinit var serverCollection: NitriteCollection
     private lateinit var inventoryCollection: NitriteCollection
     private lateinit var logsCollection: NitriteCollection
+    private lateinit var reportCollection: NitriteCollection
+    private lateinit var investigationCollection: NitriteCollection
+
     private lateinit var serverData: Database
 
     fun init(pluginFolder: File) {
@@ -58,6 +62,23 @@ object DatabaseManager {
             e.printStackTrace()
         }
 
+        Logger.infoDB("Loading Reports")
+        try {
+            reportCollection = db.getCollection("reports")
+            Logger.infoDB("Reports loaded!")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+
+        Logger.infoDB("Loading Investigations")
+        try {
+            investigationCollection = db.getCollection("investigations")
+            Logger.infoDB("Investigations loaded!")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         serverData = Database.load(serverCollection)
         InventoryManager.loadAllInventories()
         Logger.infoDB("Nitrite database ready at ${dbFile.absolutePath}")
@@ -67,6 +88,8 @@ object DatabaseManager {
     fun getServerCollection(): NitriteCollection = serverCollection
     fun getInventoryCollection(): NitriteCollection = inventoryCollection
     fun getLogsCollection(): NitriteCollection = logsCollection
+    fun getReportCollection(): NitriteCollection = reportCollection
+    fun getInvestigationCollection(): NitriteCollection = investigationCollection
 
     fun getServerData(): Database = serverData
 

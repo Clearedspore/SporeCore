@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.database.util
+package me.clearedSpore.sporeCore.util.doc
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -9,8 +9,8 @@ class DocReader(val doc: Document) {
     fun string(key: String): String? = doc.get(key)?.toString()
 
     fun boolean(key: String): Boolean =
-        ((doc.get(key) as? Boolean)
-                ?: string(key)?.toBooleanStrictOrNull() == true)
+        (doc.get(key) as? Boolean)
+            ?: (string(key)?.toBooleanStrictOrNull() == true)
 
     fun int(key: String): Int =
         (doc.get(key) as? Number)?.toInt()
@@ -64,6 +64,13 @@ class DocReader(val doc: Document) {
             if (v == null) return@mapNotNull null
             k to (v as T)
         }?.toMap() ?: emptyMap()
+
+
+    inline fun <reified T : Enum<T>> enum(key: String): T? {
+        val value = string(key) ?: return null
+        return runCatching { enumValueOf<T>(value) }.getOrNull()
+    }
+
 
     fun document(key: String): Document? =
         (doc.get(key) as? Document)
