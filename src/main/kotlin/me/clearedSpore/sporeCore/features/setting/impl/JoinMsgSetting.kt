@@ -8,11 +8,11 @@ import org.bukkit.Material
 @Setting
 class JoinMsgSetting : ToggleSetting(
     key = "join-msg",
-    displayName = "Join message",
+    displayName = "Join Message",
     item = Material.REDSTONE_LAMP,
     lore = listOf(
-        "When you join do you want",
-        "to see the info message?"
+        "| Controls whether you see",
+        "| the info message on join"
     )
 ) {
     override fun defaultValue(): Boolean = true

@@ -8,10 +8,10 @@ import org.bukkit.Material
 @Setting
 class TeleportRequestSettings : ToggleSetting(
     key = "teleport-requests",
-    displayName = "Teleport requests",
+    displayName = "Teleport Requests",
     item = Material.ENDER_EYE,
     lore = listOf(
-        "If players can send you teleport requests"
+        "| Controls whether players can send you teleport requests."
     )
 ) {
     override fun defaultValue(): Boolean = true

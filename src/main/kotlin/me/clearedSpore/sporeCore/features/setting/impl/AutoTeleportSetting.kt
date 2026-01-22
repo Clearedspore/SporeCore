@@ -8,10 +8,10 @@ import org.bukkit.Material
 @Setting
 class AutoTeleportSetting : ToggleSetting(
     key = "auto-teleport",
-    displayName = "Auto teleport",
+    displayName = "Auto Teleport",
     item = Material.LIME_WOOL,
     lore = listOf(
-        "Should the system automatically accept any /tpa request?"
+        "| Controls whether to auto accept all /tpa requests."
     )
 ) {
     override fun defaultValue(): Boolean = false

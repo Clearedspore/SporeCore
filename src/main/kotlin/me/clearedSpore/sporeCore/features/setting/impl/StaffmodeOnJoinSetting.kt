@@ -9,11 +9,11 @@ import org.bukkit.Material
 @Setting
 class StaffmodeOnJoinSetting : ToggleSetting(
     key = "staffmode-on-join",
-    displayName = "Staff mode on join",
+    displayName = "Staff Mode On Join",
     item = Material.COMPASS,
     lore = listOf(
-        "If you want to be put in staffmode",
-        "when you join the server"
+        "| Controls whether your staff mode is enabled",
+        "| automatically when you join the server."
     ),
     permission = Perm.MODE_ALLOW
 ) {

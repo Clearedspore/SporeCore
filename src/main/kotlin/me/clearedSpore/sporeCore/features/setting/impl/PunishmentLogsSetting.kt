@@ -9,10 +9,11 @@ import org.bukkit.Material
 @Setting
 class PunishmentLogsSetting : ToggleSetting(
     key = "punishment-logs",
-    displayName = "Punishment logs",
+    displayName = "Punishment Logs",
     item = Material.DISPENSER,
     lore = listOf(
-        "If you can see punishment logs."
+        "| Controls whether punishment logs are",
+        "| shown to you in chat."
     ),
     permission = Perm.PUNISH_LOG
 ) {

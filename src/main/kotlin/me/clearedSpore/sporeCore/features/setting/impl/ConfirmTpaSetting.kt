@@ -12,8 +12,8 @@ class ConfirmTpaSetting : ToggleSetting(
     displayName = "Confirm TPA",
     item = Material.PLAYER_HEAD,
     lore = listOf(
-        "When accepting & sending a TPA/TPAhere",
-        "should it open the confirmation menu?"
+        "| Controls whether /tpa or /tpahere requests are",
+        "| confirmed via a GUI."
     )
 ) {
 
