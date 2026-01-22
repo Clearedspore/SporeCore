@@ -6,6 +6,8 @@ import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.`object`.BalanceFormat
+import me.clearedSpore.sporeCore.features.punishment.PunishmentService
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clip.placeholderapi.expansion.PlaceholderExpansion
@@ -16,7 +18,7 @@ class PlaceholderAPIHook() : PlaceholderExpansion() {
 
     override fun getIdentifier(): String = "sporecore"
     override fun getAuthor(): String = "ClearedSpore"
-    override fun getVersion(): String = "2.0"
+    override fun getVersion(): String = "2.7"
     override fun persist() = true
 
     override fun onPlaceholderRequest(player: Player, params: String): String? {
@@ -40,6 +42,30 @@ class PlaceholderAPIHook() : PlaceholderExpansion() {
             params.equals("balance_decimal", ignoreCase = true) -> {
                 if (!config.economy.enabled) return null
                 EconomyService.format(user.balance, BalanceFormat.DECIMAL).toString()
+            }
+
+            params.equals("pending_messages", ignoreCase = true) -> {
+                user.pendingMessages.size.toString()
+            }
+
+            params.equals("pending_payments", ignoreCase = true) -> {
+                if(!config.economy.enabled) return "0"
+                user.pendingPayments.size.toString()
+            }
+
+            params.equals("punishments_active_mute", ignoreCase = true) -> {
+                if(!config.features.punishments) return "0"
+                if(user.getActivePunishment(PunishmentType.MUTE) != null) "Yes" else "No"
+            }
+
+            args.size >= 3 && args[0] == "punishments" && args[1] == "total" -> {
+                if (!features.punishments) return null
+                val typeStr = args.drop(2).joinToString("_")
+                if(typeStr == "all"){
+                    return user.punishments.size.toString()
+                }
+                val type = PunishmentType.valueOf(typeStr.uppercase()) ?: return "Invalid Type"
+                user.getPunishmentsByType(type).size.toString()
             }
 
             params.equals("homes", ignoreCase = true) -> {
