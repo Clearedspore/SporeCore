@@ -1,10 +1,10 @@
 package me.clearedSpore.sporeCore.features.eco
 
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.Tasks
 import net.milkbowl.vault.economy.Economy
 import net.milkbowl.vault.economy.EconomyResponse
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType
@@ -128,7 +128,7 @@ class VaultEco : Economy {
         }
 
         user.balance -= amount
-        Tasks.runAsync {
+        Task.runAsync {
             user.logEconomy(EcoAction.REMOVED, amount, "Vault withdrawal by a different plugin")
             UserManager.save(user)
             EconomyService.logConsole(
@@ -166,7 +166,7 @@ class VaultEco : Economy {
         }
 
         user.balance += amount
-        Tasks.runAsync {
+        Task.runAsync {
             user.logEconomy(EcoAction.ADDED, amount, "Vault deposit by a different plugin")
             UserManager.save(user)
             EconomyService.logConsole(

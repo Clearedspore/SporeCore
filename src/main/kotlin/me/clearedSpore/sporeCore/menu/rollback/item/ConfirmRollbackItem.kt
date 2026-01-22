@@ -3,13 +3,13 @@ package me.clearedSpore.sporeCore.menu.rollback.item
 import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -35,7 +35,7 @@ class ConfirmRollbackItem(
     override fun onClickEvent(clicker: Player, clickType: ClickType) {
         clicker.closeInventory()
 
-        Tasks.runAsync {
+        Task.runAsync {
             val start = System.currentTimeMillis()
             val senderUser = UserManager.get(clicker) ?: UserManager.getConsoleUser()
 

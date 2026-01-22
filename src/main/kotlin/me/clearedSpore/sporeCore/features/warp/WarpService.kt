@@ -3,7 +3,7 @@ package me.clearedSpore.sporeCore.features.warp
 import lombok.Getter
 import lombok.Setter
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.warp.`object`.Warp
 import org.bukkit.Location
 

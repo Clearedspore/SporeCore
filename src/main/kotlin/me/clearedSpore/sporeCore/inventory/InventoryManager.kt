@@ -1,12 +1,12 @@
 package me.clearedSpore.sporeCore.inventory
 
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
@@ -36,13 +36,19 @@ object InventoryManager {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Tasks.runRepeatedAsync(
+        cleanupTask = Task.runRepeatedAsync(
             Runnable { cleanupExpired() },
             delay = 0,
             interval = 1,
             unit = TimeUnit.HOURS
         )
     }
+
+    fun hasPendingInventory(playerId: UUID): Boolean {
+        val user = UserManager.get(playerId) ?: return false
+        return user.pendingInventories.isNotEmpty()
+    }
+
 
     fun stopCleanupTask() {
         cleanupTask?.cancel()
@@ -82,7 +88,7 @@ object InventoryManager {
     }
 
     private fun saveInventory(inventory: InventoryData) {
-        Tasks.runAsync {
+        Task.runAsync {
             val filter = FluentFilter.where("id").eq(inventory.id)
             val result = inventoryCollection.update(filter, inventory.toDocument())
 
@@ -156,7 +162,7 @@ object InventoryManager {
 
 
     fun cleanupExpired() {
-        Logger.info("Clearing inventories....")
+        Logger.infoDB("Clearing inventories....")
         val config = SporeCore.instance.coreConfig.inventories
         val maxAge = TimeUtil.parseDuration(config.deletion)
         val now = System.currentTimeMillis()
@@ -165,14 +171,14 @@ object InventoryManager {
 
         if (toRemove.isEmpty()) return
 
-        Logger.info("Removing ${toRemove.size} inventories")
+        Logger.infoDB("Removing ${toRemove.size} inventories")
 
         toRemove.forEach {
             cachedInventories.remove(it.id)
             inventoryCollection.remove(FluentFilter.where("id").eq(it.id))
         }
 
-        Logger.info("Removed ${toRemove.size} inventories")
+        Logger.infoDB("Removed ${toRemove.size} inventories")
     }
 }
 

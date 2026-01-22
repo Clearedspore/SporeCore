@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.features.logs.`object`
 
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import org.dizitart.no2.collection.Document
 
 
@@ -31,6 +31,7 @@ data class Log(
                 is String -> t.toLongOrNull() ?: System.currentTimeMillis()
                 else -> System.currentTimeMillis()
             }
+
             return Log(id, sender, type, action, timestamp)
         }
     }

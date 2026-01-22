@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.features.chat.`object`
 
-import me.clearedSpore.sporeCore.database.util.DocReader
+import me.clearedSpore.sporeCore.util.doc.DocReader
 import org.dizitart.no2.collection.Document
 
 data class ChatFormat(

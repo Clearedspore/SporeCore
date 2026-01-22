@@ -179,6 +179,17 @@ object Perm {
     const val LOG = MAIN + "log"
     const val ADMIN_LOG = MAIN + "log.admin"
 
+    // reports
+    const val REPORT = MAIN + "reports."
+    const val REPORT_STAFF = REPORT + "staff"
+    const val REPORT_ADMIN = REPORT + "admin"
+    const val REPORT_SILENT = REPORT + "silent"
+
+
+    // Investigation
+    const val INVESTIGATION = MAIN + "investigation."
+    const val INVESTIGATION_STAFF = INVESTIGATION + "staff"
+    const val INVESTIGATION_ADMIN = INVESTIGATION + "admin"
 
     fun registerAll(default: PermissionDefault = PermissionDefault.OP) {
         val pluginManager = Bukkit.getPluginManager()

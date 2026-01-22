@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.features.punishment.`object`
 
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import org.dizitart.no2.collection.Document
 import java.util.*
 

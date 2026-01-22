@@ -14,6 +14,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityPickupItemEvent
+import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerCommandPreprocessEvent
 import org.bukkit.event.player.PlayerDropItemEvent
@@ -49,6 +50,13 @@ class ModeListener(private val modeProvider: (Player) -> Mode?) : Listener {
         val player = event.entity as? Player ?: return
         val mode = modeProvider(player) ?: return
         if (!mode.itemPickup) event.isCancelled = true
+    }
+
+    @EventHandler
+    fun onPickup(event: FoodLevelChangeEvent) {
+        val player = event.entity as? Player ?: return
+        val mode = modeProvider(player) ?: return
+        event.isCancelled = true
     }
 
     @EventHandler

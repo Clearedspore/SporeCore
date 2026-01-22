@@ -1,11 +1,13 @@
 package me.clearedSpore.sporeCore.listener
 
+import me.clearedSpore.sporeCore.annotations.AutoListener
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.player.PlayerTeleportEvent
 
+@AutoListener
 class LocationListener : Listener {
 
 

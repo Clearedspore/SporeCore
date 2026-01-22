@@ -2,6 +2,7 @@ package me.clearedSpore.sporeCore.util
 
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
@@ -27,7 +28,7 @@ class UpdateChecker() : Listener {
     }
 
     fun checkForUpdates() {
-        Tasks.runAsync(Runnable {
+        Task.runAsync(Runnable {
             try {
                 val url = URL("https://api.spigotmc.org/legacy/update.php?resource=$resourceId")
                 val connection = url.openConnection() as HttpURLConnection
@@ -64,7 +65,7 @@ class UpdateChecker() : Listener {
         val player: Player = event.player
 
         if (updateAvailable && player.hasPermission(Perm.UPDATECHEKER)) {
-            Tasks.runLater(Runnable {
+            Task.runLater(Runnable {
                 player.sendMessage("[SporeCore] &fA new update is available!".blue())
                 player.sendMessage("[SporeCore] &fCurrent version: &e${plugin.description.version}".blue())
                 player.sendMessage("[SporeCore] &fLatest version: &e$latestVersion".blue())

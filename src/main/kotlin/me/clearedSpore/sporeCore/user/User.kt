@@ -3,9 +3,10 @@ package me.clearedSpore.sporeCore.user
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.database.util.DocReader
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocReader
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import me.clearedSpore.sporeCore.features.chat.color.`object`.ChatColor
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
@@ -17,6 +18,7 @@ import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
+import me.clearedSpore.sporeCore.features.reports.`object`.Report
 import me.clearedSpore.sporeCore.features.setting.model.AbstractSetting
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -60,7 +62,8 @@ data class User(
     var lastServerIP: String? = null,
     var discordID: String? = null,
     var pendingInventories: MutableSet<String> = mutableSetOf(),
-    var tpsBar: Boolean = false
+    var tpsBar: Boolean = false,
+    var pastReports: MutableList<Report> = mutableListOf()
 ) {
     val uuid: UUID get() = UUID.fromString(uuidStr)
     val player: Player? get() = Bukkit.getPlayer(uuid)
@@ -102,6 +105,7 @@ data class User(
         .put("discordID", discordID)
         .putList("pendingInventories", pendingInventories.toList())
         .putBoolean("tpsBar", tpsBar)
+        .putDocuments("pastReports", pastReports.map { it.toDocument() })
         .build()
 
     fun ChatColor.toDocument(): Document = DocWriter()
@@ -181,16 +185,23 @@ data class User(
                 pendingInventories = doc.list("pendingInventories")
                     .mapNotNull { it?.toString() }
                     .toMutableSet(),
-                tpsBar = doc.boolean("tpsBar")
+                tpsBar = doc.boolean("tpsBar"),
+                pastReports = doc.documents("pastReports").mapNotNull { Report.fromDocument(it) }
+                    .toMutableList(),
             )
         }
 
         fun create(uuid: UUID, name: String, collection: NitriteCollection): User {
-            val user = User()
+            val user = User(
+                uuidStr = uuid.toString(),
+                playerName = name,
+                hasJoinedBefore = true
+            )
             collection.insert(user.toDocument())
             Logger.infoDB("Created new user $name ($uuid)")
             return user
         }
+
     }
 
     fun getEconomyLogs(page: Int, pageSize: Int = 10): CompletableFuture<List<String>> =
@@ -274,6 +285,10 @@ data class User(
         }
     }
 
+    fun save(silent: Boolean = false){
+        UserManager.save(this, silent)
+    }
+
     fun <T> getSetting(setting: AbstractSetting<T>): T {
         val features = SporeCore.instance.coreConfig.features
         if (!features.settings) return setting.defaultValue()
@@ -306,10 +321,12 @@ data class User(
     fun kick(message: String? = null): Boolean {
         val player = this.player ?: return false
         return try {
-            if (message.isNullOrBlank()) {
-                player.kickPlayer(null)
-            } else {
-                player.kickPlayer(message.translate())
+            Task.run {
+                if (message.isNullOrBlank()) {
+                    player.kickPlayer(null)
+                } else {
+                    player.kickPlayer(message.translate())
+                }
             }
             true
         } catch (e: Exception) {
@@ -317,6 +334,7 @@ data class User(
             false
         }
     }
+
 
 
     fun logCredit(action: CreditAction, amount: Double, reason: String = "") {

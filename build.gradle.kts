@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "me.clearedSpore"
-version = "2.6"
+version = "2.7"
 
 repositories {
     mavenCentral()
@@ -15,6 +15,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
     maven("https://repo.gravemc.net/releases/")
+    maven("https://maven.enginehub.org/repo/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.scarsz.me/content/groups/public/")
 }
@@ -23,7 +24,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     implementation("org.bstats:bstats-bukkit:3.1.0")
 
-    implementation(kotlin("reflect"))
+    //implementation(kotlin("reflect"))
     //implementation(kotlin("stdlib"))
 
     compileOnly("org.projectlombok:lombok:1.18.30")
@@ -35,7 +36,7 @@ dependencies {
         exclude(group = "org.yaml", module = "snakeyaml")
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
-    implementation("com.github.Clearedspore:SporeAPI:2.2")
+    implementation("com.github.Clearedspore:SporeAPI:4.0")
     compileOnly("org.dizitart:nitrite:4.3.2")
     compileOnly(platform("org.dizitart:nitrite-bom:4.3.2"))
     compileOnly("org.dizitart:nitrite-mvstore-adapter:4.3.2")
@@ -46,6 +47,10 @@ dependencies {
 
     compileOnly("net.dv8tion:JDA:6.1.2")
     compileOnly("me.clip:placeholderapi:2.11.6")
+
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.4") {
+        exclude(group = "org.spigotmc", module = "spigot-api")
+    }
 }
 
 tasks {

@@ -1,9 +1,9 @@
 package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeAPI.util.Task
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
-import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -86,6 +86,15 @@ object UserManager {
         users[user.uuid] = user
     }
 
+    fun getOrCreate(uuid: UUID, name: String): User {
+        return get(uuid, name) ?: run {
+            val newUser = User.create(uuid, name, userCollection)
+            users[uuid] = newUser
+            return newUser
+        }
+    }
+
+
     fun getAllStoredUUIDsFromDB(): List<UUID> {
         return userCollection.find().mapNotNull {
             val id = it["uuidStr"] as? String ?: return@mapNotNull null
@@ -145,7 +154,7 @@ object UserManager {
         }
 
     fun save(user: User, silent: Boolean = false) {
-        Tasks.runAsync {
+        Task.runAsync {
             user.save(userCollection, silent)
         }
     }
@@ -157,6 +166,9 @@ object UserManager {
     fun startAutoSave(user: User) {
         if (autoSaveTasks.containsKey(user.uuid)) return
         val task = scheduler.scheduleAtFixedRate({
+            val player = Bukkit.getPlayer(user.uuid) ?: return@scheduleAtFixedRate
+            if (!player.isOnline) return@scheduleAtFixedRate
+
             users[user.uuid]?.let { save(it) }
         }, 10, 10, TimeUnit.MINUTES)
         autoSaveTasks[user.uuid] = task

@@ -1,8 +1,9 @@
 package me.clearedSpore.sporeCore.listener
 
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.annotations.AutoListener
 import me.clearedSpore.sporeCore.inventory.InventoryManager
-import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageEvent
@@ -62,7 +63,7 @@ class InventoryListener : Listener {
             }
         }
 
-        Tasks.runAsync {
+        Task.runAsync {
             InventoryManager.addPlayerInventory(player, reason)
         }
     }

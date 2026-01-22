@@ -11,7 +11,7 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.commands.currency.CurrencyCommand
 import me.clearedSpore.sporeCore.commands.currency.CurrencyShopCommand
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.features.currency.config.*
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction

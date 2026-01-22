@@ -24,7 +24,7 @@ class BalTopMenu(private val viewer: Player) : BasePaginatedMenu(SporeCore.insta
             return
         }
 
-        addSearchItem(5, 6, SporeCore.instance.chatInput)
+        addSearchItem(5, 6)
 
         topList.forEachIndexed { index, (player, balance) ->
             val displayName = player.name?.takeIf { it.isNotEmpty() } ?: "Unknown"

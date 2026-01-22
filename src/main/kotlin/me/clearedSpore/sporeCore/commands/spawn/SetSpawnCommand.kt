@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandPermission
 import co.aikar.commands.annotation.Default
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 

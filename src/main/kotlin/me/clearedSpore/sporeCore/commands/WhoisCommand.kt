@@ -8,11 +8,14 @@ import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
+import me.clearedSpore.sporeCore.features.punishment.PunishmentService
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.stats.StatService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
+import kotlin.reflect.typeOf
 
 @CommandAlias("whois")
 @CommandPermission(Perm.WHOIS)
@@ -69,10 +72,13 @@ class WhoisCommand : BaseCommand() {
                 sender.sendMessage("None".blue())
             } else {
                 activePunishments.forEach { pun ->
+                    if (pun.type == PunishmentType.TEMPWARN || pun.type == PunishmentType.WARN) return@forEach
+
                     val type = pun.type.displayName
                     val reason = pun.reason
                     val staff = pun.getPunisher()!!.playerName
                     val expires = pun.getDurationFormatted()
+
                     sender.sendMessage("- $type by $staff: $reason ($expires)".blue())
                 }
             }

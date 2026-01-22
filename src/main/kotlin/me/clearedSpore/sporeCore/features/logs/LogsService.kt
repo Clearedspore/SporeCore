@@ -1,18 +1,17 @@
 package me.clearedSpore.sporeCore.features.logs
 
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.database.DatabaseManager
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.logs.`object`.Log
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
 import org.dizitart.no2.filters.Filter.and
-import org.dizitart.no2.filters.FluentFilter
 import org.dizitart.no2.filters.FluentFilter.where
 import org.dizitart.no2.index.IndexOptions
 import org.dizitart.no2.index.IndexType
@@ -43,7 +42,7 @@ object LogsService {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Tasks.runRepeatedAsync(
+        cleanupTask = Task.runRepeatedAsync(
             Runnable { cleanupLogs() },
             delay = 0,
             interval = 1,
@@ -57,7 +56,7 @@ object LogsService {
     }
 
     fun cleanupLogs() {
-        Logger.info("Clearing logs...")
+        Logger.infoDB("Clearing logs...")
         val config = SporeCore.instance.coreConfig.logs
         val maxAge = TimeUtil.parseDuration(config.cleanupTime)
         val now = System.currentTimeMillis()
@@ -66,13 +65,13 @@ object LogsService {
 
         if (toRemove.isEmpty()) return
 
-        Logger.info("Removing ${toRemove.size} logs")
+        Logger.infoDB("Removing ${toRemove.size} logs")
 
         toRemove.forEach {
             logsCollection.remove(where("id").eq(it.id))
         }
 
-        Logger.info("Removed ${toRemove.size} logs")
+        Logger.infoDB("Removed ${toRemove.size} logs")
     }
 
 

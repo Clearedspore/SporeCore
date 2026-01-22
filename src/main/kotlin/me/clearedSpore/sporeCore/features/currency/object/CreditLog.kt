@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.features.currency.`object`
 
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import me.clearedSpore.sporeCore.features.eco.`object`.EcoAction
 import org.dizitart.no2.collection.Document
 

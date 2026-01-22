@@ -27,7 +27,12 @@ data class CoreConfig(
         "or you can look at the wiki",
         "https://spore-plugins.gitbook.io/sporecore",
         "You can run /sporecore wiki <page> ingame to find",
-        "other wiki pages!"
+        "other wiki pages!",
+        "",
+        "Some messages support PlaceholderAPI placeholders!",
+        "You need placeholderAPI installed for this!",
+        "",
+        "You can use &cb for my own custom blue color!!"
     )
     var general: GeneralConfig = GeneralConfig(),
 
@@ -53,7 +58,9 @@ data class CoreConfig(
 
     var join: JoinConfig = JoinConfig(),
 
-    var chat: ChatConfig = ChatConfig()
+    var chat: ChatConfig = ChatConfig(),
+
+    var reports: ReportConfig = ReportConfig()
 )
 
 @Configuration
@@ -106,7 +113,148 @@ data class DiscordConfig(
         "then keep the webhook clear,"
     )
     var rollback: String = "",
-    var rollbackPing: String = ""
+    var rollbackPing: String = "",
+
+    @Comment(
+        "When a player sends a message in chat you can",
+        "make it send in to a discord channel.",
+        "If you don't want this feature leave it empty"
+    )
+    var chat: String = ""
+)
+
+@Configuration
+data class ReportConfig(
+
+    @Comment(
+        "After how long should a report be deleted?"
+    )
+    var deletion: String = "2d",
+
+    @Comment(
+        "If a report has been handled how long should it take",
+        "for the report to removed from the system."
+    )
+    var completedDeletion: String = "12h",
+
+    @Comment(
+        "What should the reporter see when their report has been finished?",
+        "If you don't want a message leave it empty."
+    )
+    var notifyReporter: String = "&7[&6&lReports&7] &fYour recent report has been completed. Thank you for reporting that player and keeping our server safe!",
+
+    @Comment(
+        "The notification when a player has been reported 5 times in the last 10 minutes"
+    )
+    var tresHoldMessage: String = "&7[&6&lReports&7] &f%player% has been reported %count% times in the last 10 minutes!",
+
+    @Comment(
+        "The report accepted notification",
+        "Placeholders:",
+        "%staff% -> Staff member",
+        "%target% -> player that got reported"
+    )
+    var reportAccepted: String = "&7[&6&lReports&7] &f%staff% has &aaccepted &fthe report against &7%target%",
+
+    @Comment(
+        "The report denied notification",
+        "Placeholders:",
+        "%staff% -> Staff member",
+        "%target% -> player that got reported"
+    )
+    var reportDenied: String = "&7[&6&lReports&7] &f%staff% has &cdenied &fthe report against &7%target%",
+
+    @Comment(
+        "Notification for staff when a new report has been created",
+        "Placeholders:",
+        "%reporter% -> Reporter name",
+        "%player% -> Player that got reported",
+        "%reason% -> Reason for the report",
+        "%type% -> Report type",
+        "%evidence% -> If there is evidence (returns yes or no)",
+        "",
+        "You can use %button% if you want the following buttons there",
+        "[Click to manage] -> Opens the report list menu",
+        "[Click to view evidence] -> Views the evidence if provided"
+    )
+    var newReport: List<String> = listOf(
+        "&6============= &lReport! &6=============",
+        "&cbReporter: &f%reporter%",
+        "&cbPlayer: &f%player%",
+        "&cbReason: &f%reason% &7(%type%)",
+        "&cbEvidence: &f%evidence%",
+        "&cb%button%",
+        "&6=================================="
+    ),
+
+    @Comment(
+        "The color for the report buttons.",
+        "Using &c or any other color is NOT supported!",
+        "If you go ingame and your color is not applied then you",
+        "haven't put in a valid color!!"
+        )
+    var buttonColor: String = "YELLOW",
+
+    @Comment(
+        "The report notification for when a report has been re-opened",
+        "Placeholders:",
+        "%staff% -> Staff member that re-openend the report",
+        "%player% -> player that made the report"
+    )
+    var reportReOpened: String = "&7[&6&lReports&7] &f%staff% has re-opened %player%'s report",
+
+    @Comment(
+        "The message a player receives when their report has been re-opened",
+        "Placeholders:",
+        "%staff% -> Staff member that re-openend the report"
+    )
+    var reportReOpenedPlayer: String = "&7[&6&lReports&7] &fYour report has been re-opened by a staff member.",
+
+
+    @Comment(
+        "NOTE: Time in seconds!!"
+    )
+    var reportCooldown: Long = 60,
+
+    @Comment(
+        "Cooldown for when a player tries to report the same player",
+    )
+    var sameTargetCooldown: String = "1d",
+
+    @Comment(
+        "If you want players to be able to provide evidence"
+    )
+    var evidence: Boolean = true,
+
+    @Comment(
+        "Set report reasons players can choose",
+        "You start with the reason and then you provide the",
+        "report type after the |.",
+        "For example the toxic reason would be chat",
+        "You would do:",
+        "Toxic|chat",
+        "You can choose one of the following types:",
+        "- cheating",
+        "- chat",
+        "- other"
+    )
+    var reportReasons: List<String> = listOf(
+        "X-Ray|cheating",
+        "Base-ESP|cheating",
+        "Discrimination|chat",
+        "Spamming|chat",
+        "Inappropriate build|other"
+    ),
+
+    @Comment(
+        "If players are allowed to use custom reasons"
+    )
+    var allowCustom: Boolean = true,
+
+    @Comment(
+        "When a staff member accepts the report should it open the punish menu?"
+    )
+    var openPunish: Boolean = true
 )
 
 @Configuration
@@ -182,12 +330,19 @@ data class JoinConfig(
 
     @Comment(
         "What message should the players receive when they join?",
-        "You can use %player% to return the players name",
-        "Leave it empty if you don't want to send messages"
+        "Leave it empty if you don't want to send messages",
+        "You can user PlaceholderAPI for placeholders.",
+        "for %player_name% & %localtime_time% you need to",
+        "download the LocalTime and Player using placeholderAPI",
+        "You can do that by doing the following commands:",
+        "- /papi ecloud download Player",
+        "- /papi ecloud download LocalTime",
+        "- /papi reload"
     )
     var message: List<String> = listOf(
-        "&cWelcome &b%player%",
-        "&fRun &c/help &f to view the help menu!"
+        "&cbWelcome back %player_name%!!",
+        "&cbTime: &f%localtime_time%",
+        "&cbRun /help for a guide!"
     ),
 
     @Comment(
@@ -594,6 +749,10 @@ data class FeaturesConfig(
     var modes: Boolean = true,
 
     var invRollback: Boolean = true,
+
+    var reports: Boolean = true,
+
+    var investigation: Boolean = true,
 
     @Comment(
         "The currency feature is a separate currency that you",

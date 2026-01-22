@@ -148,6 +148,15 @@ object PunishmentService {
         return map
     }
 
+    fun findPunishmentById(punishmentId: String): Punishment? {
+        return UserManager.getAllStoredUUIDsFromDB()
+            .asSequence()
+            .mapNotNull { UserManager.get(it) }
+            .flatMap { it.punishments.asSequence() }
+            .firstOrNull { it.id == punishmentId }
+    }
+
+
     fun findReasonDefinition(reasonKey: String): Pair<String, ReasonDefinition>? {
         val lower = reasonKey.lowercase()
         for ((category, reasons) in config.reasons.categories) {
@@ -333,10 +342,16 @@ object PunishmentService {
 
 
     private fun handleKickPunishment(target: User, punisher: User, punishment: Punishment) {
+        val player = Bukkit.getPlayer(target.uuid) ?: run {
+            Logger.warn("Failed to kick ${target.playerName}: player is not online")
+            return
+        }
+
         val msg = getMessage(punishment.type)
-        target.kick(buildMessage(msg, punishment))
-        Logger.info("&f${target.playerName} &cwas ${punishment.type.displayName.lowercase()} by &f${punisher.playerName} &cfor &e${punishment.reason}".translate())
+        player.kickPlayer(buildMessage(msg, punishment))
+        Logger.info("${target.playerName} was ${punishment.type.displayName.lowercase()} by ${punisher.playerName} for ${punishment.reason}")
     }
+
 
     private fun handleChatPunishment(target: User, punisher: User, punishment: Punishment) {
         val msg = getMessage(punishment.type)

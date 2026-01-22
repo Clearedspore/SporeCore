@@ -1,8 +1,8 @@
 package me.clearedSpore.sporeCore.inventory.`object`
 
 import me.clearedSpore.sporeAPI.util.TimeUtil
-import me.clearedSpore.sporeCore.database.util.DocReader
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocReader
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack

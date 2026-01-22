@@ -4,11 +4,11 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 
@@ -55,7 +55,7 @@ class InventoryManagerCommand : BaseCommand() {
         var removed = 0
         val start = System.currentTimeMillis()
         sender.sendMessage("Clearing inventories async...".blue())
-        Tasks.runAsync {
+        Task.runAsync {
             inventories.forEach { inventory ->
                 InventoryManager.removeInventory(inventory.id)
                 removed++
@@ -91,7 +91,7 @@ class InventoryManagerCommand : BaseCommand() {
         val start = System.currentTimeMillis()
         sender.sendMessage("Clearing inventories async...".blue())
 
-        Tasks.runAsync {
+        Task.runAsync {
             InventoryManager.clearAll()
         }
 

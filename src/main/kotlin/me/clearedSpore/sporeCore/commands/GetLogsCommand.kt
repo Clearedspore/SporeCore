@@ -7,12 +7,12 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeAPI.util.TimeUtil.TimeUnitStyle
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
 import me.clearedSpore.sporeCore.util.button.TextButton
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -72,7 +72,7 @@ class GetLogsCommand : BaseCommand() {
 
         sender.sendMessage("Fetching logs async...".blue())
 
-        Tasks.runAsync {
+        Task.runAsync {
             var logs = LogsService.findLogs(type, targetUUID.toString())
 
             timeFilter?.let { fromTime -> logs = logs.filter { it.timestamp >= fromTime } }

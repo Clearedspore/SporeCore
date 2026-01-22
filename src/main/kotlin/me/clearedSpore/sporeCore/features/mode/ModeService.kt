@@ -44,6 +44,23 @@ object ModeService {
         }
     }
 
+    fun enableModeOnJoin(player: Player, mode: Mode) {
+        if (activeModes.containsKey(player)) return
+
+        val invData = if (mode.clearInv) {
+            InventoryManager.addPlayerInventory(player, "Staffmode join")
+        } else null
+
+        if (mode.clearInv) {
+            InventoryManager.clearPlayerInventory(player)
+        }
+
+        activeModes[player] = mode
+
+        applyModeSettings(player, mode.copy(clearInv = false))
+    }
+
+
     fun setMode(player: Player, enabled: Boolean, id: String? = null) {
         if (enabled) {
             val current = activeModes[player]!!
@@ -57,6 +74,24 @@ object ModeService {
             applyModeSettings(player, selectedMode)
         }
     }
+
+    fun isInStaffInventory(player: Player): Boolean {
+        val data = activeModeData[player] ?: return false
+        return data.inventoryId != null
+    }
+
+    fun forceRestoreAllInventoriesOnShutdown() {
+        activeModeData.forEach { (player, data) ->
+            if (data.inventoryId != null) {
+                InventoryManager.getInventory(data.inventoryId)?.let {
+                    InventoryManager.restoreInventory(player, it)
+                }
+            }
+        }
+        activeModes.clear()
+        activeModeData.clear()
+    }
+
 
     fun getModes(): Collection<Mode> = config.modes.values
 
@@ -136,7 +171,7 @@ object ModeService {
     fun disableAll() {
         Bukkit.getOnlinePlayers().forEach { player ->
             if (isInMode(player)) {
-                toggleMode(player)
+                setMode(player, false)
             }
         }
     }
@@ -150,11 +185,14 @@ object ModeService {
 
             var inventoryId: String? = null
 
-            if (mode.clearInv) {
+            if (mode.clearInv && !activeModeData.containsKey(player)) {
                 val invData = InventoryManager.addPlayerInventory(player, "${mode.id} mode enabled")
                 InventoryManager.clearPlayerInventory(player)
                 inventoryId = invData.id
             }
+
+
+
 
             mode.items?.forEach { (slot, itemId) ->
 
@@ -177,6 +215,8 @@ object ModeService {
             player.isInvulnerable = mode.invulnerable
             player.allowFlight = mode.flight
             player.isFlying = mode.flight
+            player.foodLevel = 20
+            player.saturation = 20f
 
             mode.enableCommands?.forEach { cmd ->
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.name))
@@ -198,4 +238,50 @@ object ModeService {
             ex.printStackTrace()
         }
     }
+
+    fun applyModeSettingsNonDestructive(player: Player, mode: Mode) {
+        val previousGamemode = player.gameMode
+        val previousLocation = player.location
+        val previousFlight = player.allowFlight
+        val previousInvulnerable = player.isInvulnerable
+
+        mode.items?.forEach { (slot, itemId) ->
+            ModeItemManager.getItem(itemId)?.let {
+                player.inventory.setItem(slot, it.getItemStack())
+            }
+        }
+
+        player.gameMode = GameMode.valueOf(mode.gamemode.uppercase())
+        player.isInvulnerable = mode.invulnerable
+        player.allowFlight = mode.flight
+        player.isFlying = mode.flight
+        player.foodLevel = 20
+        player.saturation = 20f
+
+        mode.enableCommands?.forEach { cmd ->
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.name))
+        }
+
+        if (mode.vanish) VanishService.vanish(player.uniqueId)
+
+        activeModeData[player] = ModeData(
+            mode = mode,
+            inventoryId = null,
+            previousGamemode = previousGamemode,
+            previousLocation = previousLocation,
+            previousFlight = previousFlight,
+            previousInvulnerable = previousInvulnerable
+        )
+    }
+
+
+    fun enableModeSafely(player: Player, mode: Mode) {
+        if (activeModes.containsKey(player)) return
+        if (activeModeData.containsKey(player)) return
+
+        activeModes[player] = mode
+        applyModeSettingsNonDestructive(player, mode)
+    }
+
+
 }

@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.features.punishment.`object`
 
 import me.clearedSpore.sporeAPI.util.TimeUtil
-import me.clearedSpore.sporeCore.database.util.DocWriter
+import me.clearedSpore.sporeCore.util.doc.DocWriter
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
@@ -162,7 +162,7 @@ data class Punishment(
 
     fun getTimeSincePunished(): String {
         val elapsed = System.currentTimeMillis() - punishDate.time
-        return TimeUtil.formatDuration(elapsed)
+        return TimeUtil.formatDuration(elapsed, TimeUtil.TimeUnitStyle.LONG, 2)
     }
 
 }

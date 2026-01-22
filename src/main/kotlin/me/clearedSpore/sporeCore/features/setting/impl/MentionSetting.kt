@@ -31,7 +31,6 @@ class MentionTitleSetting : OptionSetting<MentionOption>(
         "If you want to hear the mention sound or if you want",
         "to see a title when a player mentions you in chat."
     ),
-    permission = Perm.PUNISH_LOG
 ) {
     override fun values(): List<MentionOption> = listOf(
         MentionOption.TITLE_ENABLED,

@@ -1,29 +1,32 @@
 package me.clearedSpore.sporeCore.user
 
+import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.util.CC.blue
-import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.translate
-import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
+import me.clearedSpore.sporeAPI.util.Task
+import me.clearedSpore.sporeAPI.util.Webhook
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.database.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
+import me.clearedSpore.sporeCore.features.setting.impl.JoinMsgSetting
 import me.clearedSpore.sporeCore.features.setting.impl.StaffmodeOnJoinSetting
 import me.clearedSpore.sporeCore.features.setting.impl.TryLogSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.util.Perm
-import me.clearedSpore.sporeCore.util.Tasks
+import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Sound
@@ -36,13 +39,14 @@ import org.dizitart.no2.filters.FluentFilter
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 
 class UserListener : Listener {
 
     @EventHandler
     fun onLogin(event: PlayerLoginEvent) {
         val player = event.player
-        val user = UserManager.get(player) ?: return
+        val user = UserManager.getOrCreate(player.uniqueId, player.name)
 
         if (user.playerName != player.name) {
             user.playerName = player.name
@@ -187,52 +191,14 @@ class UserListener : Listener {
             }
         }
 
-        val logConfig = config.logs
-        if (logConfig.joinLeave) {
-            LogsService.addLog(
-                player.uuidStr(),
-                "Joined the server",
-                LogType.JOIN_LEAVE
-            )
-        }
-
-        if (user.pendingPayments.isNotEmpty() && SporeCore.instance.coreConfig.economy.enabled) {
-            Tasks.runLater(Runnable {
-                player.sendMessage("")
-                user.pendingPayments.forEach { (senderName, total) ->
-                    val formattedAmount = EconomyService.format(total)
-                    player.sendMessage("While you were away you received ${formattedAmount.green()}".blue() + " from ${senderName.white()}".blue())
-                }
-                player.sendMessage("")
-                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
-                user.pendingPayments.clear()
-                UserManager.save(user)
-            }, 1)
-        }
-
-        if (features.invRollback && config.inventories.storeReasons.join) {
+        if (
+            features.invRollback &&
+            config.inventories.storeReasons.join &&
+            !ModeService.isInMode(player)
+        ) {
             InventoryManager.addPlayerInventory(player, "Join")
         }
 
-        if (user.getSettingOrDefault(StaffmodeOnJoinSetting()) && features.modes && player.hasPermission(Perm.MODE_ALLOW)) {
-            val highest = ModeService.getHighestMode(player)
-            if (highest != null) {
-                ModeService.toggleMode(player)
-                player.sendMessage("Enabled ${highest.name} mode".blue())
-            }
-        }
-
-
-        if (config.features.vanish && VanishService.vanishedPlayers.isNotEmpty()) {
-            if (player.hasPermission(Perm.VANISH_SEE)) return
-
-            val vanishedPlayers = VanishService.vanishedPlayers
-                .mapNotNull { Bukkit.getPlayer(it) }
-
-            vanishedPlayers.forEach { vanished ->
-                player.hidePlayer(SporeCore.instance, vanished)
-            }
-        }
 
 
         if (joinConfig.spawnOnJoin && db.spawn != null) {
@@ -256,11 +222,13 @@ class UserListener : Listener {
         }
 
 
-        Tasks.runLater(Runnable {
-            if (joinConfig.message.isNotEmpty()) {
+        Task.runLater(Runnable {
+            if (joinConfig.message.isNotEmpty() && user.getSettingOrDefault(JoinMsgSetting())) {
                 joinConfig.message.forEach { message ->
-                    val msg = message.replace("%player%", player.name).translate()
-                    player.sendMessage(msg)
+                    val msg = message
+                        .replace("%player%", player.name)
+                        .parsePlaceholders(player)
+                    player.sendMessage(msg.translate())
                 }
             }
         }, 2)
@@ -274,8 +242,67 @@ class UserListener : Listener {
             }
         }
 
+        Task.runLater({
+            if (user.getSettingOrDefault(StaffmodeOnJoinSetting()) &&
+                features.modes &&
+                player.hasPermission(Perm.MODE_ALLOW)
+            ) {
+                val mode = ModeService.getHighestMode(player) ?: return@runLater
+                ModeService.toggleMode(player, mode.id)
+                player.sendMessage("Enabled ${mode.name} mode".blue())
+            }
+        }, 500, TimeUnit.MILLISECONDS)
+
+
+
+        if (
+            config.features.vanish &&
+            VanishService.vanishedPlayers.isNotEmpty() &&
+            !player.hasPermission(Perm.VANISH_SEE)
+        ) {
+            VanishService.vanishedPlayers
+                .mapNotNull { Bukkit.getPlayer(it) }
+                .forEach { vanished ->
+                    player.hidePlayer(SporeCore.instance, vanished)
+                }
+        }
+
         UserManager.save(user)
+
+
+        val logConfig = config.logs
+        if (logConfig.joinLeave) {
+            LogsService.addLog(
+                player.uuidStr(),
+                "Joined the server",
+                LogType.JOIN_LEAVE
+            )
+        }
+
+        if (config.discord.chat.isNotEmpty() && !VanishService.isVanished(player.uniqueId)) {
+            val embed = Webhook.Embed()
+                .setColor(0x00FF00)
+                .setDescription("**${player.name} joined the server**")
+
+            val webhook = Webhook(config.discord.chat)
+                .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                .setUsername(player.name)
+                .addEmbed(embed)
+
+            try {
+                webhook.send()
+            } catch (ex: Exception) {
+                throw LoggedException(
+                    userMessage = "Failed to send message to Discord.",
+                    internalMessage = "Failed to send message to Discord",
+                    channel = LoggedException.Channel.GENERAL,
+                    developerOnly = false,
+                    cause = ex
+                ).also { it.log() }
+            }
+        }
     }
+
 
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
@@ -284,22 +311,24 @@ class UserListener : Listener {
         val config = SporeCore.instance.coreConfig
         val features = SporeCore.instance.coreConfig.features
 
+        val wasVanished = VanishService.isVanished(player.uniqueId)
+
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val joinTime = user.lastJoin?.let {
             runCatching { LocalDateTime.parse(it, formatter).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() }
                 .getOrNull()
         } ?: System.currentTimeMillis()
 
+        if (features.modes && ModeService.isInMode(player)) {
+            ModeService.toggleMode(player)
+        }
+
+
         if (features.invRollback && config.inventories.storeReasons.leave) {
             InventoryManager.addPlayerInventory(player, "Quit")
         }
 
-        if (features.modes && ModeService.isInMode(player)) {
-            val mode = ModeService.getPlayerMode(player)!!
-            if (mode.tpBack) {
-                ModeService.toggleMode(player)
-            }
-        }
+
 
         val logConfig = config.logs
         if (logConfig.joinLeave) {
@@ -317,6 +346,29 @@ class UserListener : Listener {
 
         UserManager.stopAutoSave(player.uniqueId)
         UserManager.remove(player.uniqueId)
+
+        if (config.discord.chat.isNotEmpty() && !wasVanished) {
+            val embed = Webhook.Embed()
+                .setColor(0xFF0000)
+                .setDescription("**${player.name} left the server**")
+
+            val webhook = Webhook(config.discord.chat)
+                .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                .setUsername(player.name)
+                .addEmbed(embed)
+
+            try {
+                webhook.send()
+            } catch (ex: Exception) {
+                throw LoggedException(
+                    userMessage = "Failed to send message to Discord.",
+                    internalMessage = "Failed to send message to Discord",
+                    channel = LoggedException.Channel.GENERAL,
+                    developerOnly = false,
+                    cause = ex
+                ).also { it.log() }
+            }
+        }
     }
 
 }

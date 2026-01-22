@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.task
 
+import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.util.ActionBar
-import me.clearedSpore.sporeCore.util.Tasks
 import java.util.concurrent.TimeUnit
 
 object ActionBarTicker {
@@ -14,7 +14,7 @@ object ActionBarTicker {
         running = true
 
 
-        Tasks.runRepeated(
+        Task.runRepeated(
             Runnable {
                 ActionBar.tick()
             },

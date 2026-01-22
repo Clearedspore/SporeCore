@@ -5,6 +5,7 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import org.bukkit.Sound
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -34,6 +35,23 @@ object PlayerExtension {
         } else {
             UUID.fromString(UserManager.getConsoleUser().uuidStr)
         }
+    }
+
+    fun OfflinePlayer.hasJoinedBefore(): Boolean {
+        if (this.isOnline) return true
+        if (this.hasPlayedBefore()) return true
+
+        return Bukkit.getPlayer(this.uniqueId) != null
+    }
+
+    fun OfflinePlayer.safeUuid(): UUID {
+        val user = UserManager.get(this)
+        return user?.uuid ?: this.uniqueId
+    }
+
+    fun OfflinePlayer.safeUuidStr(): String {
+        val user = UserManager.get(this)
+        return user?.uuidStr ?: this.uniqueId.toString()
     }
 
     fun CommandSender.uuidStr(): String {

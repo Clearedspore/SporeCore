@@ -104,7 +104,9 @@ data class SettingsConfig(
     @Comment(
         "How many lines will it spam to clear the chat?"
     )
-    var clearLines: Int = 100
+    var clearLines: Int = 100,
+
+    var blockedMutedCommands: List<String> = listOf("/msg", "/whisper", "/say")
 )
 
 @Configuration

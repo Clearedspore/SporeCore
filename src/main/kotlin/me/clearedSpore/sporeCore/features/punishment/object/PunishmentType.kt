@@ -11,4 +11,5 @@ enum class PunishmentType(
     TEMPMUTE("Temp-mute", "Temp-muted"),
     WARN("Warn", "Warned"),
     TEMPWARN("Temp-warn", "Temp-warned")
+
 }
