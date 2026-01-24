@@ -314,7 +314,7 @@ class UserListener : Listener {
         val config = SporeCore.instance.coreConfig
         val features = SporeCore.instance.coreConfig.features
 
-        val wasVanished = VanishService.isVanished(player.uniqueId)
+        var wasVanished = false
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val joinTime = user.lastJoin?.let {
