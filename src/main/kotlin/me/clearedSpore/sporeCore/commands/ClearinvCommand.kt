@@ -8,11 +8,13 @@ import co.aikar.commands.annotation.Default
 import co.aikar.commands.annotation.Optional
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 @CommandAlias("clearinv|clearinventory|ci|clear")
+@SporeCoreCommand
 class ClearinvCommand : BaseCommand() {
 
     @Default

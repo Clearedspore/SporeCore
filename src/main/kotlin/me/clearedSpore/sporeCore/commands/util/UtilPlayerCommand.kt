@@ -8,6 +8,7 @@ import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.util.Perm
@@ -24,6 +25,7 @@ import org.bukkit.inventory.meta.SkullMeta
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
+@SporeCoreCommand
 class UtilPlayerCommand : BaseCommand() {
 
     @Subcommand("player uuid")

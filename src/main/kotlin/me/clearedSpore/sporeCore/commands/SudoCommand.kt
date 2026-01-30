@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore.commands
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("sudo")
 @CommandPermission(Perm.SUDO)
+@SporeCoreCommand
 class SudoCommand : BaseCommand() {
 
     @Default()

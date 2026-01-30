@@ -1,6 +1,7 @@
-package me.clearedSpore.sporeCore.util
+package me.clearedSpore.sporeCore.util.registry
 
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.annotations.AutoListener
 import org.bukkit.Bukkit
 import org.bukkit.event.Listener
@@ -10,8 +11,9 @@ import java.lang.reflect.Modifier
 import java.net.URLClassLoader
 import java.util.jar.JarFile
 
-class ListenerRegistry(private val plugin: JavaPlugin) {
+object ListenerRegistry {
 
+    val plugin = SporeCore.instance
     private val rootPath = "me/clearedSpore/"
 
     fun registerAll() {

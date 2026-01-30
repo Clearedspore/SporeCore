@@ -34,7 +34,6 @@ import me.clearedSpore.sporeCore.commands.home.CreateHomeCommand
 import me.clearedSpore.sporeCore.commands.home.DelHomeCommand
 import me.clearedSpore.sporeCore.commands.home.HomeCommand
 import me.clearedSpore.sporeCore.commands.inventory.InvRollbackCommand
-import me.clearedSpore.sporeCore.commands.inventory.InventoryManagerCommand
 import me.clearedSpore.sporeCore.commands.moderation.*
 import me.clearedSpore.sporeCore.commands.moderation.mode.CustomModeCommand
 import me.clearedSpore.sporeCore.commands.moderation.mode.ModeCommand
@@ -72,9 +71,10 @@ import me.clearedSpore.sporeCore.task.TpsTask
 import me.clearedSpore.sporeCore.task.VanishTask
 import me.clearedSpore.sporeCore.user.UserListener
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ListenerRegistry
+import me.clearedSpore.sporeCore.util.registry.ListenerRegistry
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.UpdateChecker
+import me.clearedSpore.sporeCore.util.registry.CommandRegistry
 import net.milkbowl.vault.chat.Chat
 import net.milkbowl.vault.economy.Economy
 import net.milkbowl.vault.permission.Permission
@@ -104,7 +104,6 @@ class SporeCore : JavaPlugin() {
     lateinit var coreConfig: CoreConfig
     lateinit var database: Database
 
-    lateinit var listener: ListenerRegistry
 
     lateinit var resolver: TargetSelectorResolver
     lateinit var settingRegistry: SettingRegistry
@@ -119,6 +118,7 @@ class SporeCore : JavaPlugin() {
 
     var totalCommands: Int = 0
     var discordEnabled: Boolean = false
+    var manualCommands: MutableList<BaseCommand> = mutableListOf()
 
     var freshStartup = true
 
@@ -131,6 +131,7 @@ class SporeCore : JavaPlugin() {
             coreConfig.general.prefix,
             "This should not be happening. Please contact the developer ClearedSpore."
         )
+
 
         setupEconomy()
         if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
@@ -218,8 +219,7 @@ class SporeCore : JavaPlugin() {
         Cooldown.createCooldown("msg_cooldown", 2)
         Cooldown.createCooldown("report", coreConfig.reports.reportCooldown)
 
-        listener = ListenerRegistry(this)
-        listener.registerAll()
+        ListenerRegistry.registerAll()
         registerListeners()
         registerCompletions()
         registerCommands()
@@ -350,10 +350,8 @@ class SporeCore : JavaPlugin() {
             YamlConfigurations.update(configFile, CoreConfig::class.java)
         } catch (ex: ConfigurationException) {
             Logger.error("Invalid config detected. Some values will use defaults. Check console for details.")
-
             Logger.error("Configuration error while loading config.yml: ${ex.message}")
             ex.printStackTrace()
-
             CoreConfig()
         }
     }
@@ -409,14 +407,6 @@ class SporeCore : JavaPlugin() {
         }
 
 
-        registerCommand(PendingMSGCommand())
-
-        registerCommand(AdventureCommand())
-        registerCommand(CreativeCommand())
-        registerCommand(GamemodeCommand())
-        registerCommand(SpectatorCommand())
-        registerCommand(SurvivalCommand())
-
         if (features.teleportRequest) {
             registerCommand(TpaAcceptCommand())
             registerCommand(TpaCommand())
@@ -424,18 +414,6 @@ class SporeCore : JavaPlugin() {
             registerCommand(TpaDenyCommand())
         }
 
-        registerCommand(TeleportCommand())
-        registerCommand(TpAllCommand())
-        registerCommand(TpCoordsCommand())
-        registerCommand(TphereCommand())
-
-        registerCommand(HealCommand())
-        registerCommand(FeedCommand())
-        registerCommand(RepairCommand())
-        registerCommand(RepairAllCommand())
-        registerCommand(FlyCommand())
-        registerCommand(GodCommand())
-        registerCommand(ClearinvCommand())
 
         if (features.privateMessages) {
             registerCommand(PrivateMessageCommand())
@@ -453,12 +431,10 @@ class SporeCore : JavaPlugin() {
             registerCommand(WorkbenchCommand())
         }
 
-        if (features.utilityMenus) {
+        if (features.spawn) {
             registerCommand(SpawnCommand())
             registerCommand(SetSpawnCommand())
         }
-
-        registerCommand(CoreCommand())
 
         if (features.settings) {
             registerCommand(SettingCommand())
@@ -481,9 +457,6 @@ class SporeCore : JavaPlugin() {
             registerCommand(EcoLogsCommand())
         }
 
-        registerCommand(PlayerTimeCommand())
-        registerCommand(PlayerWeatherCommand())
-
         if (features.kits) {
             registerCommand(KitCommand())
         }
@@ -492,25 +465,6 @@ class SporeCore : JavaPlugin() {
             registerCommand(StatsCommand())
         }
 
-        registerCommand(BackCommand())
-        registerCommand(SpeedCommand())
-        registerCommand(RebootCommand())
-        registerCommand(BroadcastCommand())
-        registerCommand(TrashCommand())
-        registerCommand(EditItemCommand())
-        registerCommand(ItemCommand())
-        registerCommand(SudoCommand())
-        registerCommand(PingCommand())
-        registerCommand(WhoisCommand())
-        registerCommand(GetLogsCommand())
-
-        //util commands
-        commandManager.registerCommand(UtilCommand())
-        commandManager.registerCommand(UtilItemCommand())
-        commandManager.registerCommand(UtilPlayerCommand())
-        commandManager.registerCommand(UtilWorldCommand())
-        commandManager.registerCommand(UtilServerCommand())
-        commandManager.registerCommand(UtilInventoryCommand())
 
         if (coreConfig.chat.chatColor.enabled) {
             registerCommand(ChatColorCommand())
@@ -527,12 +481,10 @@ class SporeCore : JavaPlugin() {
         if (features.modes) {
             registerCommand(ModeCommand())
             for (mode in ModeService.getModes()) {
-                val cmd = CustomModeCommand(mode)
-
                 val combinedAlias = mode.commands.joinToString("|")
                 commandManager.commandReplacements.addReplacement("modealias", combinedAlias)
 
-                registerCommand(cmd)
+                registerCommand(CustomModeCommand(mode))
             }
         }
 
@@ -540,9 +492,6 @@ class SporeCore : JavaPlugin() {
             registerCommand(InvRollbackCommand())
         }
 
-        registerCommand(InventoryManagerCommand())
-        registerCommand(FreezeCommand())
-        registerCommand(TPSBarCommand())
 
         if(features.reports){
             registerCommand(ReportCommand())
@@ -582,13 +531,12 @@ class SporeCore : JavaPlugin() {
             Logger.info("Registered currency aliases: ${aliases.joinToString(", ")}")
         }
 
-        Logger.info("Loaded $totalCommands commands")
+        CommandRegistry.registerAll(manualCommands)
 
     }
 
     fun registerCommand(command: BaseCommand) {
-        commandManager.registerCommand(command)
-        totalCommands++
+        manualCommands.add(command)
     }
 
     fun setupACF() {

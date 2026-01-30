@@ -9,6 +9,7 @@ import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -19,6 +20,7 @@ import java.text.DecimalFormat
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
+@SporeCoreCommand
 class UtilServerCommand : BaseCommand() {
 
     private val df = DecimalFormat("0.00")

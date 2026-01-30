@@ -21,6 +21,7 @@ import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
@@ -49,6 +50,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
 
 @CommandAlias("sporecore|core")
+@SporeCoreCommand
 class CoreCommand : BaseCommand() {
 
     private val startTime = System.currentTimeMillis()

@@ -21,7 +21,7 @@ class CustomModeCommand(
     val mode: Mode,
 ) : BaseCommand() {
 
-    @Default()
+    @Default
     fun onModeToggle(sender: CommandSender, @Optional @Name("target") target: OnlinePlayer?) {
         if (target == null && sender is ConsoleCommandSender) {
             sender.sendMessage("Console must provide a target!")

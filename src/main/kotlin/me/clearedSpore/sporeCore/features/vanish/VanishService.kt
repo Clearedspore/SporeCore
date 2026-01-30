@@ -1,11 +1,15 @@
 package me.clearedSpore.sporeCore.features.vanish
 
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes.player
 import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.util.CC.translate
+import me.clearedSpore.sporeAPI.util.CC.yellow
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.util.Perm
+import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import java.util.*
@@ -20,7 +24,14 @@ object VanishService {
         val wasInMode = ModeService.isInMode(userPlayer)
 
         vanishedPlayers.add(uuid)
-        if (!wasInMode) Bukkit.broadcastMessage("${ChatColor.YELLOW}${userPlayer.name} left the game")
+        val config = SporeCore.instance.coreConfig
+        if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.leave.isNotEmpty()) {
+            Bukkit.broadcastMessage(
+                config.joinLeaveMessages.leave
+                    .translate()
+                    .parsePlaceholders(userPlayer)
+            )
+        }
 
         for (player in Bukkit.getOnlinePlayers()) {
             if (player.hasPermission(Perm.VANISH_SEE)) continue
@@ -61,7 +72,13 @@ object VanishService {
         }
 
         vanishedPlayers.remove(uuid)
-        if (!wasInMode) Bukkit.broadcastMessage("${ChatColor.YELLOW}${userPlayer.name} joined the game")
+        val config = SporeCore.instance.coreConfig
+        if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.join.isNotEmpty()) {
+            Bukkit.broadcastMessage(
+                config.joinLeaveMessages.join
+                    .translate()
+                    .parsePlaceholders(userPlayer))
+        }
 
         if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty() && !wasInMode) {
             val embed = Webhook.Embed()

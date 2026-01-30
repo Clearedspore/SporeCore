@@ -7,6 +7,8 @@ import me.clearedSpore.sporeCore.features.mode.`object`.Mode
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.block.Container
+import org.bukkit.entity.ArmorStand
+import org.bukkit.entity.ItemFrame
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -16,9 +18,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityPickupItemEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.player.PlayerCommandPreprocessEvent
-import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.*
 import org.bukkit.inventory.Inventory
 import java.util.*
 
@@ -46,14 +46,26 @@ class ModeListener(private val modeProvider: (Player) -> Mode?) : Listener {
     }
 
     @EventHandler
-    fun onPickup(event: EntityPickupItemEvent) {
+    fun onItemPickup(event: EntityPickupItemEvent) {
         val player = event.entity as? Player ?: return
         val mode = modeProvider(player) ?: return
-        if (!mode.itemPickup) event.isCancelled = true
+        if (!mode.itemPickup) {
+            event.isCancelled = true
+        }
     }
 
     @EventHandler
-    fun onPickup(event: FoodLevelChangeEvent) {
+    fun onExpPickup(event: PlayerExpChangeEvent) {
+        val player = event.player
+        val mode = modeProvider(player) ?: return
+        if (!mode.itemPickup) {
+            event.amount = 0
+        }
+    }
+
+
+    @EventHandler
+    fun onFoodLevelChange(event: FoodLevelChangeEvent) {
         val player = event.entity as? Player ?: return
         val mode = modeProvider(player) ?: return
         event.isCancelled = true
@@ -63,6 +75,14 @@ class ModeListener(private val modeProvider: (Player) -> Mode?) : Listener {
     fun onDrop(event: PlayerDropItemEvent) {
         val mode = modeProvider(event.player) ?: return
         if (!mode.itemDrop) event.isCancelled = true
+    }
+
+    @EventHandler
+    fun onInteractAtEntity(event: PlayerInteractAtEntityEvent) {
+        val mode = modeProvider(event.player) ?: return
+        if (event.rightClicked is ArmorStand || event.rightClicked is ItemFrame) {
+            event.isCancelled = true
+        }
     }
 
     @EventHandler

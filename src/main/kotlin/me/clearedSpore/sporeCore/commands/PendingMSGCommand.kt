@@ -4,12 +4,14 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.menu.pms.PendingMsgsMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.entity.Player
 
 @CommandAlias("pendingmsg|pms|checkmessages")
+@SporeCoreCommand
 class PendingMSGCommand : BaseCommand() {
 
     @Default()

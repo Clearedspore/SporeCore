@@ -6,6 +6,7 @@ import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Damageable
@@ -14,6 +15,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("heal")
 @CommandPermission(Perm.HEAL)
+@SporeCoreCommand
 class HealCommand : BaseCommand() {
 
     @Default

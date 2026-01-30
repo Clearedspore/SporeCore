@@ -10,7 +10,7 @@ import org.bukkit.entity.Player
 
 
 @CommandAlias("spawn|gotospawn")
-class SpawnCommand() : BaseCommand() {
+class SpawnCommand : BaseCommand() {
 
 
     @Default

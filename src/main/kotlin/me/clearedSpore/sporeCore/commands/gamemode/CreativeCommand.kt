@@ -7,6 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
@@ -14,6 +15,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("creative|gmc")
 @CommandPermission(Perm.CREATIVE)
+@SporeCoreCommand
 class CreativeCommand : BaseCommand() {
 
     @Default

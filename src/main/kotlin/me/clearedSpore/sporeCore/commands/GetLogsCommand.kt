@@ -10,6 +10,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeAPI.util.TimeUtil.TimeUnitStyle
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.util.Perm
@@ -22,6 +23,7 @@ import java.util.*
 
 @CommandAlias("getlogs")
 @CommandPermission(Perm.VIEW_LOGS)
+@SporeCoreCommand
 class GetLogsCommand : BaseCommand() {
 
     private val pageSize = 6

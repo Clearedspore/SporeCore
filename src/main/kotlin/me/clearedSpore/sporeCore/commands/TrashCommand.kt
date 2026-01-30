@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -12,6 +13,7 @@ import org.bukkit.inventory.Inventory
 
 @CommandAlias("disposal|trash")
 @CommandPermission(Perm.TRASH)
+@SporeCoreCommand
 class TrashCommand : BaseCommand() {
 
     @Default()

@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -12,6 +13,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("ptime")
 @CommandPermission(Perm.PTIME)
+@SporeCoreCommand
 class PlayerTimeCommand : BaseCommand() {
 
     @Default

@@ -46,6 +46,8 @@ data class CoreConfig(
 
     var discord: DiscordConfig = DiscordConfig(),
 
+    var joinLeaveMessages: JoinLeaveMessages = JoinLeaveMessages(),
+
     var inventories: InventoryConfig = InventoryConfig(),
 
     var logs: LogsConfig = LogsConfig(),
@@ -620,6 +622,35 @@ data class GeneralConfig(
         "/msg",
         "/whisper"
     )
+)
+
+@Configuration
+data class JoinLeaveMessages(
+
+    @Comment(
+        "Should there be join/leave messages?"
+    )
+    var enabled: Boolean = true,
+
+    @Comment(
+        "If someone goes in vanish should it send",
+        "a leave message? This will also send a join",
+        "message if the player disables vanish.",
+        "This requires the vanish feature to be enabled"
+    )
+    var vanish: Boolean = true,
+
+    @Comment(
+        "join message",
+        "leave it empty if you want no message"
+    )
+    var join: String = "&7[&a+&7] &f%player_name% &ahas joined the server",
+
+    @Comment(
+        "leave message",
+        "leave it empty if you want no message"
+    )
+    var leave: String = "&7[&c-&7] &f%player_name% &chas left the server"
 )
 
 @Configuration

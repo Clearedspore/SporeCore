@@ -5,12 +5,14 @@ import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 @CommandAlias("fly|togglefly")
 @CommandPermission(Perm.FLIGHT)
+@SporeCoreCommand
 class FlyCommand : BaseCommand() {
 
     @Default

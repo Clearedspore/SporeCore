@@ -10,6 +10,7 @@ import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.util.Perm
@@ -17,6 +18,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("tphere|teleporthere|bring")
 @CommandPermission(Perm.TELEPORT_OTHERS)
+@SporeCoreCommand
 class TphereCommand : BaseCommand() {
 
     @Default

@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
@@ -16,6 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta
 
 @CommandAlias("edititem")
 @CommandPermission(Perm.ITEM_EDITOR)
+@SporeCoreCommand
 class EditItemCommand : BaseCommand() {
 
     private fun getItemMeta(player: Player): ItemMeta? {

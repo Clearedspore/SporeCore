@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Task
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.user.UserManager
@@ -14,6 +15,7 @@ import org.bukkit.command.CommandSender
 
 @CommandAlias("inventorymanager|invmanager|invm")
 @CommandPermission(Perm.ADMIN)
+@SporeCoreCommand
 class InventoryManagerCommand : BaseCommand() {
 
     @Subcommand("remove")

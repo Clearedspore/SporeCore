@@ -7,6 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
@@ -16,6 +17,7 @@ import org.bukkit.metadata.FixedMetadataValue
 
 @CommandAlias("freeze")
 @CommandPermission(Perm.FREEZE)
+@SporeCoreCommand
 class FreezeCommand : BaseCommand() {
 
     @Default

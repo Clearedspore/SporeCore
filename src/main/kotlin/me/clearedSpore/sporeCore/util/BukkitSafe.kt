@@ -12,18 +12,18 @@ import java.util.concurrent.ConcurrentHashMap
 
 object BukkitSafe {
 
-    val nameToPlayerMap: ConcurrentHashMap<String?, Player?> = ConcurrentHashMap<String?, Player?>()
-    val uuidToPlayerMap: ConcurrentHashMap<UUID?, Player?> = ConcurrentHashMap<UUID?, Player?>()
+    val nameToPlayerMap: ConcurrentHashMap<String, Player> = ConcurrentHashMap<String, Player>()
+    val uuidToPlayerMap: ConcurrentHashMap<UUID, Player> = ConcurrentHashMap<UUID, Player>()
 
-    fun getOnlinePlayers(): MutableCollection<Player?> {
-        return Collections.unmodifiableCollection<Player?>(nameToPlayerMap.values)
+    fun getOnlinePlayers(): MutableCollection<Player> {
+        return Collections.unmodifiableCollection<Player>(nameToPlayerMap.values)
     }
 
-    fun getPlayer(name: String?): Player? {
+    fun getPlayer(name: String): Player? {
         return nameToPlayerMap[name]
     }
 
-    fun getPlayer(uuid: UUID?): Player? {
+    fun getPlayer(uuid: UUID): Player? {
         return uuidToPlayerMap[uuid]
     }
 

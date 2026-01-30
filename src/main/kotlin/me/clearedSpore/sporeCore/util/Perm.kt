@@ -191,6 +191,10 @@ object Perm {
     const val INVESTIGATION_STAFF = INVESTIGATION + "staff"
     const val INVESTIGATION_ADMIN = INVESTIGATION + "admin"
 
+    // Disguise
+    const val DISGUISE = MAIN + "disguise."
+    const val DISGUISE_TOGGLE = DISGUISE + "toggle"
+
     fun registerAll(default: PermissionDefault = PermissionDefault.OP) {
         val pluginManager = Bukkit.getPluginManager()
         var count = 0

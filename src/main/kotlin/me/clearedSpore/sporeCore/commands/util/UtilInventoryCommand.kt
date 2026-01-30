@@ -7,6 +7,7 @@ import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.menu.Menu
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
@@ -17,6 +18,7 @@ import org.bukkit.inventory.ItemStack
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
+@SporeCoreCommand
 class UtilInventoryCommand : BaseCommand() {
 
     @Subcommand("inventory view")

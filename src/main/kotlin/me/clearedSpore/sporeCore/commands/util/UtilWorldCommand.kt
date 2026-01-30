@@ -6,6 +6,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.button.TextButton
 import org.bukkit.Bukkit
@@ -15,6 +16,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
+@SporeCoreCommand
 class UtilWorldCommand : BaseCommand() {
 
     @Subcommand("world name")

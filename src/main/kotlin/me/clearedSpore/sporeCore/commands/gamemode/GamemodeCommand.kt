@@ -9,6 +9,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
@@ -16,6 +17,7 @@ import org.bukkit.entity.Player
 
 @CommandAlias("gamemode|gm")
 @CommandPermission(Perm.GAMEMODE)
+@SporeCoreCommand
 class GamemodeCommand : BaseCommand() {
 
     @Default

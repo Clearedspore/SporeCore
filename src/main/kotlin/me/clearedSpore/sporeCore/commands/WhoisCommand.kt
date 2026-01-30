@@ -6,6 +6,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
@@ -19,6 +20,7 @@ import kotlin.reflect.typeOf
 
 @CommandAlias("whois")
 @CommandPermission(Perm.WHOIS)
+@SporeCoreCommand
 class WhoisCommand : BaseCommand() {
 
     @Default()

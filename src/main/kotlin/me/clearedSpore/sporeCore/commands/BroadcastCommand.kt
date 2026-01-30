@@ -7,12 +7,14 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 
 
 @CommandAlias("broadcast|bc|alert|announce")
 @CommandPermission(Perm.BROADCAST)
+@SporeCoreCommand
 class BroadcastCommand : BaseCommand() {
 
     private val quoteRegex = "\"([^\"]+)\"".toRegex()

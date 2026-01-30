@@ -8,11 +8,13 @@ import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.orange
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
+import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 
 @CommandAlias("ping")
 @CommandPermission(Perm.PING)
+@SporeCoreCommand
 class PingCommand : BaseCommand() {
 
     @Default
