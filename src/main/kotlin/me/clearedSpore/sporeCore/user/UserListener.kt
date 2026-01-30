@@ -318,7 +318,7 @@ class UserListener : Listener {
         val features = SporeCore.instance.coreConfig.features
 
         var wasVanished = false
-        Logger.log(player, Perm.LOG, if (features.modes && ModeService.isInMode(player)) "left the game silently" else "left the server" , false)
+        if (player.hasPermission(Perm.MODE_ALLOW)) Logger.log(player, Perm.LOG, if (features.modes && ModeService.isInMode(player)) "left the game silently" else "left the server" , false)
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val joinTime = user.lastJoin?.let {
