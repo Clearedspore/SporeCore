@@ -11,6 +11,7 @@ import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import java.util.*
 
 

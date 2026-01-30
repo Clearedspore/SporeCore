@@ -245,16 +245,14 @@ class UserListener : Listener {
             }
         }
 
-        Task.runLater({
-            if (user.getSettingOrDefault(StaffmodeOnJoinSetting()) &&
-                features.modes &&
-                player.hasPermission(Perm.MODE_ALLOW)
-            ) {
-                val mode = ModeService.getHighestMode(player) ?: return@runLater
-                ModeService.toggleMode(player, mode.id)
-                player.sendMessage("Enabled ${mode.name} mode".blue())
-            }
-        }, 500, TimeUnit.MILLISECONDS)
+        if (user.getSettingOrDefault(StaffmodeOnJoinSetting()) &&
+            features.modes &&
+            player.hasPermission(Perm.MODE_ALLOW)
+        ) {
+            val mode = ModeService.getHighestMode(player) ?: return
+            ModeService.toggleMode(player, mode.id)
+            player.sendMessage("Enabled ${mode.name} mode".blue())
+        }
 
 
 
@@ -323,6 +321,7 @@ class UserListener : Listener {
         val features = SporeCore.instance.coreConfig.features
 
         var wasVanished = false
+        if (player.hasPermission(Perm.MODE_ALLOW)) Logger.log(player, Perm.LOG, if (features.modes && ModeService.isInMode(player)) "left the game silently" else "left the server" , false)
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val joinTime = user.lastJoin?.let {
