@@ -68,15 +68,17 @@ object RebootService {
         cancelled = true
         rebootTask?.cancel()
         rebootTask = null
+        Bukkit.broadcastMessage("§m-------------------------------------")
         Bukkit.broadcastMessage("")
         Bukkit.broadcastMessage("Reboot has been cancelled.".red())
         Bukkit.broadcastMessage("")
+        Bukkit.broadcastMessage("§m-------------------------------------")
     }
 
     private fun sendRebootMessage(timeLeft: Long, isCountdown: Boolean = false) {
         val formatted = TimeUtil.formatDuration(timeLeft)
-        val title = "§lReboot!!".red()
-        val subtitle = "Rebooting in §f$formatted".blue()
+        val title = "§lServer Reboot".red()
+        val subtitle = "The server is rebooting in §f$formatted".blue()
 
         Bukkit.getOnlinePlayers().forEach {
             if (isCountdown) {
@@ -87,9 +89,11 @@ object RebootService {
             it.playSound(it, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
         }
 
+        Bukkit.broadcastMessage("§m-------------------------------------")
         Bukkit.broadcastMessage("")
-        Bukkit.broadcastMessage("§lReboot!!".red())
-        Bukkit.broadcastMessage("Rebooting in §f$formatted".blue())
+        Bukkit.broadcastMessage("§lServer Reboot".red())
+        Bukkit.broadcastMessage("The server is rebooting in §f$formatted".blue())
         Bukkit.broadcastMessage("")
+        Bukkit.broadcastMessage("§m-------------------------------------")
     }
 }

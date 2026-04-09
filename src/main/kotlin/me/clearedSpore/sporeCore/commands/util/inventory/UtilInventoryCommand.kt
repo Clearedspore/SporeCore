@@ -22,12 +22,12 @@ import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.ItemStack
 
 @CommandAlias("util")
-@CommandPermission(Perm.UTIL_COMMAND)
+@CommandPermission(Perm.UTIL_INVENTORY)
 @SporeCoreCommand
 class UtilInventoryCommand : BaseCommand() {
 
     @Subcommand("inventory view")
-    @CommandPermission(Perm.UTIL_INVENTORY)
+    @CommandPermission(Perm.UTIL_INVENTORY_VIEW)
     @CommandCompletion("@players")
     fun view(sender: Player, @Name("target") targetObject: OnlinePlayer) {
         val target = targetObject.player
@@ -42,7 +42,7 @@ class UtilInventoryCommand : BaseCommand() {
     }
 
     @Subcommand("inventory dropall")
-    @CommandPermission(Perm.UTIL_INVENTORY)
+    @CommandPermission(Perm.UTIL_INVENTORY_DROPALL)
     @CommandCompletion("@players")
     fun dropAll(sender: Player, @Name("target") targetObject: OnlinePlayer) {
         val target = targetObject.player
@@ -56,7 +56,7 @@ class UtilInventoryCommand : BaseCommand() {
     }
 
     @Subcommand("inventory giveall")
-    @CommandPermission(Perm.UTIL_INVENTORY)
+    @CommandPermission(Perm.UTIL_INVENTORY_GIVEALL)
     fun giveAll(sender: Player) {
         val items = sender.inventory.contents.filterNotNull()
 
@@ -68,7 +68,7 @@ class UtilInventoryCommand : BaseCommand() {
     }
 
     @Subcommand("inventory give")
-    @CommandPermission(Perm.UTIL_INVENTORY)
+    @CommandPermission(Perm.UTIL_INVENTORY_GIVE)
     @CommandCompletion("@players")
     fun give(sender: Player, @Name("target") targetObject: OnlinePlayer) {
         val target = targetObject.player
@@ -80,7 +80,7 @@ class UtilInventoryCommand : BaseCommand() {
 
     @Subcommand("inventory clearall")
     @CommandCompletion("@materials")
-    @CommandPermission(Perm.UTIL_INVENTORY)
+    @CommandPermission(Perm.UTIL_INVENTORY_CLEARALL)
     fun clearAll(sender: Player, @Name("material") material: Material) {
         val item = ItemStack(material)
 

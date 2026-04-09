@@ -148,6 +148,14 @@ object Perm {
     const val UTIL_SERVER = UTIL + "server"
     const val UTIL_INVENTORY = UTIL + "inventory"
 
+    //util inventory subcommands
+    const val UTIL_INVENTORY_DROPALL = "$UTIL_INVENTORY.dropall"
+    const val UTIL_INVENTORY_VIEW = "$UTIL_INVENTORY.view"
+    const val UTIL_INVENTORY_CLEARALL = "$UTIL_INVENTORY.clearall"
+    const val UTIL_INVENTORY_GIVE = "$UTIL_INVENTORY.give"
+    const val UTIL_INVENTORY_GIVEALL = "$UTIL_INVENTORY.giveall"
+
+
     //home
     const val HOME = MAIN + "home"
 

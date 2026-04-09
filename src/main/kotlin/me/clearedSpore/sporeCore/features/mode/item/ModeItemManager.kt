@@ -1,12 +1,7 @@
 package me.clearedSpore.sporeCore.features.mode.item
 
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.features.mode.item.impl.InvseeItem
-import me.clearedSpore.sporeCore.features.mode.item.impl.CompassItem
-import me.clearedSpore.sporeCore.features.mode.item.impl.FreezeItem
-import me.clearedSpore.sporeCore.features.mode.item.impl.HistoryItem
-import me.clearedSpore.sporeCore.features.mode.item.impl.PunishSwordItem
-import me.clearedSpore.sporeCore.features.mode.item.impl.SpeedItem
+import me.clearedSpore.sporeCore.features.mode.item.impl.*
 import me.clearedSpore.sporeCore.features.mode.item.`object`.ModeItem
 import org.bukkit.Bukkit
 
@@ -21,6 +16,7 @@ object ModeItemManager {
         register(HistoryItem())
         register(InvseeItem())
         register(CompassItem())
+        register(WorldEditItem())
     }
 
     fun register(item: ModeItem) {

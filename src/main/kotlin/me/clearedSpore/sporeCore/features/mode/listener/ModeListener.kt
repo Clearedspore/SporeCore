@@ -16,6 +16,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityPickupItemEvent
+import org.bukkit.event.entity.EntityShootBowEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.*
@@ -112,6 +113,14 @@ class ModeListener(private val modeProvider: (Player) -> Mode?) : Listener {
     }
 
     @EventHandler
+    fun onBowPrepare(event: EntityShootBowEvent) {
+        val player = event.entity as? Player ?: return
+        val mode = modeProvider(player) ?: return
+        if (!mode.pvp) event.isCancelled = true
+        
+        }
+
+    @EventHandler
     fun onSilentChest(event: PlayerInteractEvent) {
         val player = event.player
         val mode = modeProvider(player) ?: return
@@ -150,5 +159,6 @@ class ModeListener(private val modeProvider: (Player) -> Mode?) : Listener {
                 }
             }, 0L, 20L)
         }
+        event.isCancelled = true
     }
 }

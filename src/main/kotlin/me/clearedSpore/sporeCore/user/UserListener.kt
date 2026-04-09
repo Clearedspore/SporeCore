@@ -2,6 +2,7 @@ package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.bold
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
@@ -27,6 +28,7 @@ import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Sound
@@ -160,6 +162,10 @@ class UserListener : Listener {
         if (autoStaff && player.hasPermission(Perm.MODE_ALLOW)) {
             Logger.log(player, Perm.LOG, "joined the game silently", false)
             event.joinMessage(null)
+        } else if (!autoStaff && VanishService.vanishedPlayers.contains(player.uniqueId)) {
+            Logger.log(player, Perm.LOG, "joined the game silently", false)
+            player.sendMessage("You were automatically put into vanish as you last logged off in vanish".blue().bold())
+            event.joinMessage(null)
         } else if (!autoStaff && player.hasPermission(Perm.MODE_ALLOW)) {
             Logger.log(player, Perm.LOG, "joined the server", false)
         }
@@ -287,7 +293,7 @@ class UserListener : Listener {
         }
 
 
-        if (config.joinLeaveMessages.join.isNotBlank() && !autoStaff) {
+        if (config.joinLeaveMessages.join.isNotBlank() && !autoStaff && !VanishService.vanishedPlayers.contains(player.uniqueId)) {
             event.joinMessage = config.joinLeaveMessages.join
                 .translate()
                 .parsePlaceholders(player)
@@ -307,7 +313,7 @@ class UserListener : Listener {
         }
 
 
-        if (config.discord.chat.isNotEmpty() && !autoStaff && !VanishService.isVanished(player.uniqueId)) {
+        if (config.discord.chat.isNotEmpty() && !ModeService.isInMode(player) && !VanishService.isVanished(player.uniqueId)) {
             val embed = Webhook.Embed()
                 .setColor(0x00FF00)
                 .setDescription("**${player.name} joined the server**")
@@ -340,7 +346,6 @@ class UserListener : Listener {
         val features = SporeCore.instance.coreConfig.features
 
         var wasVanished = false
-        if (player.hasPermission(Perm.MODE_ALLOW)) Logger.log(player, Perm.LOG, if (features.modes && ModeService.isInMode(player)) "left the game silently" else "left the server" , false)
 
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val joinTime = user.lastJoin?.let {
@@ -349,9 +354,18 @@ class UserListener : Listener {
         } ?: System.currentTimeMillis()
 
         if (features.modes && ModeService.isInMode(player)) {
-            event.quitMessage(null)
+            Logger.log(player, Perm.LOG, "left the game silently", false)
+            event.quitMessage = null
             wasVanished = true
             ModeService.toggleMode(player)
+            VanishService.vanishedPlayers.remove(player.uniqueId)
+            player.isSleepingIgnored = false
+        } else if (features.vanish && VanishService.vanishedPlayers.contains(player.uniqueId)) {
+            Logger.log(player, Perm.LOG, "left the game silently", false)
+            wasVanished = true
+            player.isSleepingIgnored = false
+        } else {
+            Logger.log(player, Perm.LOG, "left the server", false)
         }
 
 
@@ -381,7 +395,7 @@ class UserListener : Listener {
             event.quitMessage = null
         } else {
             if (config.joinLeaveMessages.leave.isNotBlank()) {
-                event.quitMessage = config.joinLeaveMessages.join
+                event.quitMessage = config.joinLeaveMessages.leave
                     .translate()
                     .parsePlaceholders(player)
             }

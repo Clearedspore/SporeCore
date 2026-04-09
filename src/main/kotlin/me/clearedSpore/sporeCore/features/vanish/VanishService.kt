@@ -24,6 +24,7 @@ object VanishService {
         val wasInMode = ModeService.isInMode(userPlayer)
 
         vanishedPlayers.add(uuid)
+        userPlayer.isSleepingIgnored = true
         val config = SporeCore.instance.coreConfig
         if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.leave.isNotEmpty()) {
             Bukkit.broadcastMessage(
@@ -72,6 +73,7 @@ object VanishService {
         }
 
         vanishedPlayers.remove(uuid)
+        userPlayer.isSleepingIgnored = false
         val config = SporeCore.instance.coreConfig
         if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.join.isNotEmpty()) {
             Bukkit.broadcastMessage(
