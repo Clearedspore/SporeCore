@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.menu.rollback.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
 import me.clearedSpore.sporeCore.user.UserManager

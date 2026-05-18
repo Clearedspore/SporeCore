@@ -6,6 +6,7 @@ import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
@@ -15,9 +16,8 @@ import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
-import me.clearedSpore.sporeAPI.util.Task
-import me.clearedSpore.sporeAPI.util.TimeUtil
 import me.clearedSpore.sporeAPI.util.Webhook
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
@@ -250,7 +250,7 @@ class CoreCommand : BaseCommand() {
         val start = System.currentTimeMillis()
         sender.sendMessage("Processing...".blue())
 
-        Task.runAsync {
+        Tasks.runAsync {
             val staffPlayer = Bukkit.getOfflinePlayers()
                 .firstOrNull { it.name.equals(staffName, ignoreCase = true) }
 
@@ -259,7 +259,7 @@ class CoreCommand : BaseCommand() {
                 return@runAsync
             }
 
-            val millisBack = TimeUtil.parseDuration(timeArg)
+            val millisBack = TimeUtil.parse(timeArg).millis
             if (millisBack <= 0) {
                 sender.sendMessage("Invalid time: '$timeArg'.".red())
                 return@runAsync
@@ -293,10 +293,10 @@ class CoreCommand : BaseCommand() {
                 if (sender is Player) {
                     val viewer = sender
 
-                    Task.runSync {
+                    Tasks.run {
                         if (statsToRollback.isEmpty()) {
                             sender.sendMessage("No punishments by $staffName within $timeArg.".red())
-                            return@runSync
+                            return@run
                         }
                         val menu = StaffRollbackPreviewMenu(viewer, staffPlayer, timeArg, statsToRollback)
                         menu.open(viewer)
@@ -386,7 +386,7 @@ class CoreCommand : BaseCommand() {
     fun onDumpDB(sender: CommandSender) {
         sender.sendMessage("Dumping database to JSON...".blue())
 
-        Task.runAsync {
+        Tasks.runAsync {
             try {
                 val plugin = SporeCore.instance
                 val file = File(plugin.dataFolder, "database_dump.json")
@@ -507,7 +507,7 @@ class CoreCommand : BaseCommand() {
         val amount = (amountArg ?: 500).coerceIn(1, 5000)
         sender.sendMessage("Starting generation of $amount fake users...".blue())
 
-        Task.runAsync {
+        Tasks.runAsync {
             try {
                 val databaseCollection = DatabaseManager.getServerCollection()
                 val database = DatabaseManager.getServerData()

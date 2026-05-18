@@ -1,12 +1,12 @@
 package me.clearedSpore.sporeCore.menu.user.messages.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.extension.PlayerExtension.toPlayerName
 import me.clearedSpore.sporeCore.features.message.Message
 import me.clearedSpore.sporeCore.menu.user.messages.MessagesMenu

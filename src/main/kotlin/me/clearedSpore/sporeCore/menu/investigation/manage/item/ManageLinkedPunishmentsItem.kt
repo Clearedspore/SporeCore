@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.menu.investigation.manage.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeCore.SporeCore

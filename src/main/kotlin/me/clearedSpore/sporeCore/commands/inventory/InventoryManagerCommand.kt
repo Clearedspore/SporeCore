@@ -2,9 +2,9 @@ package me.clearedSpore.sporeCore.commands.inventory
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.inventory.InventoryManager
@@ -57,7 +57,7 @@ class InventoryManagerCommand : BaseCommand() {
         var removed = 0
         val start = System.currentTimeMillis()
         sender.sendMessage("Clearing inventories async...".blue())
-        Task.runAsync {
+        Tasks.runAsync {
             inventories.forEach { inventory ->
                 InventoryManager.removeInventory(inventory.id)
                 removed++
@@ -93,7 +93,7 @@ class InventoryManagerCommand : BaseCommand() {
         val start = System.currentTimeMillis()
         sender.sendMessage("Clearing inventories async...".blue())
 
-        Task.runAsync {
+        Tasks.runAsync {
             InventoryManager.clearAll()
         }
 

@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.menu.investigation.manage.item
 
 import lombok.`val`
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.ChatInputService
 import me.clearedSpore.sporeAPI.util.IdUtil

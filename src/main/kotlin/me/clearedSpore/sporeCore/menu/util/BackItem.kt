@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.menu.util
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.red
 import org.bukkit.Material
 import org.bukkit.entity.Player

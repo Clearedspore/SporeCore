@@ -3,7 +3,7 @@ package me.clearedSpore.sporeCore
 import co.aikar.commands.*
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
-import me.clearedSpore.sporeAPI.SporeAPI
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
@@ -157,7 +157,7 @@ class SporeCore : JavaPlugin() {
         Message.init(true)
         commandManager = PaperCommandManager(this)
         setupACF()
-        Task.onInitialize(this)
+        Tasks.onInitialize(this)
         Perm.registerAll()
 
         val pluginID = 28481
@@ -173,7 +173,7 @@ class SporeCore : JavaPlugin() {
 
         InventoryManager.startCleanupTask()
 
-        Task.run {
+        Tasks.run {
             if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
                 PlaceholderAPIHook().register()
                 Logger.info("Successfully integrated with PlaceholderAPI")
@@ -237,7 +237,7 @@ class SporeCore : JavaPlugin() {
         registerCompletions()
         registerCommands()
 
-        Task.runLater({
+        Tasks.runLater(3 * 20) {
             freshStartup = false
             logStartupBanner()
             val consoleHeadURL = DiscordService.getConsoleAvatar()
@@ -253,7 +253,7 @@ class SporeCore : JavaPlugin() {
                     Logger.error("Failed to send server status webhook: ${ex.message}")
                 }
             }
-        }, 3)
+        }
     }
 
     override fun onDisable() {

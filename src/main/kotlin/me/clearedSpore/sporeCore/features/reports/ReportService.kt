@@ -1,14 +1,16 @@
 package me.clearedSpore.sporeCore.features.reports
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeAPI.util.Task
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil.hours
+import me.clearedSpore.sporeAPI.util.time.TimeUtil.toTicks
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
@@ -119,7 +121,7 @@ object ReportService {
         manageButton.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/reports")
         manageButton.hoverEvent = HoverEvent(HoverEvent.Action.SHOW_TEXT, Text("Click to manage reports"))
 
-        val components = arrayListOf<TextComponent>(manageButton)
+        val components = arrayListOf(manageButton)
 
         if (hasEvidence) {
             val evidenceButton = TextComponent(" [Click to view Evidence]")
@@ -237,12 +239,7 @@ object ReportService {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Task.runRepeatedAsync(
-            Runnable { cleanupReports() },
-            delay = 0,
-            interval = 1,
-            unit = TimeUnit.HOURS
-        )
+        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 0) { cleanupReports() }
     }
 
     fun stopCleanupTask() {
@@ -255,7 +252,7 @@ object ReportService {
         target: UUID
     ): Long? {
         val config = SporeCore.instance.coreConfig.reports
-        val cooldownMillis = TimeUtil.parseDuration(config.sameTargetCooldown)
+        val cooldownMillis = TimeUtil.parse(config.sameTargetCooldown).millis
 
         if (cooldownMillis <= 0) return null
 
@@ -274,8 +271,8 @@ object ReportService {
         Logger.infoDB("Clearing reports....")
 
         val config = SporeCore.instance.coreConfig.reports
-        val defaultMaxAge = TimeUtil.parseDuration(config.deletion)
-        val completedMaxAge = TimeUtil.parseDuration(config.completedDeletion)
+        val defaultMaxAge = TimeUtil.parse(config.deletion).millis
+        val completedMaxAge = TimeUtil.parse(config.completedDeletion).millis
         val now = System.currentTimeMillis()
 
         val toRemove = reportCollection.find().toList().mapNotNull { doc ->

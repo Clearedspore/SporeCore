@@ -1,9 +1,9 @@
 package me.clearedSpore.sporeCore.util
 
 import io.papermc.paper.event.player.AsyncChatEvent
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -51,7 +51,7 @@ class ChatInput() : Listener {
             return
         }
 
-        Task.run(Runnable {
+        Tasks.run(Runnable {
             awaitingInput.remove(player.uniqueId)?.accept(msg)
         })
     }

@@ -1,13 +1,12 @@
 package me.clearedSpore.sporeCore.menu.kits.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.kit.`object`.Kit
 import me.clearedSpore.sporeCore.menu.kits.preview.KitPreviewMenu
-import me.clearedSpore.sporeCore.menu.kits.preview.NewKitPreviewMenu
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.Material
 import org.bukkit.entity.Player

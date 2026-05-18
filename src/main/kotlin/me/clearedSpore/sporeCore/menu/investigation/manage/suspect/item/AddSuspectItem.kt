@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.menu.investigation.manage.suspect.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.ChatInputService
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage

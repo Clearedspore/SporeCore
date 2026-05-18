@@ -1,13 +1,13 @@
 package me.clearedSpore.sporeCore.user
 
 import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.bold
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.SporeCore
@@ -237,7 +237,7 @@ class UserListener : Listener {
         }
 
 
-        Task.runLater(Runnable {
+        Tasks.runLater(2) {
             if (joinConfig.message.isNotEmpty() && user.getSettingOrDefault(JoinMsgSetting())) {
                 joinConfig.message.forEach { message ->
                     val msg = message
@@ -246,7 +246,7 @@ class UserListener : Listener {
                     player.sendMessage(msg.translate())
                 }
             }
-        }, 2)
+        }
 
         if (joinConfig.gamemode.isNotBlank()) {
             runCatching {

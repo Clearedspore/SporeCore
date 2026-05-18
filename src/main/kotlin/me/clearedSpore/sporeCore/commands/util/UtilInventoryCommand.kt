@@ -1,4 +1,4 @@
-package me.clearedSpore.sporeCore.commands.util.inventory
+package me.clearedSpore.sporeCore.commands.util
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
@@ -7,8 +7,8 @@ import co.aikar.commands.annotation.CommandPermission
 import co.aikar.commands.annotation.Name
 import co.aikar.commands.annotation.Subcommand
 import co.aikar.commands.bukkit.contexts.OnlinePlayer
-import me.clearedSpore.sporeAPI.menu.Item
 import me.clearedSpore.sporeAPI.menu.Menu
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
@@ -31,14 +31,7 @@ class UtilInventoryCommand : BaseCommand() {
     @CommandCompletion("@players")
     fun view(sender: Player, @Name("target") targetObject: OnlinePlayer) {
         val target = targetObject.player
-        InventoryViewMenu(
-            viewer = sender,
-            target = target,
-            editable = false,
-            autoRefresh = true,
-            plugin = SporeCore.instance
-        ).open()
-        //InventoryPreviewMenu(target, sender).open(sender)
+        InventoryPreviewMenu(target, sender).open(sender)
     }
 
     @Subcommand("inventory dropall")

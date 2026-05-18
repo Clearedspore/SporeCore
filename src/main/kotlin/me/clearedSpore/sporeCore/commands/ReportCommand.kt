@@ -7,7 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.extension.PlayerExtension.hasJoinedBefore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.safeUuid
 import me.clearedSpore.sporeCore.extension.PlayerExtension.safeUuidStr

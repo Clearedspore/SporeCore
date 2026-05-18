@@ -1,8 +1,9 @@
 package me.clearedSpore.sporeCore.util
 
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Task
+
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
@@ -28,7 +29,7 @@ class UpdateChecker() : Listener {
     }
 
     fun checkForUpdates() {
-        Task.runAsync(Runnable {
+        Tasks.runAsync {
             try {
                 val url = URL("https://api.spigotmc.org/legacy/update.php?resource=$resourceId")
                 val connection = url.openConnection() as HttpURLConnection
@@ -57,7 +58,7 @@ class UpdateChecker() : Listener {
             } catch (e: Exception) {
                 Logger.error("Failed to check for updates: ${e.message}")
             }
-        })
+        }
     }
 
     @EventHandler
@@ -65,12 +66,12 @@ class UpdateChecker() : Listener {
         val player: Player = event.player
 
         if (updateAvailable && player.hasPermission(Perm.UPDATECHEKER)) {
-            Task.runLater(Runnable {
+            Tasks.runLater(2) {
                 player.sendMessage("[SporeCore] &fA new update is available!".blue())
                 player.sendMessage("[SporeCore] &fCurrent version: &e${plugin.description.version}".blue())
                 player.sendMessage("[SporeCore] &fLatest version: &e$latestVersion".blue())
                 player.sendMessage("[SporeCore] &fDownload at: &ehttps://modrinth.com/plugin/sporecore/version/latest".blue())
-            }, 2)
+            }
         }
     }
 }

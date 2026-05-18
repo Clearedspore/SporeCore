@@ -7,7 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.DiscordService
@@ -234,7 +234,7 @@ object PunishmentService {
 
         val now = Date()
         val expireDate = time?.takeIf { it.isNotBlank() }?.let {
-            Date(now.time + TimeUtil.parseDuration(it))
+            Date(now.time + TimeUtil.parse(it).millis)
         }
 
         val punishment = Punishment(

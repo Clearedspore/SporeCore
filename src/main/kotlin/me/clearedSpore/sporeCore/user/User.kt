@@ -1,10 +1,10 @@
 package me.clearedSpore.sporeCore.user
 
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.chat.color.`object`.ChatColor
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
@@ -343,7 +343,7 @@ data class User(
     fun kick(message: String? = null): Boolean {
         val player = this.player ?: return false
         return try {
-            Task.run {
+            Tasks.run {
                 if (message.isNullOrBlank()) {
                     player.kickPlayer(null)
                 } else {

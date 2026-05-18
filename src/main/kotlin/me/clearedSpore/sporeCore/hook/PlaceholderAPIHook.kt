@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.hook
 
 import me.clearedSpore.sporeAPI.util.CC.translate
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.eco.EconomyService

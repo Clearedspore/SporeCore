@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.user
 
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import org.bukkit.Bukkit
@@ -154,7 +154,7 @@ object UserManager {
         }
 
     fun save(user: User, silent: Boolean = false) {
-        Task.runAsync {
+        Tasks.runAsync {
             user.save(userCollection, silent)
         }
     }

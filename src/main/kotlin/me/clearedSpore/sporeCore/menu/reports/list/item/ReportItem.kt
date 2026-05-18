@@ -1,12 +1,12 @@
 package me.clearedSpore.sporeCore.menu.reports.list.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gold
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.investigation.IGService
 import me.clearedSpore.sporeCore.features.reports.ReportService

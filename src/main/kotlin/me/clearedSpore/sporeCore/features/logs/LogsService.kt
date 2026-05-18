@@ -1,8 +1,10 @@
 package me.clearedSpore.sporeCore.features.logs
 
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Task
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil.hours
+import me.clearedSpore.sporeAPI.util.time.TimeUtil.toTicks
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.logs.`object`.Log
@@ -42,12 +44,7 @@ object LogsService {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Task.runRepeatedAsync(
-            Runnable { cleanupLogs() },
-            delay = 0,
-            interval = 1,
-            unit = TimeUnit.HOURS
-        )
+        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 0) { cleanupLogs() }
     }
 
     fun stopCleanupTask() {
@@ -58,7 +55,7 @@ object LogsService {
     fun cleanupLogs() {
         Logger.infoDB("Clearing logs...")
         val config = SporeCore.instance.coreConfig.logs
-        val maxAge = TimeUtil.parseDuration(config.cleanupTime)
+        val maxAge = TimeUtil.parse(config.cleanupTime).millis
         val now = System.currentTimeMillis()
 
         val toRemove = logsCollection.find().map { Log.fromDocument(it) }.filter { now - it.timestamp >= maxAge }

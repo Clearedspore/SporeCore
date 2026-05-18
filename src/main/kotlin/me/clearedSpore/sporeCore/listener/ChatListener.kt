@@ -1,6 +1,7 @@
 package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
@@ -8,7 +9,6 @@ import me.clearedSpore.sporeAPI.util.ChatInputService
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.annotations.AutoListener
@@ -58,7 +58,7 @@ class ChatListener : Listener {
                 ChatInputService.cancel(player)
                 player.sendErrorMessage("Cancelled procedure.")
             } else {
-                Task.run {
+                Tasks.run {
                     ChatInputService.consume(player, msg)
                 }
             }
@@ -153,7 +153,8 @@ class ChatListener : Listener {
             recipientUser == null ||
                     (!player.hasPermission(Perm.CHAT_BYPASS) && !recipientUser.getSettingOrDefault(ChatEnabledSetting()))
         }
-        Task.run { event.recipients.removeAll(toRemove) }
+
+        Tasks.run { event.recipients.removeAll(toRemove) }
 
         val config = SporeCore.instance.coreConfig
         val chatService = SporeCore.instance.chat

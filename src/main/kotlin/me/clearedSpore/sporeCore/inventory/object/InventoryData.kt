@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.inventory.`object`
 
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.util.doc.DocReader
 import me.clearedSpore.sporeCore.util.doc.DocWriter
 import org.bukkit.Location

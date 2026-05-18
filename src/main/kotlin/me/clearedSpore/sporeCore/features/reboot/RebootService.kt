@@ -2,7 +2,7 @@ package me.clearedSpore.sporeCore.features.reboot
 
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.Bukkit
 import org.bukkit.Sound
@@ -17,7 +17,7 @@ object RebootService {
     private val plugin = SporeCore.instance
 
     fun startReboot(durationInput: String) {
-        val durationMs = TimeUtil.parseDuration(durationInput)
+        val durationMs = TimeUtil.parse(durationInput).millis
         if (durationMs <= 0) {
             Bukkit.broadcastMessage("Invalid reboot duration: $durationInput".red())
             return

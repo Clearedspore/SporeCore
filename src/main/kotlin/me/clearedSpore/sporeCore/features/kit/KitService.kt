@@ -5,7 +5,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.kit.`object`.Kit
 import me.clearedSpore.sporeCore.user.UserManager
@@ -122,7 +122,7 @@ class KitService {
         val key = kitName.lowercase()
         val kit = kits[key] ?: return Logger.warn("Kit '$kitName' not found.")
 
-        val duration = TimeUtil.parseDuration(input)
+        val duration = TimeUtil.parse(input).millis
         if (duration <= 0) {
             Logger.warn("Invalid cooldown format: $input")
             return

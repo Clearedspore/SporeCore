@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.menu.homes.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
 import org.bukkit.Material

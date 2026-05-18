@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.menu.invrollback.preview.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeCore.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.entity.Player

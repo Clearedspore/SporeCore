@@ -1,8 +1,10 @@
 package me.clearedSpore.sporeCore.inventory
 
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Task
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil.hours
+import me.clearedSpore.sporeAPI.util.time.TimeUtil.toTicks
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
@@ -36,12 +38,7 @@ object InventoryManager {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Task.runRepeatedAsync(
-            Runnable { cleanupExpired() },
-            delay = 0,
-            interval = 1,
-            unit = TimeUnit.HOURS
-        )
+        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 1) { cleanupExpired() }
     }
 
     fun hasPendingInventory(playerId: UUID): Boolean {
@@ -88,7 +85,7 @@ object InventoryManager {
     }
 
     private fun saveInventory(inventory: InventoryData) {
-        Task.runAsync {
+        Tasks.runAsync {
             val filter = FluentFilter.where("id").eq(inventory.id)
             val result = inventoryCollection.update(filter, inventory.toDocument())
 
@@ -164,7 +161,7 @@ object InventoryManager {
     fun cleanupExpired() {
         Logger.infoDB("Clearing inventories....")
         val config = SporeCore.instance.coreConfig.inventories
-        val maxAge = TimeUtil.parseDuration(config.deletion)
+        val maxAge = TimeUtil.parse(config.deletion).millis
         val now = System.currentTimeMillis()
 
         val toRemove = cachedInventories.values.filter { now - it.timestamp >= maxAge }

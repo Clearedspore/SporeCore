@@ -1,12 +1,13 @@
 package me.clearedSpore.sporeCore.menu.investigation.manage.report.item
 
 import com.sk89q.worldedit.util.report.ReportList
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
-import me.clearedSpore.sporeAPI.util.Task
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.Duration
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.extension.PlayerExtension.safeUuidStr
 import me.clearedSpore.sporeCore.features.investigation.IGService
 import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
@@ -22,6 +23,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.inventory.ItemStack
 import java.util.concurrent.TimeUnit
+import kotlin.time.toDuration
 
 class LinkedReportItem(
     val investigation: Investigation,
@@ -67,9 +69,9 @@ class LinkedReportItem(
             ConfirmMenu(clicker) {
                 IGService.removeReport(investigation.id, viewer.safeUuidStr(), report.id)
                 clicker.sendSuccessMessage("Successfully removed report ${report.id} from the investigation.")
-                Task.runLater ({
+                Tasks.run {
                     LinkedReportMenu(investigation.id, clicker).open(clicker)
-                }, 500, TimeUnit.MINUTES)
+                }
             }.open(clicker)
         }
     }

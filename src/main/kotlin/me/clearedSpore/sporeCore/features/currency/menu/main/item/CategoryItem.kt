@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.features.currency.menu.main.item
 
-import me.clearedSpore.sporeAPI.menu.Item
+import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService

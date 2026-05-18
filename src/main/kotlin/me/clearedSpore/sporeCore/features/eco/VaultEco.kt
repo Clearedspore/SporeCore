@@ -1,8 +1,8 @@
 package me.clearedSpore.sporeCore.features.eco
 
 import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.Logger
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.DiscordService
@@ -162,7 +162,7 @@ class VaultEco : Economy {
         }
 
         user.balance -= amount
-        Task.runAsync {
+        Tasks.runAsync {
             user.logEconomy(EcoAction.REMOVED, amount, "Vault withdrawal by a different plugin")
             UserManager.save(user)
             EconomyService.logConsole(
@@ -230,7 +230,7 @@ class VaultEco : Economy {
         }
 
         user.balance += amount
-        Task.runAsync {
+        Tasks.runAsync {
             user.logEconomy(EcoAction.ADDED, amount, "Vault deposit by a different plugin")
             UserManager.save(user)
             EconomyService.logConsole(

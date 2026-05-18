@@ -3,13 +3,12 @@ package me.clearedSpore.sporeCore.commands
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
-import me.clearedSpore.sporeAPI.util.Task
-import me.clearedSpore.sporeAPI.util.TimeUtil
-import me.clearedSpore.sporeAPI.util.TimeUtil.TimeUnitStyle
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
@@ -64,7 +63,7 @@ class GetLogsCommand : BaseCommand() {
             when {
                 arg.startsWith("time=", true) -> {
                     val durationStr = arg.substringAfter("=")
-                    val durationMs = TimeUtil.parseDuration(durationStr)
+                    val durationMs = TimeUtil.parse(durationStr).millis
                     timeFilter = System.currentTimeMillis() - durationMs
                 }
 
@@ -74,7 +73,7 @@ class GetLogsCommand : BaseCommand() {
 
         sender.sendMessage("Fetching logs async...".blue())
 
-        Task.runAsync {
+        Tasks.runAsync {
             var logs = LogsService.findLogs(type, targetUUID.toString())
 
             timeFilter?.let { fromTime -> logs = logs.filter { it.timestamp >= fromTime } }
@@ -99,7 +98,7 @@ class GetLogsCommand : BaseCommand() {
                 " after ${
                     TimeUtil.formatDuration(
                         System.currentTimeMillis() - it,
-                        TimeUnitStyle.SHORT,
+                        TimeUtil.TimeUnitStyle.SHORT,
                         2
                     )
                 }"

@@ -2,10 +2,10 @@ package me.clearedSpore.sporeCore.commands.moderation
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
-import me.clearedSpore.sporeAPI.util.Task
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
@@ -43,7 +43,7 @@ class AltsCommand : BaseCommand() {
             return
         }
 
-        Task.runAsync(Runnable {
+        Tasks.runAsync(Runnable {
             val alts: List<User> = if (useDeep) {
                 UserManager.getAltsDeep(targetUser)
             } else {

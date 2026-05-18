@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.features.punishment.`object`
 
-import me.clearedSpore.sporeAPI.util.TimeUtil
+import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.util.doc.DocWriter
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.user.User
