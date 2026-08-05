@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore.features.investigation
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
@@ -12,6 +13,7 @@ import me.clearedSpore.sporeCore.extension.PlayerExtension.hasJoinedBefore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.safeUuidStr
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuid
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
 import me.clearedSpore.sporeCore.features.investigation.`object`.enum.IGLogType
 import me.clearedSpore.sporeCore.features.investigation.`object`.enum.InvestigationPriority
@@ -37,6 +39,7 @@ object IGService {
     internal val igCollection get() = DatabaseManager.getInvestigationCollection()
 
     fun startInvestigation(creator: Player, name: String, description: String, priority: InvestigationPriority) {
+        var suffix = chatService?.getPlayerSuffix(creator)?.translate() ?: ""
 
         val investigation = Investigation(
             UUID.randomUUID().toString(),
@@ -58,7 +61,7 @@ object IGService {
         try {
             igCollection.insert(investigation.toDocument())
             Logger.infoDB("New investigation '$name' made by ${creator.name}")
-            Logger.log(creator, Perm.ADMIN_LOG, "started a new investigation", false)
+            Logger.log(suffix, creator, Perm.ADMIN_LOG, "&rstarted a new investigation", false)
             logAction(investigation.id, IGLogType.STARTED, creator.safeUuidStr(), "Started the investigation")
             creator.sendSuccessMessage("Successfully started investigation")
             ManageIGMenu(investigation.id, creator).open(creator)

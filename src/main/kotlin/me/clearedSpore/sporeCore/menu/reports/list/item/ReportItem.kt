@@ -2,6 +2,7 @@ package me.clearedSpore.sporeCore.menu.reports.list.item
 
 import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.bold
 import me.clearedSpore.sporeAPI.util.CC.gold
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
@@ -34,9 +35,9 @@ class ReportItem(
 
     override fun createItem(): ItemStack {
         val item = ItemBuilder(Material.BOOK)
-            .setName(report.targetName.blue())
-            .addLoreLine("Reporter: &f${report.reporterName}".blue())
-            .addLoreLine("Suspect: &f${report.targetName}".blue())
+            .setName("${report.targetSuffix}${report.targetName}")
+            .addLoreLine("Reporter: &f${report.reporterSuffix}${report.reporterName}".blue())
+            .addLoreLine("Suspect: &f${report.targetSuffix}${report.targetName}".blue())
             .addLoreLine("Reason: &f${report.reason} &7(${report.type.displayName.capitalizeFirstLetter()})".blue())
 
         val age = System.currentTimeMillis() - report.timestamp
@@ -54,27 +55,27 @@ class ReportItem(
         ) {
 
             item.addLoreLine("Result: &f${report.action.displayName}".blue())
-            item.addLoreLine("Staff member: &f${report.staffName}".blue())
+            item.addLoreLine("Staff member: &f${report.staffSuffix}${report.staffName}".blue())
             item.addLoreLine("Silent: &f${report.silent.toString().lowercase().capitalizeFirstLetter()}".blue())
         }
 
         item.addLoreLine("&f".translate())
 
         if (report.evidence != null) {
-            item.addLoreLine("Right click to view evidence".gold())
+            item.addUsageLine(ClickType.RIGHT, "to view evidence")
         }
 
         if (report.status != ReportStatus.COMPLETED) {
 
-            item.addLoreLine("Left click to resolve".gold())
+            item.addUsageLine(ClickType.LEFT, "to resolve")
             if (viewer.hasPermission(Perm.HISTORY_OTHERS) && SporeCore.instance.coreConfig.features.punishments) {
-                item.addLoreLine("Middle click to view punishments history".gold())
+                item.addUsageLine(ClickType.MIDDLE, "view punishments history")
             }
             if (viewer.hasPermission(Perm.WHOIS)) {
-                item.addLoreLine("Shift left click to view user info".gold())
+                item.addUsageLine(ClickType.SHIFT_LEFT, "to view user info")
             }
         } else if (report.status == ReportStatus.COMPLETED && viewer.hasPermission(Perm.REPORT_ADMIN)) {
-            item.addLoreLine("Left click to re-open the report".gold())
+            item.addUsageLine(ClickType.LEFT, "to re-open the report")
         }
 
         if (IGService.isStaff(viewer)

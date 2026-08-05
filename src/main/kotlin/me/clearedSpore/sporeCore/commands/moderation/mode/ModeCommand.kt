@@ -8,11 +8,13 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.mode.item.ModeItemManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
+import org.bukkit.entity.Player
 
 @CommandAlias("staffmode|modmode|mode")
 @CommandPermission(Perm.MODE_ALLOW)
@@ -24,6 +26,7 @@ class ModeCommand : BaseCommand() {
         @Optional @Name("mode") modeId: String?,
         @Optional @Name("target") target: OnlinePlayer?
     ) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
         val service = ModeService
 
         if (sender is ConsoleCommandSender && modeId != null && target == null) {
@@ -51,7 +54,7 @@ class ModeCommand : BaseCommand() {
 
             service.toggleMode(player, highest.id)
             player.sendMessage("$status ${highest.name} mode".blue())
-            Logger.log(sender, Perm.LOG, "$status ${highest.name} mode", false)
+            Logger.log(suffix, sender, Perm.LOG, "$status ${highest.name} mode", false)
             return
         }
 
@@ -79,7 +82,7 @@ class ModeCommand : BaseCommand() {
 
             service.toggleMode(player, mode.id)
             player.sendMessage("$status ${mode.name} mode".blue())
-            Logger.log(sender, Perm.LOG, "$status ${mode.name}", false)
+            Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name}", false)
             return
         }
 
@@ -101,7 +104,7 @@ class ModeCommand : BaseCommand() {
 
             service.toggleMode(target.player, mode.id)
             sender.sendMessage("$status ${mode.name} mode for ${target.player.name}".blue())
-            Logger.log(sender, Perm.LOG, "$status ${mode.name} mode for ${target.player.name}", false)
+            Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name} mode for ${target.player.name}", false)
             return
         }
     }

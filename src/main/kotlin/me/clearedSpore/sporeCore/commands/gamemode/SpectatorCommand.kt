@@ -4,10 +4,12 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
@@ -22,6 +24,7 @@ class SpectatorCommand : BaseCommand() {
     @CommandCompletion("@targets")
     @Syntax("<player>")
     fun onSpectator(sender: CommandSender, @Optional targets: TargetPlayers?) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
 
         val resolved = targets ?: when (sender) {
             is Player -> listOf(sender)
@@ -40,12 +43,14 @@ class SpectatorCommand : BaseCommand() {
 
         players.forEach { target ->
             target.gameMode = GameMode.SPECTATOR
+            var targetSuffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
             if (sender == target) {
-                Logger.log(sender, Perm.LOG, "changed their gamemode to Spectator", false)
+                Logger.log(suffix, sender, Perm.LOG, "&rchanged their gamemode to Spectator", false)
+                sender.sendMessage("Your gamemode has been updated to Spectator".blue())
             } else {
-                Logger.log(sender, Perm.LOG, "changed ${target.name}’s gamemode to Spectator", false)
+                Logger.log(suffix, sender, Perm.LOG, "&rchanged $targetSuffix${target.name}&r&f’s gamemode to Spectator", false)
+                sender.sendMessage("You updated ".blue() + targetSuffix + target.name + "&r’s gamemode to Spectator.".blue())
             }
-            sender.sendMessage("You updated ".blue() + target.name.white() + "’s gamemode to Spectator.".blue())
         }
     }
 }

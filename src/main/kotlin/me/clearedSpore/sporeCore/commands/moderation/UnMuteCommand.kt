@@ -4,14 +4,17 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
+import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
@@ -50,8 +53,23 @@ class UnMuteCommand : BaseCommand() {
 
         val success = targetUser.unmute(senderUser, activePunishment.id, reason)
 
+        var format = ""
+        var suffix: String
+        var targetSuffix = ""
+
+        if (sender is Player) {
+            suffix = chatService?.getPlayerSuffix(sender)?.translate() ?: ""
+            targetSuffix = if (Bukkit.getOnlinePlayers().contains(target.player)) chatService?.getPlayerSuffix(targetUser.player)?.translate() ?: "" else ""
+
+            format = PunishmentService.config.logs.unMute
+                .replace("%ranksuffix%", suffix)
+                .replace("%targetSuffix", targetSuffix)
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                PlaceholderAPI.setPlaceholders(sender, format)
+            }
+        }
         if (success) {
-            val msg = PunishmentService.config.logs.unMute
+            val msg = format.translate()
             val formatted = PunishmentService.buildRemovalMessage(
                 msg,
                 activePunishment,
@@ -60,9 +78,9 @@ class UnMuteCommand : BaseCommand() {
                 reason
             )
             Message.broadcastMessageWithPermission(formatted, Perm.PUNISH_LOG)
-            sender.sendMessage("Successfully unmuted ${target.name}.".blue())
+            sender.sendMessage("Successfully unmuted ${targetSuffix}${target.name}.".blue())
         } else {
-            sender.sendMessage("Failed to unmute ${target.name}.".red())
+            sender.sendMessage("Failed to unmute ${targetSuffix}${target.name}.".red())
         }
     }
 }

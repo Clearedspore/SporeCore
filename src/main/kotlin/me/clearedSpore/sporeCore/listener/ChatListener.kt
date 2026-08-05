@@ -283,17 +283,18 @@ class ChatListener : Listener {
                 .setMessage(dcMessage)
                 .setUsername(player.name)
                 .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
-
-            try {
-                webhook.send()
-            } catch (ex: Exception) {
-                throw LoggedException(
-                    userMessage = "Failed to send message to Discord.",
-                    internalMessage = "Failed to send message to Discord",
-                    channel = LoggedException.Channel.GENERAL,
-                    developerOnly = false,
-                    cause = ex
-                ).also { it.log() }
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
             }
         }
     }

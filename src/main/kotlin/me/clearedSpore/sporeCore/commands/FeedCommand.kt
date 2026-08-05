@@ -4,9 +4,11 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -19,6 +21,7 @@ class FeedCommand : BaseCommand() {
     @Default
     @CommandCompletion("@targets")
     fun onFeed(sender: CommandSender, @Optional targets: TargetPlayers?) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
 
         val resolved = targets ?: when (sender) {
             is Player -> listOf(sender)
@@ -46,6 +49,7 @@ class FeedCommand : BaseCommand() {
         )
 
         Logger.log(
+            suffix,
             sender,
             Perm.LOG,
             "fed ${players.size} player(s)",

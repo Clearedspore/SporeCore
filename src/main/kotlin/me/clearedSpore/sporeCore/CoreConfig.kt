@@ -29,8 +29,8 @@ data class CoreConfig(
         "You can run /sporecore wiki <page> ingame to find",
         "other wiki pages!",
         "",
-        "Some messages support PlaceholderAPI placeholders!",
-        "You need placeholderAPI installed for this!",
+        "Some messages support PlaceholderAPI & Vault functionality!",
+        "You need PlaceholderAPI & Vault (required) installed for this!",
         "",
         "You can use &cb for my own custom blue color!!"
     )
@@ -158,7 +158,7 @@ data class ReportConfig(
     @Comment(
         "The notification when a player has been reported 5 times in the last 10 minutes"
     )
-    var tresHoldMessage: String = "&7[&6&lReports&7] &f%player% has been reported %count% times in the last 10 minutes!",
+    var tresHoldMessage: String = "&7[&6&lReports&7] &f%player% &fhas been reported %count% times in the last 10 minutes!",
 
     @Comment(
         "The report accepted notification",
@@ -166,7 +166,7 @@ data class ReportConfig(
         "%staff% -> Staff member",
         "%target% -> player that got reported"
     )
-    var reportAccepted: String = "&7[&6&lReports&7] &f%staff% has &aaccepted &fthe report against &7%target%",
+    var reportAccepted: String = "&7[&6&lReports&7] &f%staff% &fhas &aaccepted &fthe report against &7%target%",
 
     @Comment(
         "The report denied notification",
@@ -174,7 +174,7 @@ data class ReportConfig(
         "%staff% -> Staff member",
         "%target% -> player that got reported"
     )
-    var reportDenied: String = "&7[&6&lReports&7] &f%staff% has &cdenied &fthe report against &7%target%",
+    var reportDenied: String = "&7[&6&lReports&7] &f%staff% &fhas &cdenied &fthe report against &7%target%",
 
     @Comment(
         "Notification for staff when a new report has been created",
@@ -213,7 +213,7 @@ data class ReportConfig(
         "%staff% -> Staff member that re-openend the report",
         "%player% -> player that made the report"
     )
-    var reportReOpened: String = "&7[&6&lReports&7] &f%staff% has re-opened %player%'s report",
+    var reportReOpened: String = "&7[&6&lReports&7] &f%staff% &fhas re-opened %player%'s report",
 
     @Comment(
         "The message a player receives when their report has been re-opened",
@@ -469,7 +469,9 @@ data class ChatChannelsConfig(
         "MUST HAVE THE sporecore.channel.allow PERMISSION!!",
         "Placeholders:",
         "%player% -> Player that sends the message",
-        "%message% -> The message from the player"
+        "%message% -> The message from the player",
+        "%rankprefix% → Vault rank prefix of the player",
+        "%ranksuffix% → Vault rank suffix of the player"
     )
     var channels: MutableMap<String, ChannelConfig> = mutableMapOf(
         "staff" to ChannelConfig(
@@ -477,7 +479,7 @@ data class ChatChannelsConfig(
             "staff",
             "sporecore.channel.staff",
             "&b&lStaff",
-            "&b&lStaff &7-> &9%player%&f: %message%",
+            "&b&lStaff &7-> &9%ranksuffix%%player%&f: %message%",
             listOf("staffchat", "sc"),
             "#"
         ),
@@ -486,7 +488,7 @@ data class ChatChannelsConfig(
             "admin",
             "sporecore.channel.admin",
             "&c&lAdmin",
-            "&c&lAdmin &7-> &c%player%&f: %message%",
+            "&c&lAdmin &7-> &c%ranksuffix%%player%&f: %message%",
             listOf("adminchat", "ac"),
             "@"
         )
@@ -499,7 +501,7 @@ data class ChannelConfig(
     var id: String = "staff",
     var permission: String = "sporecore.channel.staff",
     var prefix: String = "&b&lStaff",
-    var message: String = "&b&lStaff &7-> &9%player%&f: %message%",
+    var message: String = "&b&lStaff &7-> &9%ranksuffix%%player%&f: %message%",
     var commands: List<String> = listOf("staff", "sc"),
     var symbol: String = "#"
 )

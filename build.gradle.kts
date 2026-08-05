@@ -4,10 +4,11 @@ plugins {
     kotlin("jvm") version "2.2.20"
     id("com.gradleup.shadow") version "9.3.1"
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    kotlin("plugin.lombok") version "2.2.20"
 }
 
 group = "me.clearedSpore"
-version = "2.8.2"
+version = "2.8.3"
 
 repositories {
     mavenCentral()
@@ -36,7 +37,7 @@ dependencies {
         exclude(group = "org.yaml", module = "snakeyaml")
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
-    implementation("com.github.Clearedspore:SporeAPI:6.3")
+    implementation(files("libs/SporeAPI.jar"))
     compileOnly("org.dizitart:nitrite:4.3.2")
     compileOnly(platform("org.dizitart:nitrite-bom:4.3.2"))
     compileOnly("org.dizitart:nitrite-mvstore-adapter:4.3.2")
@@ -54,6 +55,7 @@ dependencies {
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.4") {
         exclude(group = "org.spigotmc", module = "spigot-api")
     }
+    testImplementation(kotlin("test"))
 }
 
 tasks {

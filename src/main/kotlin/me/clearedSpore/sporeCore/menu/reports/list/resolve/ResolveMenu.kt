@@ -27,12 +27,12 @@ class ResolveMenu(
 
     override fun setMenuItems() {
 
-        setMenuItem(2, 2, ResolveItem(report, Material.LIME_WOOL, ReportAction.ACCEPTED, "accept".green(), false))
-        setMenuItem(7, 2, ResolveItem(report, Material.RED_WOOL, ReportAction.DENIED, "deny".red(), false))
+        setMenuItem(2, 2, ResolveItem(report, Material.LIME_WOOL, ReportAction.ACCEPTED, "Accept".green(), false))
+        setMenuItem(7, 2, ResolveItem(report, Material.RED_WOOL, ReportAction.DENIED, "Deny".red(), false))
 
         if (viewer.hasPermission(Perm.REPORT_SILENT)) {
-            setMenuItem(4, 2, ResolveItem(report, Material.LIME_CARPET, ReportAction.ACCEPTED, "accept".green(), true))
-            setMenuItem(5, 2, ResolveItem(report, Material.RED_CARPET, ReportAction.DENIED, "deny".red(), true))
+            setMenuItem(4, 2, ResolveItem(report, Material.LIME_CARPET, ReportAction.ACCEPTED, "Accept".green(), true))
+            setMenuItem(5, 2, ResolveItem(report, Material.RED_CARPET, ReportAction.DENIED, "Deny".red(), true))
         }
     }
 }

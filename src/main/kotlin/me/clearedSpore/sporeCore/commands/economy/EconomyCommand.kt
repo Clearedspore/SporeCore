@@ -2,13 +2,17 @@ package me.clearedSpore.sporeCore.commands.economy
 
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
+import co.aikar.commands.bukkit.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
+import net.kyori.adventure.sound.Sound
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -34,7 +38,14 @@ class EconomyCommand : BaseCommand() {
         val displayName = target.name ?: user.playerName.ifEmpty { "Unknown" }
 
         val formatted = EconomyService.format(user.balance)
-        sender.sendMessage("${displayName}'s Balance: ".blue() + formatted.green())
+        val suffix = if (Bukkit.getOnlinePlayers().contains(target.player)) chatService?.getPlayerSuffix(target.player)?.translate() ?: "" else ""
+        sender.sendMessage("$suffix${displayName}&cb's Balance: ".blue() + formatted.green())
+        sender.playSound(Sound.sound(
+            net.kyori.adventure.key.Key.key("entity.horse.armor"),
+            Sound.Source.PLAYER,
+            1f,
+            1f),
+            Sound.Emitter.self())
     }
 
     @Subcommand("add")
@@ -60,8 +71,14 @@ class EconomyCommand : BaseCommand() {
 
         EconomyService.add(user, amount, "Added by ${sender.name}")
 
-
-        sender.sendMessage("Added ".blue() + EconomyService.format(amount).green() + " to ${user.playerName}.".blue())
+        val suffix = if (Bukkit.getOnlinePlayers().contains(target.player)) chatService?.getPlayerSuffix(target.player)?.translate() ?: "" else ""
+        sender.sendMessage("Added ".blue() + EconomyService.format(amount).green() + " to $suffix${user.playerName}&cb.".blue())
+        sender.playSound(Sound.sound(
+            net.kyori.adventure.key.Key.key("entity.player.levelup"),
+            Sound.Source.PLAYER,
+            1f,
+            1.06f),
+            Sound.Emitter.self())
     }
 
     @Subcommand("remove")
@@ -94,7 +111,14 @@ class EconomyCommand : BaseCommand() {
 
         EconomyService.remove(user, amount, "Removed by ${sender.name}")
 
-        sender.sendMessage("Removed ".blue() + EconomyService.format(amount).red() + " from ${user.playerName}.".blue())
+        val suffix = if (Bukkit.getOnlinePlayers().contains(target.player)) chatService?.getPlayerSuffix(target.player)?.translate() ?: "" else ""
+        sender.sendMessage("Removed ".blue() + EconomyService.format(amount).red() + " from $suffix${user.playerName}&cb.".blue())
+        sender.playSound(Sound.sound(
+            net.kyori.adventure.key.Key.key("entity.player.levelup"),
+            Sound.Source.PLAYER,
+            1f,
+            1.06f),
+            Sound.Emitter.self())
     }
 
     @Subcommand("set")
@@ -115,12 +139,24 @@ class EconomyCommand : BaseCommand() {
 
         if (amount < 0) {
             sender.sendMessage("Amount must be above 0!".red())
+            sender.playSound(Sound.sound(
+                net.kyori.adventure.key.Key.key("block.note_block.bass"),
+                Sound.Source.PLAYER,
+                1f,
+                2f),
+                Sound.Emitter.self())
             return
         }
 
         EconomyService.set(user, amount, "Set by ${sender.name}")
 
-
-        sender.sendMessage("Set ${user.playerName}'s balance to ".blue() + EconomyService.format(amount).green())
+        val suffix = if (Bukkit.getOnlinePlayers().contains(target.player)) chatService?.getPlayerSuffix(target.player)?.translate() ?: "" else ""
+        sender.sendMessage("Set $suffix${user.playerName}&cb's balance to ".blue() + EconomyService.format(amount).green())
+        sender.playSound(Sound.sound(
+            net.kyori.adventure.key.Key.key("entity.experience_orb.pickup"),
+            Sound.Source.PLAYER,
+            1f,
+            1.3f),
+            Sound.Emitter.self())
     }
 }

@@ -5,7 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import org.bukkit.entity.Player
 
-@CommandAlias("tpaaccept")
+@CommandAlias("tpaccept")
 class TpaAcceptCommand() : BaseCommand() {
 
     @Default
@@ -14,7 +14,7 @@ class TpaAcceptCommand() : BaseCommand() {
     }
 }
 
-@CommandAlias("tpadeny")
+@CommandAlias("tpdeny")
 class TpaDenyCommand : BaseCommand() {
 
     @Default

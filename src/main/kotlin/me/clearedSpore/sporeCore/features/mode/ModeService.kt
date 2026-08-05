@@ -157,7 +157,7 @@ object ModeService {
                 // Always set this to false!!
                 player.isInvulnerable = false
                 if (mode.tpBack) {
-                    it.previousLocation?.let { loc -> player.teleport(loc) }
+                    it.previousLocation?.let { loc -> player.teleportAsync(loc) }
                 }
             }
 

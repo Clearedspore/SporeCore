@@ -9,8 +9,10 @@ data class Report(
     @Id var id: String,
     var targetUuid: String,
     var targetName: String,
+    var targetSuffix: String,
     var reporterUuid: String,
     var reporterName: String,
+    var reporterSuffix: String,
     var reason: String,
     var evidence: String? = null,
     var timestamp: Long,
@@ -19,6 +21,7 @@ data class Report(
     var action: ReportAction,
     var staffName: String? = null,
     var staffUuid: String? = null,
+    var staffSuffix: String? = null,
     var silent: Boolean = false
 ) {
 
@@ -26,8 +29,10 @@ data class Report(
         .put("id", id)
         .put("targetUuid", targetUuid)
         .put("targetName", targetName)
+        .put("targetSuffix", targetSuffix)
         .put("reporterUuid", reporterUuid)
         .put("reporterName", reporterName)
+        .put("reporterSuffix", reporterSuffix)
         .put("reason", reason)
         .put("evidence", evidence)
         .put("timestamp", timestamp)
@@ -36,6 +41,7 @@ data class Report(
         .put("action", action.name)
         .put("staffName", staffName)
         .put("staffUuid", staffUuid)
+        .put("staffSuffix", staffSuffix)
         .putBoolean("silent", silent)
         .build()
 
@@ -47,8 +53,10 @@ data class Report(
                 id = reader.string("id") ?: return null,
                 targetUuid = reader.string("targetUuid") ?: return null,
                 targetName = reader.string("targetName") ?: "Unknown",
+                targetSuffix = reader.string("targetSuffix") ?: "Unknown",
                 reporterUuid = reader.string("reporterUuid") ?: return null,
                 reporterName = reader.string("reporterName") ?: "Unknown",
+                reporterSuffix = reader.string("reporterSuffix") ?: "Unknown",
                 reason = reader.string("reason") ?: return null,
                 evidence = reader.string("evidence"),
                 timestamp = reader.long("timestamp"),
@@ -57,6 +65,7 @@ data class Report(
                 action = reader.enum<ReportAction>("action") ?: return null,
                 staffName = reader.string("staffName"),
                 staffUuid = reader.string("staffUuid"),
+                staffSuffix = reader.string("staffSuffix"),
                 silent = reader.boolean("silent")
             )
         }

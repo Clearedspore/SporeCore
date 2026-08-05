@@ -37,7 +37,7 @@ class HomeItem(
         when {
             clickType.isLeftClick -> {
                 clicker.closeInventory()
-                clicker.teleport(home.location)
+                clicker.teleportAsync(home.location)
             }
 
             clickType.isRightClick && clickType.isShiftClick -> {

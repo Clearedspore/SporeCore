@@ -6,11 +6,13 @@ import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
+import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Logger
@@ -24,6 +26,7 @@ import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
@@ -41,6 +44,7 @@ import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.niceName
 import me.clearedSpore.sporeCore.util.button.CallbackRegistry
 import me.clearedSpore.sporeCore.util.button.TextButton
+import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -66,6 +70,7 @@ class CoreCommand : BaseCommand() {
         val plugin = SporeCore.instance
         val config = plugin.coreConfig
         sender.sendMessage("Reloading SporeCore asynchronously...".blue())
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
 
         val startTime = System.currentTimeMillis()
         Logger.initialize(config.general.prefix)
@@ -89,12 +94,11 @@ class CoreCommand : BaseCommand() {
                 }
 
                 Cooldown.updateCooldownDuration("report", config.reports.reportCooldown)
-
                 val duration = System.currentTimeMillis() - startTime
                 sender.sendMessage("Reload complete. Took ${duration}ms.".blue())
                 plugin.logStartupBanner()
                 Logger.info("SporeCore reloaded in ${duration}ms, by ${sender.name}.")
-                Logger.log(sender, Perm.ADMIN_LOG, "reloaded the plugin", false)
+                Logger.log(suffix, sender, Perm.ADMIN_LOG, "reloaded the plugin", false)
             }
 
             .exceptionally { ex ->
@@ -249,6 +253,7 @@ class CoreCommand : BaseCommand() {
     fun onStaffRollback(sender: CommandSender, staffName: String, timeArg: String, @Optional confirm: String?) {
         val start = System.currentTimeMillis()
         sender.sendMessage("Processing...".blue())
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
 
         Tasks.runAsync {
             val staffPlayer = Bukkit.getOfflinePlayers()
@@ -361,7 +366,7 @@ class CoreCommand : BaseCommand() {
             sender.sendMessage(
                 "Rolled back $rollbackCount punishments from $staffName in the last $timeArg (took ${end - start}ms).".blue()
             )
-            Logger.log(sender, Perm.ADMIN_LOG, "rolled back punishments made by $staffName", true)
+            Logger.log(suffix, sender, Perm.ADMIN_LOG, "rolled back punishments made by $staffName", true)
             val config = SporeCore.instance.coreConfig.discord
             val webhook = Webhook(config.staffRollback)
             if (config.staffRollbackPing.isNullOrBlank()) {
@@ -374,9 +379,19 @@ class CoreCommand : BaseCommand() {
             }
             webhook.setUsername("SporeCore Logs")
                 .setProfileURL("https://cdn.modrinth.com/data/8X4HqUuD/980c64224cb4fb48829d90a0d51c36b565ad8a05_96.webp")
-
-            webhook.send()
-
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
+            }
         }
     }
 

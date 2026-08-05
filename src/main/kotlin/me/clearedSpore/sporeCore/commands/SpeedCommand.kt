@@ -5,8 +5,10 @@ import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -44,10 +46,12 @@ class SpeedCommand : BaseCommand() {
             target.walkSpeed = bukkitSpeed
         }
 
+        var suffix = chatService?.getPlayerSuffix(players.first().player)?.translate() ?: ""
+
         sender.sendMessage(
             when {
                 players.size == 1 && players.first() == sender -> "Your speed has been set to $speed.".blue()
-                players.size == 1 -> "Speed set to $speed for ${players.first().name}.".blue()
+                players.size == 1 -> "Speed set to $speed for $suffix${players.first().name}".blue() + ".".blue()
                 else -> "Speed set to $speed for ${players.size} players.".blue()
             }
         )
@@ -77,13 +81,14 @@ class SpeedCommand : BaseCommand() {
                 player.sendMessage("Your speed has been reset to default.".blue())
             }
         }
+        var suffix = chatService?.getPlayerSuffix(players.first().player)?.translate() ?: ""
 
         sender.sendMessage(
             if (players.size == 1)
                 if (players.first() == sender)
                     "Your speed has been reset to default.".blue()
                 else
-                    "You reset ${players.first().name}'s speed to default.".blue()
+                    "You reset $suffix${players.first().name}".blue() + "'s speed to default.".blue()
             else
                 "You reset speed for ${players.size} players.".blue()
         )

@@ -3,11 +3,13 @@ package me.clearedSpore.sporeCore.menu.investigation.manage.item
 import lombok.`val`
 import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.ChatInputService
 import me.clearedSpore.sporeAPI.util.IdUtil
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.investigation.IGService
 import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
 import me.clearedSpore.sporeCore.features.investigation.`object`.enum.InvestigationStatus
@@ -41,6 +43,7 @@ class CompleteIGItem(
     }
 
     override fun onClickEvent(clicker: Player, clickType: ClickType) {
+        var suffix = chatService?.getPlayerSuffix(clicker)?.translate() ?: ""
         val investigation = IGService.findInvestigation(investigationID)!!
         if (investigation.status == InvestigationStatus.COMPLETED) {
 
@@ -59,14 +62,14 @@ class CompleteIGItem(
                     }
 
                     IGService.igCollection.remove(where("id").eq(investigation.id))
-                    Logger.log(clicker, Perm.ADMIN_LOG, "deleted investigation ${investigation.name}", true)
+                    Logger.log(suffix, clicker, Perm.ADMIN_LOG, "deleted investigation ${investigation.name}", true)
                 }
             }.open(clicker)
         } else {
             ConfirmMenu(clicker) {
                 investigation.status = InvestigationStatus.COMPLETED
                 IGService.updateInvestigation(investigation)
-                Logger.log(clicker, Perm.ADMIN_LOG, "completed investigation ${investigation.name}", true)
+                Logger.log(suffix, clicker, Perm.ADMIN_LOG, "completed investigation ${investigation.name}", true)
             }.open(clicker)
         }
     }

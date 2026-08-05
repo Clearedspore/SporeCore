@@ -4,7 +4,9 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.chat.color.ChatColorService
 import me.clearedSpore.sporeCore.menu.chatcolor.ChatColorMenu
 import me.clearedSpore.sporeCore.user.UserManager
@@ -29,6 +31,7 @@ class ChatColorCommand : BaseCommand() {
     @Syntax("<player> <color>")
     fun onSetColor(sender: CommandSender, targetName: String, colorStr: String) {
         val target = Bukkit.getOfflinePlayer(targetName)
+        val targetSuffix = if (Bukkit.getOnlinePlayers().contains(target)) chatService?.getPlayerSuffix(target.player)?.translate() ?: "" else ""
 
         val user = UserManager.get(target)
 
@@ -45,7 +48,7 @@ class ChatColorCommand : BaseCommand() {
         }
 
         ChatColorService.setColor(user, color)
-        sender.sendMessage("You have set $targetName's chatcolor to $colorStr".blue())
+        sender.sendMessage("You have set $targetSuffix$targetName".blue() + "'s chatcolor to $colorStr".blue())
 
     }
 }

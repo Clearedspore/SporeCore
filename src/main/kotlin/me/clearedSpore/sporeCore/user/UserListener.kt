@@ -12,6 +12,7 @@ import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -32,6 +33,7 @@ import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Sound
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
@@ -153,6 +155,7 @@ class UserListener : Listener {
     fun onJoin(event: PlayerJoinEvent) {
         val player = event.player
         val user = UserManager.getIfLoaded(player.uniqueId) ?: return
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val config = SporeCore.instance.coreConfig
         val joinConfig = SporeCore.instance.coreConfig.join
         val db = DatabaseManager.getServerData()
@@ -160,14 +163,14 @@ class UserListener : Listener {
         val autoStaff = user.getSettingOrDefault(StaffmodeOnJoinSetting())
 
         if (autoStaff && player.hasPermission(Perm.MODE_ALLOW)) {
-            Logger.log(player, Perm.LOG, "joined the game silently", false)
+            Logger.log(suffix, player, Perm.LOG, "&rjoined the game silently", false)
             event.joinMessage(null)
         } else if (!autoStaff && VanishService.vanishedPlayers.contains(player.uniqueId)) {
-            Logger.log(player, Perm.LOG, "joined the game silently", false)
+            Logger.log(suffix, player, Perm.LOG, "&rjoined the game silently", false)
             player.sendMessage("You were automatically put into vanish as you last logged off in vanish".blue().bold())
             event.joinMessage(null)
         } else if (!autoStaff && player.hasPermission(Perm.MODE_ALLOW)) {
-            Logger.log(player, Perm.LOG, "joined the server", false)
+            Logger.log(suffix, player, Perm.LOG, "&rjoined the server", false)
         }
 
         if (!user.hasJoinedBefore) {
@@ -217,7 +220,7 @@ class UserListener : Listener {
 
 
         if (joinConfig.spawnOnJoin && db.spawn != null) {
-            player.teleport(db.spawn!!)
+            player.teleportAsync(db.spawn!!)
         }
 
         if (joinConfig.title.isNotBlank()) {
@@ -322,17 +325,18 @@ class UserListener : Listener {
                 .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
                 .setUsername(player.name)
                 .addEmbed(embed)
-
-            try {
-                webhook.send()
-            } catch (ex: Exception) {
-                throw LoggedException(
-                    userMessage = "Failed to send message to Discord.",
-                    internalMessage = "Failed to send message to Discord",
-                    channel = LoggedException.Channel.GENERAL,
-                    developerOnly = false,
-                    cause = ex
-                ).also { it.log() }
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
             }
         }
     }
@@ -342,6 +346,7 @@ class UserListener : Listener {
     fun onQuit(event: PlayerQuitEvent) {
         val player = event.player
         val user = UserManager.getIfLoaded(player.uniqueId) ?: return
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val config = SporeCore.instance.coreConfig
         val features = SporeCore.instance.coreConfig.features
 
@@ -354,18 +359,18 @@ class UserListener : Listener {
         } ?: System.currentTimeMillis()
 
         if (features.modes && ModeService.isInMode(player)) {
-            Logger.log(player, Perm.LOG, "left the game silently", false)
+            Logger.log(suffix, player, Perm.LOG, "&rleft the game silently", false)
             event.quitMessage = null
             wasVanished = true
             ModeService.toggleMode(player)
             VanishService.vanishedPlayers.remove(player.uniqueId)
             player.isSleepingIgnored = false
         } else if (features.vanish && VanishService.vanishedPlayers.contains(player.uniqueId)) {
-            Logger.log(player, Perm.LOG, "left the game silently", false)
+            Logger.log(suffix, player, Perm.LOG, "&rleft the game silently", false)
             wasVanished = true
             player.isSleepingIgnored = false
-        } else {
-            Logger.log(player, Perm.LOG, "left the server", false)
+        } else if (player.hasPermission(Perm.MODE_ALLOW)) {
+            Logger.log(suffix, player, Perm.LOG, "&rleft the server", false)
         }
 
 
@@ -411,18 +416,19 @@ class UserListener : Listener {
                 .setUsername(player.name)
                 .addEmbed(embed)
 
-            try {
-                webhook.send()
-            } catch (ex: Exception) {
-                throw LoggedException(
-                    userMessage = "Failed to send message to Discord.",
-                    internalMessage = "Failed to send message to Discord",
-                    channel = LoggedException.Channel.GENERAL,
-                    developerOnly = false,
-                    cause = ex
-                ).also { it.log() }
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
             }
         }
     }
-
 }

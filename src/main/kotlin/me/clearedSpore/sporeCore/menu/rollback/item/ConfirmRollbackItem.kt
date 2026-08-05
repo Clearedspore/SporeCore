@@ -4,9 +4,11 @@ package me.clearedSpore.sporeCore.menu.rollback.item
 import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
 import me.clearedSpore.sporeCore.user.UserManager
@@ -34,6 +36,7 @@ class ConfirmRollbackItem(
     }
 
     override fun onClickEvent(clicker: Player, clickType: ClickType) {
+        var suffix = chatService?.getPlayerSuffix(clicker)?.translate() ?: ""
         clicker.closeInventory()
 
         Tasks.runAsync {
@@ -77,7 +80,7 @@ class ConfirmRollbackItem(
             clicker.sendMessage(
                 "Rolled back $rollbackCount punishments from ${staff.name} in the last $timeArg (took ${end - start}ms).".blue()
             )
-            Logger.log(clicker, Perm.ADMIN_LOG, "rolled back punishments made by ${staff.name}", true)
+            Logger.log(suffix, clicker, Perm.ADMIN_LOG, "rolled back punishments made by ${staff.name}", true)
             val config = SporeCore.instance.coreConfig.discord
             val webhook = Webhook(config.staffRollback)
             if (config.staffRollbackPing.isNullOrBlank()) {
@@ -91,7 +94,7 @@ class ConfirmRollbackItem(
             webhook.setUsername("SporeCore Logs")
                 .setProfileURL("https://cdn.modrinth.com/data/8X4HqUuD/980c64224cb4fb48829d90a0d51c36b565ad8a05_96.webp")
 
-            webhook.send()
+            Tasks.runAsync { webhook.send() }
         }
     }
 }

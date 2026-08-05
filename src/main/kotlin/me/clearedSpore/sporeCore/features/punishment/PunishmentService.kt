@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore.features.punishment
 import com.github.benmanes.caffeine.cache.Caffeine
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
@@ -10,18 +11,21 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.message.Message
 import me.clearedSpore.sporeCore.features.message.MessageType
 import me.clearedSpore.sporeCore.features.punishment.config.PunishmentConfig
 import me.clearedSpore.sporeCore.features.punishment.config.ReasonDefinition
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
+import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment.Companion.SYSTEM_UUID
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.punishment.`object`.StaffPunishmentStats
 import me.clearedSpore.sporeCore.features.setting.impl.PunishmentLogsSetting
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
+import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.io.File
@@ -96,30 +100,31 @@ object PunishmentService {
             return
         }
 
-        try {
-            issuer.sendMessage("Punishing player...".blue())
-            val webhook = Webhook(discordConfig.punishment)
+        Tasks.runAsync {
+            try {
+                val webhook = Webhook(discordConfig.punishment)
 
-            if (discordConfig.pingStaff && linkedStaffId != null) {
-                webhook.setMessage("<@$linkedStaffId>")
+                if (discordConfig.pingStaff && linkedStaffId != null) {
+                    webhook.setMessage("<@$linkedStaffId>")
+                }
+
+                val embed = Webhook.Embed()
+                    .setTitle("Punishment Issued")
+                    .setColor(getPunishmentColor(type))
+                    .setThumbnail(skinURL)
+                    .setAuthor(staffName, issuerSkinURL)
+                    .addField("Punisher", staffName, true)
+                    .addField("Target", targetName, true)
+                    .addField("Type", type.discordName, true)
+                    .addField("Reason", reason, false)
+
+                webhook.addEmbed(embed)
+                webhook.setUsername(staffName)
+                webhook.setProfileURL(issuerSkinURL)
+                webhook.send()
+            } catch (ex: Exception) {
+                Logger.error("Failed to send punishment webhook: ${ex.message}")
             }
-
-            val embed = Webhook.Embed()
-                .setTitle("Punishment Issued")
-                .setColor(getPunishmentColor(type))
-                .setThumbnail(skinURL)
-                .setAuthor(staffName, issuerSkinURL)
-                .addField("Punisher", staffName, true)
-                .addField("Target", targetName, true)
-                .addField("Type", type.displayName ?: "Unknown", true)
-                .addField("Reason", reason, false)
-
-            webhook.addEmbed(embed)
-            webhook.setUsername(staffName)
-            webhook.setProfileURL(issuerSkinURL)
-            webhook.send()
-        } catch (ex: Exception) {
-            Logger.error("Failed to send punishment webhook: ${ex.message}")
         }
     }
 
@@ -273,7 +278,8 @@ object PunishmentService {
 
         logToDiscord(punishment)
         logPunishment(punishment)
-        punisher.sendMessage("Successfully punished ${targetUser.playerName.blue()} for $reason.".blue())
+        val targetSuffix = if (Bukkit.getPlayer(targetUser.playerName) != null) chatService?.getPlayerSuffix(targetUser.player)?.translate() ?: "" else ""
+        punisher.sendMessage("Successfully punished ${targetSuffix}${targetUser.playerName.blue()} for $reason.".blue())
 
         when (type) {
             PunishmentType.BAN,
@@ -368,7 +374,7 @@ object PunishmentService {
         val timeLeft = punishment.getDurationFormatted()
         return lines.joinToString("\n") {
             it.replace("%reason%", punishment.reason)
-                .replace("%punisher%", punishment.getPunisher()?.playerName ?: "Unknown")
+                .replace("%punisher%", punishment.getPunisher()?.playerName ?: "&4Console")
                 .replace("%time%", timeLeft)
                 .replace("%date%", punishment.punishDate.toString())
                 .replace("%id%", punishment.id.toString())
@@ -402,10 +408,10 @@ object PunishmentService {
 
     fun buildAltEvasionScreen(user: User, altPunishment: Punishment): List<String> {
         val timeLeft = altPunishment.getDurationFormatted()
-        val punisherName = altPunishment.getPunisher()?.playerName ?: "Unknown"
+        val punisherName = altPunishment.getPunisher()?.playerName ?: "&4Console"
         val date = altPunishment.punishDate.toString()
         val id = altPunishment.id.toString()
-        val altName = altPunishment.getUser()?.playerName ?: "Unknown"
+        val altName = altPunishment.getUser()?.playerName ?: "&4Console"
 
         return config.messages.evasion.map { line ->
             line.replace("%alt%", altName)
@@ -420,7 +426,7 @@ object PunishmentService {
 
     fun buildAltTryMessage(user: User, altPunishment: Punishment): String {
         val timeLeft = altPunishment.getDurationFormatted()
-        val altName = altPunishment.getUser()?.playerName ?: "Unknown"
+        val altName = altPunishment.getUser()?.playerName ?: "&4Console"
 
         return config.alts.tryMessage
             .replace("%user%", user.playerName)
@@ -442,18 +448,31 @@ object PunishmentService {
             PunishmentType.TEMPWARN -> logConfig.tempWarn
         }
 
+        var punisherSuffix = "&4"
+        var targetSuffix = ""
+
+        if (punishment.getPunisherPlayer() != null) {
+            punisherSuffix = chatService?.getPlayerSuffix(punishment.getPunisherPlayer())?.translate() ?: ""
+        }
+
+        if (Bukkit.getOnlinePlayers().contains(punishment.getUser()?.player)) {
+            targetSuffix = chatService?.getPlayerSuffix(punishment.getUser()?.player)?.translate() ?: ""
+        }
+
         val timeFormatted = punishment.getDurationFormatted()
         val message = format
-            .replace("%user%", punishment.getPunisher()?.playerName ?: "Unknown")
+            .replace("%punisherSuffix%", punisherSuffix)
+            .replace("%user%", punishment.getPunisher()?.playerName ?: "&4Console")
             .replace("%action%", punishment.type.pastTense)
-            .replace("%target%", punishment.getUser()?.playerName ?: "Unknown")
+            .replace("%targetSuffix%", targetSuffix)
+            .replace("%target%", punishment.getUser()?.playerName ?: "&4Console")
             .replace("%reason%", punishment.reason)
             .replace("%time%", timeFormatted)
 
         for (player in Bukkit.getOnlinePlayers()) {
             if (player.hasPermission(Perm.PUNISH_LOG)) {
                 val user = UserManager.get(player)
-                if (user != null && user.getSetting(PunishmentLogsSetting()) == true) {
+                if (user != null && user.getSetting(PunishmentLogsSetting())) {
                     player.sendMessage(message.translate())
                 }
             }

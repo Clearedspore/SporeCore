@@ -35,7 +35,7 @@ object TeleportService {
         if (!player.isOnline) return
 
         if (player.hasPermission(Perm.TELEPORT_BYPASS) || worldGuardEnabled && WGUtil.isInSafeZone(player)) {
-            player.teleport(location)
+            player.teleportAsync(location)
             player.playSound(player.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f)
             player.actionBar("tp", "Teleported successfully!".blue())
             return
@@ -87,7 +87,7 @@ class TeleportCountdown(
 
         if (timeLeft <= 0) {
             Tasks.run {
-                player.teleport(location)
+                player.teleportAsync(location)
                 teleportingPlayers.remove(player)
                 player.playSound(player.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f)
                 player.actionBar("tp", "Teleported successfully!".blue())

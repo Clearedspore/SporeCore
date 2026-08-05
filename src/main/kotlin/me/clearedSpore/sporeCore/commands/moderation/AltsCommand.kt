@@ -39,7 +39,7 @@ class AltsCommand : BaseCommand() {
         val targetUser = UserManager.get(target)
 
         if (targetUser == null) {
-            sender.sendMessage("Could not find user $targetName.".red())
+            sender.sendMessage("Could not find user     $targetName.".red())
             return
         }
 
@@ -62,13 +62,13 @@ class AltsCommand : BaseCommand() {
                 val banned = user.isBanned()
                 val muted = user.isMuted()
                 val punishmentStatus = when {
-                    banned && muted -> "&cBANNED &6MUTED"
-                    banned -> "&cBANNED"
-                    muted -> "&6MUTED"
+                    banned && muted -> "&cBanned & &6Muted"
+                    banned -> "&cBanned"
+                    muted -> "&6Muted"
                     else -> "&aNo active punishment"
                 }
 
-                sender.sendMessage("&f- ".translate() + "${user.playerName} ($onlineStatus, $punishmentStatus".blue() + ")".blue())
+                sender.sendMessage("&f- ".translate() + "${user.playerName} ($onlineStatus | $punishmentStatus".blue() + ")".blue())
             }
         })
     }

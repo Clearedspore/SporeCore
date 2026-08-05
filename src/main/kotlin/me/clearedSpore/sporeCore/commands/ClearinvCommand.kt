@@ -7,8 +7,10 @@ import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Default
 import co.aikar.commands.annotation.Optional
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -39,9 +41,11 @@ class ClearinvCommand : BaseCommand() {
             it.sendMessage("Your inventory has been cleared.".blue())
         }
 
+        val targetSuffix = chatService?.getPlayerSuffix(players.first().player)?.translate() ?: ""
+
         sender.sendMessage(
             if (players.size == 1)
-                "You cleared ${players.first().name}'s inventory.".blue()
+                "You cleared $targetSuffix${players.first().name}".blue() + "'s inventory.".blue()
             else
                 "You cleared ${players.size} players' inventories.".blue()
         )

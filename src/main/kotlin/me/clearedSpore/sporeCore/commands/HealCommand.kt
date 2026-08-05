@@ -4,9 +4,11 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Damageable
@@ -21,6 +23,7 @@ class HealCommand : BaseCommand() {
     @Default
     @CommandCompletion("@targets")
     fun onHeal(sender: CommandSender, @Optional targets: TargetPlayers?) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else "&4"
 
         val resolved = targets ?: when (sender) {
             is Entity -> listOf(sender)
@@ -45,16 +48,16 @@ class HealCommand : BaseCommand() {
 
         val count = healables.size
 
-        sender.sendMessage(
-            if (count == 1) {
-                val name = (healables.first() as? Player)?.name
-                    ?: healables.first().type.name.lowercase()
-                "You healed $name.".blue()
-            } else {
-                "You healed $count entities.".blue()
-            }
-        )
+        if (count == 1) {
+            val name = (healables.first() as? Player)?.name ?: healables.first().type.name.lowercase()
+            val targetSuffix = chatService?.getPlayerSuffix(healables.first() as? Player)?.translate()
+            sender.sendMessage("You healed $targetSuffix$name&r&#1D91FF.".blue())
+            Logger.log(suffix, sender, Perm.LOG, "healed $targetSuffix$name", false)
+        } else {
+            sender.sendMessage("You healed $count entities.".blue())
+            Logger.log(suffix, sender, Perm.LOG, "healed $count entities", false)
+        }
 
-        Logger.log(sender, Perm.LOG, "healed $count entities", false)
+
     }
 }

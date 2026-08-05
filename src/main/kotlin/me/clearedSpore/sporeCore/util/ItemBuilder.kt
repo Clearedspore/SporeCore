@@ -112,12 +112,13 @@ class ItemBuilder(private val material: Material, private var amount: Int = 1) {
 
     fun addUsageLine(click: ClickType, message: String) : ItemBuilder {
         val line = when (click) {
-            ClickType.LEFT -> "[Left Click] ".green() + "to $message".gold()
-            ClickType.RIGHT -> "[Right Click] ".green() + "to $message".gold()
-            ClickType.SHIFT_LEFT -> "[Shift Left Click] ".green() + "to $message".gold()
-            ClickType.SHIFT_RIGHT -> "[Shift Right Click] ".green() + "to $message".gold()
-            ClickType.DROP -> "[Drop] ".green() + "to $message".gold()
-            else -> "[${click.name.niceName()}] ".green() + "to $message".gold()
+            ClickType.LEFT -> "&lLeft Click ".gold() + "to $message".gold()
+            ClickType.RIGHT -> "&lRight Click ".gold() + "to $message".gold()
+            ClickType.SHIFT_LEFT -> "&lShift + Left Click ".gold() + "to $message".gold()
+            ClickType.SHIFT_RIGHT -> "&lShift + Right Click ".gold() + "to $message".gold()
+            ClickType.DROP -> "&lDrop ".gold() + "to $message".gold()
+            ClickType.MIDDLE -> "&lMiddle Click ".gold() + "to $message".gold()
+            else -> "&l${click.name.niceName()}".gold() + "to $message".gold()
         }
 
         val currentLore = meta.lore?.toMutableList() ?: mutableListOf()

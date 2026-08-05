@@ -4,9 +4,11 @@ import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.ChatInputService
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.investigation.IGService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.Punishment
@@ -17,6 +19,8 @@ import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.button.TextButton
+import me.clip.placeholderapi.PlaceholderAPI
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
@@ -117,8 +121,20 @@ class PunishmentItem(
                     else -> return@begin
                 }
 
+                var format = ""
+
+                if (user is Player) {
+                    var suffix = chatService?.getPlayerSuffix(user)?.translate() ?: ""
+
+                    format = logMsg
+                        .replace("%ranksuffix%", suffix)
+                    if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                        PlaceholderAPI.setPlaceholders(user, format)
+                    }
+                }
+
                 val formatted = PunishmentService.buildRemovalMessage(
-                    logMsg,
+                    format.translate(),
                     punishment,
                     user,
                     remover,

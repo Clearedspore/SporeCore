@@ -1,7 +1,10 @@
 package me.clearedSpore.sporeCore.menu.punishment.history.item
 
 import me.clearedSpore.sporeAPI.menu.item.Item
+import me.clearedSpore.sporeAPI.util.CC
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
+import me.clearedSpore.sporeCore.features.chat.ChatService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.menu.util.NoUserItem
 import me.clearedSpore.sporeCore.user.UserManager
@@ -18,13 +21,11 @@ class InfoItem(
 ) : Item() {
 
     override fun createItem(): ItemStack {
-        val item = PlayerUtil.getPlayerHead(target, target.name!!.blue())
+//        var suffix = ChatService.getSuffix(target as Player)?.translate() ?: ""
+        val item = PlayerUtil.getPlayerHead(target, "${target.name}"!!.blue())
         val meta = item.itemMeta
 
-        val user = UserManager.get(target)
-        if (user == null) {
-            return NoUserItem.toItemStack()
-        }
+        val user = UserManager.get(target) ?: return NoUserItem.toItemStack()
 
         val total = user.punishments.size
         val bans = user.getPunishmentsByType(PunishmentType.BAN).size
@@ -34,21 +35,21 @@ class InfoItem(
         val lastPunishment = user.getLastPunishment()
 
         val lore = mutableListOf<String>()
-        lore.add("".blue())
-        lore.add("Total Punishments: &f$total".blue())
-        lore.add("&7| Bans: &f$bans".blue())
-        lore.add("&7| Warns: &f$warns".blue())
-        lore.add("&7| Mutes: &f$mutes".blue())
-        lore.add("&7| Kicks: &f$kicks".blue())
+        lore.add("")
+        lore.add("&lTotal Punishments".blue() + ": &f$total".translate())
+        lore.add("&7⎜ ".translate() + "&cBans: &f$bans".translate())
+        lore.add("&7⎜ ".translate() + "&#FF7A00Warns: &f$warns".translate())
+        lore.add("&7⎜ ".translate() + "&eMutes: &f$mutes".translate())
+        lore.add("&7⎜ ".translate() + "&aKicks: &f$kicks".translate())
         if (lastPunishment != null) {
-            lore.add("".blue())
-            lore.add("Last Punishment: ".blue())
-            lore.add("&7| Type: &f${lastPunishment.type.displayName}".blue())
-            lore.add("&7| Expires: &f${lastPunishment.getDurationFormatted()}".blue())
+            lore.add("")
+            lore.add("&lLast Punishment: ".blue())
+            lore.add("&7⎜ &fType: ${lastPunishment.type.displayName}".translate())
+            lore.add("&7⎜ &fExpires: &e${lastPunishment.getDurationFormatted()}".translate())
             val timeAgo = lastPunishment.getTimeSincePunished()
-            lore.add("&7| Date: &f${lastPunishment.punishDate} ($timeAgo)".blue())
-            lore.add("&7| Reason: &f${lastPunishment.reason}".blue())
-            lore.add("&7| Issuer: &f${lastPunishment.getPunisherName(viewer)}".blue())
+            lore.add("&7⎜ &fDate: ${lastPunishment.punishDate} &7($timeAgo)".translate())
+            lore.add("&7⎜ &fReason: &c${lastPunishment.reason}".translate())
+            lore.add("&7⎜ &fIssuer: &e${lastPunishment.getPunisherName(viewer)}".translate())
         }
 
         meta.lore = lore
