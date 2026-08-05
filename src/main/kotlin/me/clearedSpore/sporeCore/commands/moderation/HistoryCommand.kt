@@ -13,7 +13,7 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
 
-@CommandAlias("history|viewpunishments|checkpunishments")
+@CommandAlias("hist|history|viewpunishments|checkpunishments")
 @CommandPermission(Perm.HISTORY)
 class HistoryCommand : BaseCommand() {
 

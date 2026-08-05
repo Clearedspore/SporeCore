@@ -6,6 +6,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
@@ -89,7 +90,8 @@ class ItemCommand : BaseCommand() {
         for (target in targets) {
             target.inventory.addItem(item.clone())
             if (target != sender) {
-                sender.sendMessage("Gave ${item.amount}x ${material.name} to ${target.name}!".blue())
+                var suffix = chatService?.getPlayerSuffix(target.player)?.translate() ?: ""
+                sender.sendMessage("Gave ${item.amount}x ${material.name} to $suffix${target.name}".blue() + "!".blue())
             }
             target.sendMessage("You received ${item.amount}x ${material.name}!".blue())
         }

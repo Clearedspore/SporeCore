@@ -252,19 +252,21 @@ data class PunishmentLogConfig(
     @Comment(
         "Format for log messages when a punishment is applied.",
         "Use placeholders:",
-        "%user%, %action%, %target%, %reason%, %time%"
+        "%user%, %action%, %target%, %reason%, %time%",
+        "Vault Dependent suffixes are as follows",
+        "%punisherSuffix%, %targetSuffix%, %ranksuffix%"
     )
-    var ban: String = "&9[SporeCore] &f%user% &7has &cbanned &f%target% &7for &e%reason% &7Expires in &e%time%",
-    var tempBan: String = "&9[SporeCore] &f%user% &7has &ctemp-banned &f%target% &7for &e%reason% &7Expires in &e%time%",
-    var kick: String = "&9[SporeCore] &f%user% &7has &ckicked &f%target% &7for &e%reason%",
-    var mute: String = "&9[SporeCore] &f%user% &7has &cmuted &f%target% &7for &e%reason%",
-    var tempMute: String = "&9[SporeCore] &f%user% &7has &ctemp-muted &f%target% &7for &e%reason% &7Expires in &e%time%",
-    var warn: String = "&9[SporeCore] &f%user% &7has &cwarned &f%target% &7for &e%reason%",
-    var tempWarn: String = "&9[SporeCore] &f%user% &7has &ctemp-warned &f%target% &7for &e%reason% &7Expires in &e%time%",
+    var ban: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &cbanned &f%targetSuffix%%target% &7for &e%reason% (&7Expires in &e%time%)",
+    var tempBan: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &ctemp-banned &f%targetSuffix%%target% &7for &e%reason% (&7Expires in &e%time%)",
+    var kick: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &ckicked &f%targetSuffix%%target% &7for &e%reason%",
+    var mute: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &cmuted &f%targetSuffix%%target% &7for &e%reason%",
+    var tempMute: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &ctemp-muted &f%targetSuffix%%target% &7for &e%reason% (&7Expires in &e%time%)",
+    var warn: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &cwarned &f%targetSuffix%%target% &7for &e%reason%",
+    var tempWarn: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &ctemp-warned &f%targetSuffix%%target% &7for &e%reason% &7(Expires in &e%time%)",
 
-    var unMute: String = "&9[SporeCore] &f%user% &7has &cunmuted &f%target% &7for &e%reason%",
-    var unWarn: String = "&9[SporeCore] &f%user% &7has &cunwarn &f%target% &7for &e%reason%",
-    var unBan: String = "&9[SporeCore] &f%user% &7has &cunbanned &f%target% &7for &e%reason%",
+    var unMute: String = "&9[SporeCore] &f%ranksuffix%%user% &7has &cunmuted &f%targetSuffix%%target% &7for &e%reason%",
+    var unWarn: String = "&9[SporeCore] &f%ranksuffix%user% &7has &cunwarn &f%targetSuffix%%target% &7for &e%reason%",
+    var unBan: String = "&9[SporeCore] &f%ranksuffix%user% &7has &cunbanned &f%target% &7for &e%reason%",
 
     @Comment(
         "These are the messages for when someone tries",

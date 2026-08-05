@@ -63,9 +63,9 @@ class WhoisCommand : BaseCommand() {
         sender.sendMessage("Last Join: ".white() + lastJoin.blue())
         sender.sendMessage("First Join: ".white() + firstJoin.blue())
         sender.sendMessage("")
-        sender.sendMessage("First server IP: ".white() + "$firstServerIP".blue())
-        sender.sendMessage("Last server IP: ".white() + "$lastServerIP".blue())
-        sender.sendMessage("")
+        if (firstServerIP != null) sender.sendMessage("First server IP: ".white() + "$firstServerIP".blue())
+        if (lastServerIP != null) sender.sendMessage("Last server IP: ".white() + "$lastServerIP".blue())
+        if (lastServerIP != null || firstServerIP != null) sender.sendMessage("")
 
         if (punishmentsEnabled) {
             val activePunishments = user.getActivePunishments()

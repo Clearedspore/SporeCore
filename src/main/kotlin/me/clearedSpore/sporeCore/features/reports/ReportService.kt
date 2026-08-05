@@ -14,6 +14,7 @@ import me.clearedSpore.sporeAPI.util.time.TimeUtil.toTicks
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.reports.`object`.Report
 import me.clearedSpore.sporeCore.features.reports.`object`.ReportAction
 import me.clearedSpore.sporeCore.features.reports.`object`.ReportStatus
@@ -53,8 +54,10 @@ object ReportService {
             id = UUID.randomUUID().toString(),
             targetUuid = target.uniqueId.toString(),
             targetName = target.name ?: "Unknown",
+            targetSuffix = chatService?.getPlayerSuffix(target as? Player)?.translate() ?: "",
             reporterUuid = reporter.uniqueId.toString(),
             reporterName = reporter.name,
+            reporterSuffix = chatService?.getPlayerSuffix(reporter)?.translate() ?: "",
             reason = reason,
             evidence = evidence,
             timestamp = System.currentTimeMillis(),
@@ -78,8 +81,8 @@ object ReportService {
 
             config.newReport.forEach { line ->
                 var message = line
-                    .replace("%reporter%", report.reporterName)
-                    .replace("%player%", report.targetName)
+                    .replace("%reporter%", "${report.reporterSuffix}${report.reporterName}")
+                    .replace("%player%", "${report.targetSuffix}${report.targetName}")
                     .replace("%reason%", report.reason)
                     .replace("%type%", reportType.displayName)
                     .replace("%evidence%", evidenceBoolean)
@@ -149,6 +152,7 @@ object ReportService {
         report.action = action
         report.staffName = player.name
         report.staffUuid = player.uuidStr()
+        report.staffSuffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         report.silent = silent
 
         val target = Bukkit.getOfflinePlayer(UUID.fromString(report.targetUuid))
@@ -160,13 +164,13 @@ object ReportService {
         if(!silent) {
             val broadcastMsg = if (action == ReportAction.ACCEPTED) {
                 SporeCore.instance.coreConfig.reports.reportAccepted
-                    .replace("%staff%", player.name)
-                    .replace("%target%", target.name.toString())
+                    .replace("%staff%", "${report.staffSuffix}${player.name}")
+                    .replace("%target%", "${report.targetSuffix}${target.name.toString()}")
                     .translate()
             } else {
                 SporeCore.instance.coreConfig.reports.reportDenied
-                    .replace("%staff%", player.name)
-                    .replace("%target%", target.name.toString())
+                    .replace("%staff%", "${report.staffSuffix}${player.name}")
+                    .replace("%target%", "${report.targetSuffix}${target.name.toString()}")
                     .translate()
             }
             Message.broadcastMessageWithPermission(
@@ -217,8 +221,8 @@ object ReportService {
 
         Message.broadcastMessageWithPermission(
             SporeCore.instance.coreConfig.reports.reportReOpened
-                .replace("%staff%", player.name)
-                .replace("%player%", reporter.name.toString())
+                .replace("%staff%", "${report.staffSuffix}${player.name}")
+                .replace("%player%", "${report.reporterSuffix}${reporter.name}")
                 .translate(),
             Perm.REPORT_ADMIN)
 

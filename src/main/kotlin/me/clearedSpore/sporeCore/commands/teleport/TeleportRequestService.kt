@@ -1,12 +1,16 @@
 package me.clearedSpore.sporeCore.commands.teleport
 
+import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.setting.impl.AutoTeleportSetting
@@ -38,7 +42,7 @@ object TeleportRequestService {
         val targetUser = UserManager.get(target)
 
         if (requesterUser == null) {
-            Logger.error("Failed to load user for ${requester.name}")
+            Logger.error("Failed to load user for &e${requester.name}")
             return
         }
 
@@ -46,15 +50,17 @@ object TeleportRequestService {
             requester.userJoinFail()
             return
         }
+        val requesterSuffix = chatService?.getPlayerSuffix(requester.player)?.translate()
+        val targetSuffix = chatService?.getPlayerSuffix(target.player)?.translate()
 
         if (!targetUser.getSettingOrDefault(TeleportRequestSettings())) {
-            requester.sendErrorMessage("That player has teleport requests disabled!".red())
+            requester.sendMessage("That player has teleport requests disabled!".red())
             return
         }
 
         val existingRequest = pendingRequests[target]
         if (existingRequest != null && existingRequest.requester == requester) {
-            requester.sendErrorMessage("You have already sent a request to ${target.name}!")
+            requester.sendMessage("You have already sent a request to $targetSuffix${target.name}".red() + "!".red())
             return
         }
 
@@ -62,20 +68,29 @@ object TeleportRequestService {
         pendingRequests[target] = request
 
         val executeRequest = {
-            requester.actionBar("tpa", "Teleport request sent to ${target.name}.")
+            requester.actionBar("tpa", "&7Teleport request sent to $targetSuffix${target.name}&r&7.")
             when (type) {
                 RequestType.TPA -> {
                     if (targetUser.getSettingOrDefault(AutoTeleportSetting())) {
                         accept(target)
-                        target.actionBar("tpa", "Accepted ${requester.name}'s request (Auto-TP)")
+                        target.actionBar("tpa", "&7Accepted $requesterSuffix${requester.name}&r&7's request (Auto-TP)")
                         pendingRequests.remove(target)
                     } else {
-                        target.sendSuccessMessage("${requester.name} wants to teleport to you. Use /tpaaccept or /tpadeny.")
+                        target.sendMessage(
+                            "$requesterSuffix${requester.name}&r&7 wants to teleport to you. Use ".translate()
+                                + "/tpaccept".blue()
+                                + " or ".gray()
+                                + "/tpdeny".blue()
+                                + ".".gray())
                     }
                 }
 
                 RequestType.TPAHERE -> {
-                    target.sendSuccessMessage("${requester.name} wants you to teleport to them. Use /tpaaccept or /tpadeny.")
+                    target.sendMessage("$requesterSuffix${requester.name}&r&7 wants you to teleport to them. Use ".translate()
+                            + "/tpaccept".blue()
+                            + " or ".gray()
+                            + "/tpdeny".blue()
+                            + ".".gray())
                 }
             }
         }
@@ -102,14 +117,17 @@ object TeleportRequestService {
             return
         }
 
+        val requesterSuffix = chatService?.getPlayerSuffix(request.requester.player)?.translate()
+        val targetSuffix = chatService?.getPlayerSuffix(target.player)?.translate()
+
         val executeTeleport = {
             pendingRequests.remove(target)
 
             when (request.type) {
                 RequestType.TPA -> {
                     request.requester.awaitTeleport(target.location)
-                    request.requester.actionBar("tpa", "${target.name} accepted your teleport request.")
-                    target.actionBar("tpa", "Accepted ${request.requester.name}'s teleport request.")
+                    request.requester.actionBar("tpa", "$targetSuffix${target.name}&r&7 accepted your teleport request.")
+                    target.actionBar("tpa", "&7Accepted $targetSuffix${request.requester.name}&r&7's teleport request.")
 
                     if (SporeCore.instance.coreConfig.logs.teleports) {
                         LogsService.addLog(
@@ -128,8 +146,8 @@ object TeleportRequestService {
 
                 RequestType.TPAHERE -> {
                     target.awaitTeleport(request.requester.location)
-                    target.actionBar("tpa", "Accepted ${request.requester.name}'s teleport request.")
-                    request.requester.actionBar("tpa", "${target.name} accepted your teleport request.")
+                    target.actionBar("tpa", "&7Accepted $requesterSuffix${request.requester.name}&r&7's teleport request.")
+                    request.requester.actionBar("tpa", "$targetSuffix${target.name}&r&7 accepted your teleport request.")
 
                     if (SporeCore.instance.coreConfig.logs.teleports) {
                         LogsService.addLog(
@@ -148,10 +166,6 @@ object TeleportRequestService {
             }
         }
 
-
-
-
-
         if (targetUser.getSettingOrDefault(ConfirmTpaSetting())) {
             TPAConfirmMenu(target, request.requester, executeTeleport).open(target)
         } else {
@@ -165,8 +179,10 @@ object TeleportRequestService {
             target.sendErrorMessage("You have no pending teleport requests.")
             return
         }
+        val requesterSuffix = chatService?.getPlayerSuffix(request.requester.player)?.translate()
+        val targetSuffix = chatService?.getPlayerSuffix(request.target.player)?.translate()
 
-        request.requester.sendErrorMessage("Your teleport request to ${request.target.name} was denied.")
-        target.sendSuccessMessage("You denied ${request.requester.name}'s teleport request.")
+        request.requester.sendMessage("Your teleport request to $targetSuffix${request.target.name}".red() + " was denied.".red())
+        target.sendMessage("You denied $requesterSuffix${request.requester.name}&r".blue() + "'s teleport request.".blue())
     }
 }

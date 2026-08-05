@@ -4,12 +4,16 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import co.aikar.commands.bukkit.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.green
+import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
+import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.button.TextButton
@@ -59,13 +63,14 @@ class UtilPlayerCommand : BaseCommand() {
             sender.userJoinFail()
             return
         }
+        var suffix = chatService?.getPlayerSuffix(target.player)?.translate() ?: ""
 
         val head = ItemStack(org.bukkit.Material.PLAYER_HEAD)
         val meta = head.itemMeta as SkullMeta
         meta.owningPlayer = target
         head.itemMeta = meta
 
-        sender.sendSuccessMessage("Player skull for ${target.name} created!")
+        sender.sendSuccessMessage("Player skull for $suffix${target.name}" + " created!".blue())
         if (sender is Player) {
             sender.inventory.addItem(head)
         }
@@ -81,9 +86,10 @@ class UtilPlayerCommand : BaseCommand() {
     ) {
         val target = targetOnline.player
         val message = messageParts.joinWithSpaces()
+        var suffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
 
         target.sendMessage(message.translate())
-        sender.sendSuccessMessage("Successfully send the message to ${target.name}")
+        sender.sendSuccessMessage("Successfully send the message to $suffix${target.name}")
         sender.sendMessage("Message: $message".blue())
     }
 
@@ -107,14 +113,19 @@ class UtilPlayerCommand : BaseCommand() {
     @Subcommand("player vanished")
     @CommandPermission(Perm.UTIL_PLAYER)
     @CommandCompletion("@players")
-    fun vanished(sender: CommandSender, @Name("player") targetName: OnlinePlayer) {
-        val target: OfflinePlayer = targetName.player
+    fun vanished(sender: CommandSender, @Name("player") targetName: String) {
+        val target = Bukkit.getPlayer(targetName)
+        if (target == null) {
+            sender.sendErrorMessage("&e$targetName".translate() + " is offline, cannot retrieve their vanish status.".red())
+            return
+        }
+        var suffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
 
         val isVanished = VanishService.isVanished(target.uniqueId)
         if (isVanished) {
-            sender.sendSuccessMessage("${target.name} is &fvanished!")
+            sender.sendSuccessMessage("$suffix${target.name}".translate() + " is &fvanished!".blue())
         } else {
-            sender.sendSuccessMessage("${target.name} is &fvisible!")
+            sender.sendSuccessMessage("$suffix${target.name}".translate() + " is &fvisible!".blue())
         }
     }
 
@@ -130,7 +141,8 @@ class UtilPlayerCommand : BaseCommand() {
 
         val loc = target.location
         val copyString = "${loc.blockX}, ${loc.blockY}, ${loc.blockZ}, ${loc.world?.name ?: "world"}"
-        sender.sendSuccessMessage("${target.name}'s location: ${loc.world?.name} x:${loc.blockX} y:${loc.blockY} z:${loc.blockZ}")
+        var suffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
+        sender.sendSuccessMessage("$suffix${target.name}" + "'s location: ${loc.world?.name} x:${loc.blockX} y:${loc.blockY} z:${loc.blockZ}".white())
 
         if (sender is Player) {
             val copyButton = TextButton("[Copy]".blue())

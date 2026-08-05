@@ -4,9 +4,11 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.warp.WarpService
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.menu.warps.WarpsMenu
@@ -53,6 +55,7 @@ class WarpCommand : BaseCommand() {
     @Syntax("<name>")
     fun createWarp(player: Player, name: String) {
         val location = player.location
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val warps = warpService.getAllWarps()
         val warp = warps.find { it.name.equals(name, ignoreCase = true) }
 
@@ -63,7 +66,7 @@ class WarpCommand : BaseCommand() {
 
         warpService.createWarp(name, location)
         player.sendSuccessMessage("You have successfully created a new warp called '$name'")
-        Logger.log(player, Perm.LOG, "created a new warp called '$name'", false)
+        Logger.log(suffix, player, Perm.LOG, "created a new warp called '$name'", false)
     }
 
 
@@ -72,6 +75,7 @@ class WarpCommand : BaseCommand() {
     @Syntax("<name>")
     @CommandPermission(Perm.WARP_DELETE)
     fun deleteWarp(player: Player, name: String) {
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val warps = warpService.getAllWarps()
 
         val warp = warps.find { it.name.equals(name, ignoreCase = true) }
@@ -85,7 +89,7 @@ class WarpCommand : BaseCommand() {
             player.sendErrorMessage("No warp found with the name '$name'.")
         }
 
-        Logger.log(player, Perm.LOG, "deleted a warp called '$name'", false)
+        Logger.log(suffix, player, Perm.LOG, "deleted a warp called '$name'", false)
     }
 
     @Subcommand("permission")

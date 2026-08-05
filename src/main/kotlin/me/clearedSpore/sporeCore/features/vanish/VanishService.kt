@@ -2,6 +2,7 @@ package me.clearedSpore.sporeCore.features.vanish
 
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes.player
 import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.yellow
 import me.clearedSpore.sporeAPI.util.Webhook
@@ -49,16 +50,18 @@ object VanishService {
                 .setUsername(userPlayer.name)
                 .addEmbed(embed)
 
-            try {
-                webhook.send()
-            } catch (ex: Exception) {
-                throw LoggedException(
-                    userMessage = "Failed to send message to Discord.",
-                    internalMessage = "Failed to send message to Discord",
-                    channel = LoggedException.Channel.GENERAL,
-                    developerOnly = false,
-                    cause = ex
-                ).also { it.log() }
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
             }
         }
     }
@@ -92,19 +95,20 @@ object VanishService {
                 .setUsername(userPlayer.name)
                 .addEmbed(embed)
 
-            try {
-                webhook.send()
-            } catch (ex: Exception) {
-                throw LoggedException(
-                    userMessage = "Failed to send message to Discord.",
-                    internalMessage = "Failed to send message to Discord",
-                    channel = LoggedException.Channel.GENERAL,
-                    developerOnly = false,
-                    cause = ex
-                ).also { it.log() }
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
             }
         }
-
     }
 
     fun toggle(uuid: UUID) {

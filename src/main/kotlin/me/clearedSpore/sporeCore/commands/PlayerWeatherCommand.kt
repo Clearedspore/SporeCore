@@ -4,8 +4,10 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.WeatherType
@@ -27,6 +29,7 @@ class PlayerWeatherCommand : BaseCommand() {
             targetName != null -> Bukkit.getPlayer(targetName)
             else -> null
         }
+        val targetSuffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
 
         if (target == null) {
             sender.sendMessage("That player is not online!".red())
@@ -48,7 +51,7 @@ class PlayerWeatherCommand : BaseCommand() {
             )
         } else {
             sender.sendMessage(
-                "You have set ${targetName}'s weather to ${
+                "You have set $targetSuffix${targetName}'s weather to ${
                     type.toString().capitalizeFirstLetter()
                 }".blue()
             )

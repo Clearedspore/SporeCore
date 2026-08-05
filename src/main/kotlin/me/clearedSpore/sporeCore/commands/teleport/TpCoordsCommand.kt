@@ -49,7 +49,7 @@ class TpCoordsCommand : BaseCommand() {
         }
 
 
-        target.teleport(Location(target.world, x, y, z))
+        target.teleportAsync(Location(target.world, x, y, z))
         executor.sendSuccessMessage("Teleported ${target.name} to &f$x $y $z".blue())
     }
 

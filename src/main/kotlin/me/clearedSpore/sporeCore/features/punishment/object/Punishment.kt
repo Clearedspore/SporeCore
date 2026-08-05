@@ -1,10 +1,14 @@
 package me.clearedSpore.sporeCore.features.punishment.`object`
 
+import me.clearedSpore.sporeAPI.Extension.uuid
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.util.doc.DocWriter
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
+import org.bukkit.Bukkit
+import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.entity.Player
 import org.dizitart.no2.collection.Document
 import java.util.*
@@ -27,13 +31,13 @@ data class Punishment(
     fun getPunisher(): User? = UserManager.get(punisherUuid)
 
     fun getPunisherPlayer(): Player? {
-        return org.bukkit.Bukkit.getPlayer(punisherUuid)
+        return Bukkit.getPlayer(punisherUuid)
     }
 
     fun getPunisherDisplayName(): String {
         return getPunisherPlayer()?.name
             ?: getPunisher()?.playerName
-            ?: if (punisherUuid == SYSTEM_UUID) "Console" else "Unknown"
+            ?: if (punisherUuid == SYSTEM_UUID) "&4System" else "&4Console"
     }
 
 
@@ -42,7 +46,7 @@ data class Punishment(
         return if (permission == null || viewer?.hasPermission(permission) == true) {
             getPunisher()?.playerName ?: "Hidden"
         } else {
-            "Unknown"
+            "&4Console"
         }
     }
 
@@ -55,9 +59,9 @@ data class Punishment(
     fun getRemovalUserName(viewer: Player? = null): String {
         val permission = PunishmentService.config.settings.viewPunisherPermission
         return if (permission == null || viewer?.hasPermission(permission) == true) {
-            getRemovalUser()?.playerName ?: if (removalUserUuid == SYSTEM_UUID) "System" else "Unknown"
+            getRemovalUser()?.playerName ?: if (removalUserUuid == SYSTEM_UUID) "&4System" else "&4Console"
         } else {
-            "Unknown"
+            "&4Console"
         }
     }
 
@@ -110,17 +114,17 @@ data class Punishment(
             )
         }
 
-        val SYSTEM_UUID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+        val SYSTEM_UUID: UUID = UUID.fromString("bccaa4aa-8083-3b76-8112-40a16447975f")
     }
 
     fun getDurationFormatted(): String {
-        if (removalDate != null) return "Removed"
-        val expire = expireDate ?: return "Never"
+        if (removalDate != null) return "&aRemoved"
+        val expire = expireDate ?: return "&cNever"
 
         val now = System.currentTimeMillis()
         val remaining = expire.time - now
 
-        if (remaining <= 0) return "Expired"
+        if (remaining <= 0) return "&aExpired"
 
         return TimeUtil.formatDuration(remaining)
     }

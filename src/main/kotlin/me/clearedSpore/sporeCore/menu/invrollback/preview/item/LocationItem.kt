@@ -41,7 +41,7 @@ class LocationItem(
 
         if (location != null) {
             clicker.closeInventory()
-            clicker.teleport(location)
+            clicker.teleportAsync(location)
             clicker.sendSuccessMessage("Teleported to save location!")
         } else {
             clicker.sendErrorMessage("Failed to find location!")

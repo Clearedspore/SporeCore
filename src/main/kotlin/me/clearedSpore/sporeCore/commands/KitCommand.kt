@@ -4,10 +4,12 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.kit.KitService
 import me.clearedSpore.sporeCore.menu.kits.KitsMenu
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
@@ -95,6 +97,7 @@ class KitCommand : BaseCommand() {
     @CommandPermission(Perm.KIT_ADMIN)
     @Syntax("<name>")
     fun createKit(player: Player, name: String) {
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val kits = kitService.getAllKits()
         val kit = kits.find { it.name.equals(name, ignoreCase = true) }
 
@@ -105,7 +108,7 @@ class KitCommand : BaseCommand() {
 
         kitService.createKit(name, player, null)
         player.sendSuccessMessage("You have successfully created a new kit called '$name'")
-        Logger.log(player, Perm.LOG, "created a new kit called '$name'", false)
+        Logger.log(suffix, player, Perm.LOG, "created a new kit called '$name'", false)
     }
 
     @Subcommand("delete")
@@ -113,6 +116,7 @@ class KitCommand : BaseCommand() {
     @Syntax("<name>")
     @CommandPermission(Perm.KIT_ADMIN)
     fun deleteKit(player: Player, name: String) {
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val kit = kitService.getAllKits().find { it.name.equals(name, ignoreCase = true) }
 
         if (kit != null) {
@@ -124,7 +128,7 @@ class KitCommand : BaseCommand() {
             player.sendErrorMessage("No kit found with the name '$name'.")
         }
 
-        Logger.log(player, Perm.LOG, "deleted a kit called '$name'", false)
+        Logger.log(suffix, player, Perm.LOG, "deleted a kit called '$name'", false)
     }
 
     @Subcommand("permission")
@@ -206,6 +210,7 @@ class KitCommand : BaseCommand() {
     @Syntax("<kit> <time>")
     fun onSetCooldown(player: Player, name: String, time: String) {
         val kit = kitService.getAllKits().find { it.name.equals(name, ignoreCase = true) }
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
 
         if (kit == null) {
             player.sendErrorMessage("No kit found with the name '$name'.")
@@ -215,7 +220,7 @@ class KitCommand : BaseCommand() {
         try {
             kitService.setCooldown(name, time)
             player.sendSuccessMessage("Set cooldown for kit '$name' to $time.")
-            Logger.log(player, Perm.LOG, "set the kit cooldown for kit: '$name'. To $time", false)
+            Logger.log(suffix, player, Perm.LOG, "set the kit cooldown for kit: '$name'. To $time", false)
         } catch (e: Exception) {
             player.sendErrorMessage("Invalid time format! Use formats like 10s, 5m, 2h, or 1d.")
         }
@@ -226,6 +231,7 @@ class KitCommand : BaseCommand() {
     @CommandCompletion("@kits")
     @Syntax("<kit>")
     fun onSetKitItems(player: Player, name: String) {
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val kit = kitService.getAllKits().find { it.name.equals(name, ignoreCase = true) }
 
         if (kit == null) {
@@ -235,7 +241,7 @@ class KitCommand : BaseCommand() {
 
         kitService.setKitItems(name, player)
         player.sendSuccessMessage("You have updated the items for kit '$name'.")
-        Logger.log(player, Perm.LOG, "updated the kit items for the kit '$name'", false)
+        Logger.log(suffix, player, Perm.LOG, "updated the kit items for the kit '$name'", false)
     }
 
     @Subcommand("reload")

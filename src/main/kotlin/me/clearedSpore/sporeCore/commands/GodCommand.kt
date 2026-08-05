@@ -4,8 +4,10 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -39,9 +41,11 @@ class GodCommand : BaseCommand() {
             )
         }
 
+        var suffix = chatService?.getPlayerSuffix(players.first().player)?.translate() ?: ""
+
         sender.sendMessage(
-            if (players.size == 1)
-                "GodMode ${if (players.first().isInvulnerable) "enabled" else "disabled"} for ${players.first().name}.".blue()
+            if (players.size == 1 && players.first().name != sender.name)
+                "GodMode ${if (players.first().isInvulnerable) "enabled" else "disabled"} for $suffix${players.first().name}".blue() + ".".blue()
             else
                 "GodMode toggled for ${players.size} players.".blue()
         )

@@ -7,8 +7,10 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.orange
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 
@@ -22,6 +24,7 @@ class PingCommand : BaseCommand() {
     @Syntax("[player]")
     fun onPing(sender: Player, @Optional onlineTarget: OnlinePlayer?) {
         val target = onlineTarget?.player ?: sender
+        val targetSuffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
         val ping = target.ping
 
         val formattedPing = when {
@@ -35,12 +38,7 @@ class PingCommand : BaseCommand() {
             sender.sendMessage("Your ping is $formattedPing".blue())
         } else {
 
-            if (!sender.hasPermission(Perm.PING_OTHERS)) {
-                sender.sendErrorMessage("You don't have permission to check other players their ping!".red())
-                return
-            }
-
-            sender.sendMessage("${target.name}'s ping is $formattedPing".blue())
+            sender.sendMessage("$targetSuffix${target.name}" + "'s ping is $formattedPing".blue())
         }
     }
 }

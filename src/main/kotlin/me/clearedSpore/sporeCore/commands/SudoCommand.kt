@@ -3,8 +3,10 @@ package me.clearedSpore.sporeCore.commands
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -43,10 +45,11 @@ class SudoCommand : BaseCommand() {
 
         if (targets.size == 1) {
             val t = targets[0]
+            var suffix = chatService?.getPlayerSuffix(t.player)?.translate() ?: ""
             if (action.startsWith("chat:")) {
-                sender.sendMessage("Successfully forced ${t.name} to send a chat message".blue())
+                sender.sendMessage("Successfully forced $suffix${t.name}".blue() + " to send a chat message".blue())
             } else {
-                sender.sendMessage("Successfully forced ${t.name} to run a command".blue())
+                sender.sendMessage("Successfully forced $suffix${t.name}".blue() + " to run a command".blue())
             }
         } else {
             if (action.startsWith("chat:")) {

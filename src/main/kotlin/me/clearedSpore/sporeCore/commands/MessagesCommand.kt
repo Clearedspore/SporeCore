@@ -64,7 +64,7 @@ class MessagesCommand : BaseCommand() {
         )
 
         user.queueMessage(message)
-        player.sendSuccessMessage("Successfully send the message to ${user.playerName}")
+        player.sendSuccessMessage("Successfully send the message to &f${user.playerName}")
     }
 
     @Subcommand("admin view")

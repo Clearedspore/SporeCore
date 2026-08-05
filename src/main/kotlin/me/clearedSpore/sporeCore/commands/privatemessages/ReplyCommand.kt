@@ -6,12 +6,14 @@ import co.aikar.commands.annotation.Default
 import co.aikar.commands.annotation.Syntax
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Cooldown
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.setting.impl.PrivateMessagesSetting
@@ -29,6 +31,7 @@ class ReplyCommand : BaseCommand() {
     @Default
     @Syntax("<message>")
     fun onReply(player: Player, messageParts: String) {
+        var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         val message: String = messageParts.joinWithSpaces()
         val lastSenderId = PMService.getLastSender(player)
 
@@ -43,6 +46,7 @@ class ReplyCommand : BaseCommand() {
         }
 
         val target = Bukkit.getPlayer(lastSenderId)
+        var targetSuffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
         if (target == null || !target.isOnline) {
             player.sendErrorMessage("Your last sender is not online.")
             return
@@ -63,22 +67,22 @@ class ReplyCommand : BaseCommand() {
         PMService.setLastSender(player, target)
 
         Cooldown.addCooldown("msg_cooldown", player.uniqueId)
-        player.sendMessage("You » ${target.name} &f".blue() + message.noTranslate())
+        player.sendMessage("You » $suffix${target.name}&r&#1D91FF: &f".blue() + message.noTranslate())
         player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f)
 
-        target.sendMessage("${player.name} » You &f".blue() + message.noTranslate())
+        target.sendMessage("$suffix${player.name}&r&#1D91FF » You: &f".blue() + message.noTranslate())
         target.playSound(target.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
 
         if (SporeCore.instance.coreConfig.logs.privateMessages) {
             LogsService.addLog(
                 player.uuidStr(),
-                "to=${target.name}: ${message.noTranslate()}",
+                "to $targetSuffix${target.name}: ${message.noTranslate()}",
                 LogType.PRIVATE_MESSAGE
             )
 
             LogsService.addLog(
                 target.uuidStr(),
-                "from=${player.name}: ${message.noTranslate()}",
+                "from $suffix${player.name}: ${message.noTranslate()}",
                 LogType.PRIVATE_MESSAGE
             )
         }

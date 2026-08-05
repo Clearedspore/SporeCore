@@ -3,12 +3,14 @@ package me.clearedSpore.sporeCore.commands.teleport
 import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.util.Perm
@@ -32,6 +34,7 @@ class TeleportCommand : BaseCommand() {
         @Optional arg4: String?,
         @Optional targets: TargetPlayers?
     ) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
         val playerSender = sender as? Player
 
         val firstTargets = targets ?: run {
@@ -47,16 +50,19 @@ class TeleportCommand : BaseCommand() {
                     return
                 }
                 val target = firstTargets.first()
-                playerSender.teleport(target.location)
-                Logger.log(sender, Perm.LOG, "teleported to ${target.name}", false)
-                sender.sendMessage("Teleported to ${target.name}.".blue())
+                val firstSuffix = chatService?.getPlayerSuffix(firstTargets.first())?.translate() ?: ""
+                playerSender.teleportAsync(target.location)
+                Logger.log(suffix, sender, Perm.LOG, "teleported to $firstSuffix${target.name}", false)
+                sender.sendMessage("Teleported to $firstSuffix${target.name}.".blue())
                 if (shouldLog) {
-                    LogsService.addLog(sender.uuidStr(), "Teleported to ${target.name}", LogType.TELEPORT)
+                    LogsService.addLog(sender.uuidStr(), "Teleported to $firstSuffix${target.name}", LogType.TELEPORT)
                 }
             }
 
             arg2 != null && arg3 == null -> {
                 val secondTarget = Bukkit.getPlayerExact(arg2)
+                val secondSuffix = chatService?.getPlayerSuffix(Bukkit.getPlayerExact(arg2))?.translate() ?: ""
+                val firstSuffix = chatService?.getPlayerSuffix(firstTargets.first())?.translate() ?: ""
                 if (secondTarget == null) {
                     sender.sendErrorMessage("The target player '${arg2}' is not online.")
                     return
@@ -67,10 +73,10 @@ class TeleportCommand : BaseCommand() {
                     return
                 }
 
-                firstTargets.forEach { it.teleport(secondTarget.location) }
+                firstTargets.forEach { it.teleportAsync(secondTarget.location) }
                 firstTargets.forEach {
-                    Logger.log(sender, Perm.LOG, "teleported ${it.name} to ${secondTarget.name}", false)
-                    sender.sendMessage("Teleported ${it.name} to ${secondTarget.name}.".blue())
+                    Logger.log(suffix, sender, Perm.LOG, "teleported $firstSuffix${it.name}&r to $secondSuffix${secondTarget.name}", false)
+                    sender.sendMessage("Teleported $firstSuffix${it.name}&r to $secondSuffix${secondTarget.name}.".blue())
                     if (shouldLog) {
                         LogsService.addLog(
                             sender.uuidStr(),
@@ -97,11 +103,12 @@ class TeleportCommand : BaseCommand() {
                     return
                 }
 
-                playerSender.teleport(loc)
+                playerSender.teleportAsync(loc)
                 Logger.log(
+                    suffix,
                     sender,
                     Perm.LOG,
-                    "teleported ${playerSender.name} to coordinates ${loc.x} ${loc.y} ${loc.z}",
+                    "teleported to coordinates ${loc.x} ${loc.y} ${loc.z}",
                     false
                 )
                 sender.sendMessage(
@@ -132,24 +139,24 @@ class TeleportCommand : BaseCommand() {
                     return
                 }
 
-                val targetsToTeleport = firstTargets
-
-                val loc = parseCoordinates(targetsToTeleport.first().location, arg2, arg3, arg4)
+                val loc = parseCoordinates(firstTargets.first().location, arg2, arg3, arg4)
                 if (loc == null) {
                     sender.sendErrorMessage("Invalid coordinates.")
                     return
                 }
 
-                targetsToTeleport.forEach { target ->
-                    target.teleport(loc)
+                firstTargets.forEach { target ->
+                    target.teleportAsync(loc)
+                    val targetSuffixes = chatService?.getPlayerSuffix(target)?.translate() ?: ""
                     Logger.log(
+                        suffix,
                         sender,
                         Perm.LOG,
-                        "teleported ${target.name} to coordinates ${loc.x} ${loc.y} ${loc.z}",
+                        "teleported $targetSuffixes${target.name}&r to coordinates ${loc.x} ${loc.y} ${loc.z}",
                         false
                     )
                     sender.sendMessage(
-                        "Teleported ${target.name} to &f${formatCoord(loc.x)} ${formatCoord(loc.y)} ${formatCoord(loc.z)}".blue()
+                        "Teleported $targetSuffixes${target.name} to &f${formatCoord(loc.x)} ${formatCoord(loc.y)} ${formatCoord(loc.z)}".blue()
                     )
                     if (shouldLog) {
                         LogsService.addLog(

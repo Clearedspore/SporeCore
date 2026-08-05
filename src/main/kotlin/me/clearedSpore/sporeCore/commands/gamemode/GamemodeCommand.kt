@@ -5,12 +5,16 @@ import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
+import net.kyori.adventure.sound.Sound
+import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -24,6 +28,7 @@ class GamemodeCommand : BaseCommand() {
     @Syntax("<gamemode> <player>")
     @CommandCompletion("@gamemodes @targets")
     fun onGamemode(sender: CommandSender, gamemode: String, @Optional targets: TargetPlayers?) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
 
         val mode = try {
             GameMode.valueOf(gamemode.uppercase())
@@ -40,9 +45,7 @@ class GamemodeCommand : BaseCommand() {
         }
 
         if (!sender.hasPermission(permission)) {
-            sender.sendMessage(
-                "You do not have permission to switch to ${mode.name.lowercase().capitalizeFirstLetter()}!".red()
-            )
+            sender.sendMessage("You do not have permission to switch to ${mode.name.lowercase().capitalizeFirstLetter()}!".red())
             return
         }
 
@@ -57,19 +60,22 @@ class GamemodeCommand : BaseCommand() {
             throw InvalidCommandArgument("No valid players.")
         }
 
+
         players.forEach { target ->
             target.gameMode = mode
             if (sender == target) {
-                Logger.log(sender, Perm.LOG, "changed their gamemode to ${mode.name.capitalizeFirstLetter()}", false)
+                Logger.log(suffix, sender, Perm.LOG, "changed their gamemode to ${mode.name.capitalizeFirstLetter()}", false)
             } else {
+                val targetSuffix = if (Bukkit.getOnlinePlayers().contains(target.player)) chatService?.getPlayerSuffix(target.player)?.translate() ?: "" else ""
                 Logger.log(
+                    suffix,
                     sender,
                     Perm.LOG,
-                    "changed ${target.name}’s gamemode to ${mode.name.capitalizeFirstLetter()}",
+                    "changed $targetSuffix${target.name}&r’s gamemode to ${mode.name.capitalizeFirstLetter()}",
                     false
                 )
+                sender.sendMessage("You updated ".blue() + targetSuffix + target.name + "’s gamemode to ${mode.name.capitalizeFirstLetter()}.".blue())
             }
-            sender.sendMessage("You updated ".blue() + target.name.white() + "’s gamemode to ${mode.name.capitalizeFirstLetter()}.".blue())
         }
     }
 }

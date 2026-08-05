@@ -136,7 +136,7 @@ class SporeCore : JavaPlugin() {
         totalCommands = 0
         instance = this
 
-        version = Version.DEV
+        version = Version.PUBLIC
 
         coreConfig = loadConfig()
         Logger.initialize(
@@ -400,7 +400,7 @@ class SporeCore : JavaPlugin() {
 
     fun logStartupBanner() {
         val pluginName = "SporeCore"
-        val author = "ClearedSpore"
+        val author = "ClearedSpore, kittyisdev"
         val serverType = Bukkit.getServer().name + " - " + Bukkit.getServer().version
 
         val features = mutableListOf<String>()
@@ -427,9 +427,9 @@ class SporeCore : JavaPlugin() {
             " |_____/ \\_____|".blue(),
             "",
             "§f$pluginName $formattedVersion",
-            "§fAuthor: $author",
+            "§fAuthor(s): $author",
             "§fServer: $serverType",
-            "§fFeatures: $featureLine",
+            "§fEnabled Features: $featureLine",
             ""
         )
 

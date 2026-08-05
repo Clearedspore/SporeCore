@@ -10,9 +10,11 @@ import co.aikar.commands.bukkit.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.menu.Menu
 import me.clearedSpore.sporeAPI.menu.item.Item
 import me.clearedSpore.sporeAPI.util.CC.blue
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
@@ -39,13 +41,14 @@ class UtilInventoryCommand : BaseCommand() {
     @CommandCompletion("@players")
     fun dropAll(sender: Player, @Name("target") targetObject: OnlinePlayer) {
         val target = targetObject.player
+        var suffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
 
         target.inventory.contents.forEach { item ->
             if (item != null && item.type != Material.AIR) target.world.dropItemNaturally(target.location, item)
         }
 
         InventoryManager.clearPlayerInventory(target)
-        sender.sendSuccessMessage("Dropped all items from ${target.name}'s inventory.")
+        sender.sendSuccessMessage("Dropped all items from $suffix${target.name}".translate() + "'s inventory.".blue())
     }
 
     @Subcommand("inventory giveall")
@@ -65,10 +68,11 @@ class UtilInventoryCommand : BaseCommand() {
     @CommandCompletion("@players")
     fun give(sender: Player, @Name("target") targetObject: OnlinePlayer) {
         val target = targetObject.player
+        var suffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
         val items = sender.inventory.contents.filterNotNull()
         target.inventory.addItem(*items.toTypedArray())
 
-        sender.sendSuccessMessage("Gave your inventory to ${target.name}.")
+        sender.sendSuccessMessage("Gave your inventory to $suffix${target.name}".translate() + ".".blue())
     }
 
     @Subcommand("inventory clearall")
@@ -151,7 +155,8 @@ class UtilInventoryCommand : BaseCommand() {
                     override fun onClickEvent(clicker: Player, clickType: ClickType) {
                         target.inventory.clear()
                         target.updateInventory()
-                        viewer.sendSuccessMessage("${target.name}'s inventory has been cleared.")
+                        var suffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
+                        viewer.sendSuccessMessage("$suffix${target.name}".translate() + "'s inventory has been cleared.".blue())
                     }
                 })
             }

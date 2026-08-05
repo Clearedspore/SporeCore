@@ -1,6 +1,7 @@
 package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
@@ -31,17 +32,18 @@ class DeathListener : Listener {
                 .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
                 .setUsername(player.name)
                 .addEmbed(embed)
-
-            try {
-                webhook.send()
-            } catch (ex: Exception) {
-                throw LoggedException(
-                    userMessage = "Failed to send message to Discord.",
-                    internalMessage = "Failed to send message to Discord",
-                    channel = LoggedException.Channel.GENERAL,
-                    developerOnly = false,
-                    cause = ex
-                ).also { it.log() }
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
             }
         }
     }
@@ -71,5 +73,4 @@ class DeathListener : Listener {
             kitService.giveKit(player, kitName)
         }
     }
-
 }

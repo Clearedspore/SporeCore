@@ -1,6 +1,7 @@
 package me.clearedSpore.sporeCore.menu.invrollback.preview.item
 
 import me.clearedSpore.sporeAPI.menu.item.Item
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.green
@@ -44,39 +45,41 @@ class SoftRollbackItem(
 
             val config = SporeCore.instance.coreConfig.discord
             if (config.rollback.isNotEmpty()) {
-                try {
+                Tasks.runAsync {
+                    try {
 
-                    val webhook = Webhook(config.rollback)
+                        val webhook = Webhook(config.rollback)
 
-                    if (config.rollbackPing.isNotEmpty()) {
-                        webhook.setMessage(config.rollbackPing)
+                        if (config.rollbackPing.isNotEmpty()) {
+                            webhook.setMessage(config.rollbackPing)
+                        }
+
+                        val embed = Webhook.Embed()
+                        embed.addField("Issuer", clicker.name)
+                        embed.addField("Player", target.name.toString())
+                        embed.addField("Claimed", "✖ No")
+                        embed.setThumbnail(DiscordService.getAvatarURL(target.uniqueId))
+
+
+                        webhook.setProfileURL(DiscordService.getAvatarURL(clicker.uniqueId))
+                        webhook.setUsername(clicker.name)
+                        webhook.addEmbed(embed)
+
+                        clicker.closeInventory()
+
+                        val messageId = webhook.send()
+                        if (messageId != null) {
+                            data.messageID = messageId
+                            InventoryManager.putCached(data)
+                        }
+
+                        data.rollbackIssuer = clicker.name
+
+                        clicker.sendMessage("Successfully rolled back ${target.name}'s inventory &7(Soft)".blue())
+                    } catch (e: Exception) {
+                        Logger.error("Failed to send discord message!")
+                        e.printStackTrace()
                     }
-
-                    val embed = Webhook.Embed()
-                    embed.addField("Issuer", clicker.name)
-                    embed.addField("Player", target.name.toString())
-                    embed.addField("Claimed", "✖ No")
-                    embed.setThumbnail(DiscordService.getAvatarURL(target.uniqueId))
-
-
-                    webhook.setProfileURL(DiscordService.getAvatarURL(clicker.uniqueId))
-                    webhook.setUsername(clicker.name)
-                    webhook.addEmbed(embed)
-
-                    clicker.closeInventory()
-
-                    val messageId = webhook.send()
-                    if (messageId != null) {
-                        data.messageID = messageId
-                        InventoryManager.putCached(data)
-                    }
-
-                    data.rollbackIssuer = clicker.name
-
-                    clicker.sendMessage("Successfully rolled back ${target.name}'s inventory &7(Soft)".blue())
-                } catch (e: Exception) {
-                    Logger.error("Failed to send discord message!")
-                    e.printStackTrace()
                 }
             }
         }.open(clicker)

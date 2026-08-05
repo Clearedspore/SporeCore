@@ -5,15 +5,18 @@ import co.aikar.commands.annotation.*
 import co.aikar.commands.bukkit.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.mode.`object`.Mode
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
+import org.bukkit.entity.Player
 
 @CommandAlias("%modealias")
 @CommandPermission(Perm.MODE_ALLOW)
@@ -23,6 +26,7 @@ class CustomModeCommand(
 
     @Default
     fun onModeToggle(sender: CommandSender, @Optional @Name("target") target: OnlinePlayer?) {
+        var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
         if (target == null && sender is ConsoleCommandSender) {
             sender.sendMessage("Console must provide a target!")
             return
@@ -51,7 +55,7 @@ class CustomModeCommand(
 
             service.toggleMode(player, mode.id)
             sender.sendMessage("$status ${mode.name} mode".blue())
-            Logger.log(sender, Perm.LOG, "$status ${mode.name}", false)
+            Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name}", false)
         } else {
 
             if (!sender.hasPermission(Perm.MODE_OTHERS) && !sender.hasPermission(mode.permission)) {
@@ -64,7 +68,7 @@ class CustomModeCommand(
 
             service.toggleMode(target.player, mode.id)
             sender.sendMessage("$status ${mode.name} mode for ${target.player.name}".blue())
-            Logger.log(sender, Perm.LOG, "$status ${mode.name} mode for ${target.player.name}", false)
+            Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name} mode for ${target.player.name}", false)
         }
     }
 }

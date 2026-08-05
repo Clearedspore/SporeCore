@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
 import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
 import me.clearedSpore.sporeCore.util.Perm
@@ -44,11 +45,11 @@ class PlayerTimeCommand : BaseCommand() {
             sender.sendMessage("Your personal time has been set to ${type.toString().capitalizeFirstLetter()}".blue())
         } else {
             sender.sendMessage(
-                "You have set ${target.name}'s personal time to ${
+                "You have set &f${target.name}".blue() + "'s personal time to &f${
                     type.toString().capitalizeFirstLetter()
                 }".blue()
             )
-            target.sendMessage("Your personal time has been set to ${type.toString().capitalizeFirstLetter()}".blue())
+            target.sendMessage("Your personal time has been set to &f${type.toString().capitalizeFirstLetter()}".blue())
         }
     }
 
