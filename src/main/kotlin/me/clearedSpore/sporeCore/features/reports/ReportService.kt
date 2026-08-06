@@ -243,7 +243,7 @@ object ReportService {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 0) { cleanupReports() }
+        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 1.hours.toTicks()) { cleanupReports() }
     }
 
     fun stopCleanupTask() {
