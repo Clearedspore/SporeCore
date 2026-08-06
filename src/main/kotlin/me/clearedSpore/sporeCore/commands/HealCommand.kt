@@ -50,7 +50,7 @@ class HealCommand : SporeCommand() {
 
         if (count == 1) {
             val name = (healables.first() as? Player)?.name ?: healables.first().type.name.lowercase()
-            val targetSuffix = chatService?.getPlayerSuffix(healables.first() as? Player)?.translate()
+            val targetSuffix = chatService?.getPlayerSuffix(healables.first() as? Player)?.translate() ?: ""
             sender.sendMessage("You healed $targetSuffix$name&r&#1D91FF.".blue())
             Logger.log(suffix, sender, Perm.LOG, "healed $targetSuffix$name", false)
         } else {
