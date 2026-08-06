@@ -1,7 +1,7 @@
 package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.event.PlayerPreLogEvent
-import me.clearedSpore.sporeCore.annotations.AutoListener
+import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.setting.impl.LogsSetting
 import me.clearedSpore.sporeCore.user.UserManager
@@ -10,7 +10,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 
-@AutoListener
+@RegisterListener
 class LoggerEvent : Listener {
 
     @EventHandler

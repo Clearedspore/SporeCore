@@ -10,7 +10,7 @@ import me.clearedSpore.sporeCore.features.reports.ReportService
 import me.clearedSpore.sporeCore.features.reports.`object`.Report
 import me.clearedSpore.sporeCore.features.reports.`object`.ReportAction
 import me.clearedSpore.sporeCore.features.reports.`object`.ReportStatus
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

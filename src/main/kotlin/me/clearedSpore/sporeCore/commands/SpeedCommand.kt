@@ -1,13 +1,13 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
@@ -15,8 +15,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("speed")
 @CommandPermission(Perm.SPEED)
-@SporeCoreCommand
-class SpeedCommand : BaseCommand() {
+@RegisterCommand
+class SpeedCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@range:1-10 @players")

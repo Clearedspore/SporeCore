@@ -18,7 +18,7 @@ import me.clearedSpore.sporeCore.features.setting.impl.ConfirmTpaSetting
 import me.clearedSpore.sporeCore.features.setting.impl.TeleportRequestSettings
 import me.clearedSpore.sporeCore.menu.util.confirm.TPAConfirmMenu
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ActionBar.actionBar
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import me.clearedSpore.sporeCore.util.TeleportService.awaitTeleport
 import org.bukkit.entity.Player
 

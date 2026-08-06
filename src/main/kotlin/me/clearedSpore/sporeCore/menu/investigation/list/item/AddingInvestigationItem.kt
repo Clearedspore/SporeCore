@@ -9,7 +9,7 @@ import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.investigation.IGService
 import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
 import me.clearedSpore.sporeCore.menu.investigation.manage.ManageIGMenu
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

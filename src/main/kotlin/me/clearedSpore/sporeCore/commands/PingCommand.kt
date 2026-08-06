@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import co.aikar.commands.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.util.CC.blue
@@ -9,15 +9,15 @@ import me.clearedSpore.sporeAPI.util.CC.orange
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 
 @CommandAlias("ping")
 @CommandPermission(Perm.PING)
-@SporeCoreCommand
-class PingCommand : BaseCommand() {
+@RegisterCommand
+class PingCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@players")

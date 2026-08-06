@@ -37,7 +37,7 @@ dependencies {
         exclude(group = "org.yaml", module = "snakeyaml")
     }
     implementation("com.github.Exlll.ConfigLib:configlib-yaml:v4.6.1")
-    implementation(files("libs/SporeAPI.jar"))
+    implementation("com.github.Clearedspore:SporeAPI:6.9")
     compileOnly("org.dizitart:nitrite:4.3.2")
     compileOnly(platform("org.dizitart:nitrite-bom:4.3.2"))
     compileOnly("org.dizitart:nitrite-mvstore-adapter:4.3.2")

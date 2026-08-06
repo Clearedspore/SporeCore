@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.CommandHelp
 import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
@@ -23,7 +23,7 @@ import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.CoreConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
@@ -54,8 +54,8 @@ import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
 
 @CommandAlias("sporecore|core")
-@SporeCoreCommand
-class CoreCommand : BaseCommand() {
+@RegisterCommand
+class CoreCommand : SporeCommand() {
 
     private val startTime = System.currentTimeMillis()
 

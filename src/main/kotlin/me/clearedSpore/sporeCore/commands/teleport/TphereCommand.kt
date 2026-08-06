@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.teleport
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.CommandPermission
@@ -11,7 +11,7 @@ import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
@@ -20,8 +20,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("tphere|teleporthere|bring")
 @CommandPermission(Perm.TELEPORT_OTHERS)
-@SporeCoreCommand
-class TphereCommand : BaseCommand() {
+@RegisterCommand
+class TphereCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@players")

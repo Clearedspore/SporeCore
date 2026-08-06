@@ -16,7 +16,7 @@ import me.clearedSpore.sporeCore.features.reports.`object`.ReportStatus
 import me.clearedSpore.sporeCore.menu.investigation.manage.report.LinkedReportMenu
 import me.clearedSpore.sporeCore.menu.reports.list.ReportListMenu
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Material
 import org.bukkit.entity.Player

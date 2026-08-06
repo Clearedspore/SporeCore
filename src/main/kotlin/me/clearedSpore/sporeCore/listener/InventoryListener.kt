@@ -2,7 +2,6 @@ package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.AutoListener
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener

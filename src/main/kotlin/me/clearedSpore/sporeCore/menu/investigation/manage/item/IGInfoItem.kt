@@ -7,7 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.features.investigation.IGService
 import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.button.TextButton
 import org.bukkit.Material
 import org.bukkit.entity.Player

@@ -2,7 +2,7 @@ package me.clearedSpore.sporeCore.listener
 
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.AutoListener
+import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -15,7 +15,7 @@ import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
 
-@AutoListener
+@RegisterListener
 class FreezeListener : Listener {
 
     @EventHandler

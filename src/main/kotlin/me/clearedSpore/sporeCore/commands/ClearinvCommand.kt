@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
@@ -9,15 +9,15 @@ import co.aikar.commands.annotation.Optional
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
 @CommandAlias("clearinv|clearinventory|ci|clear")
-@SporeCoreCommand
-class ClearinvCommand : BaseCommand() {
+@RegisterCommand
+class ClearinvCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@targets")

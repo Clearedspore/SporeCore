@@ -2,15 +2,12 @@ package me.clearedSpore.sporeCore.acf.extension
 
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.PaperCommandManager
-import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.investigation.`object`.enum.InvestigationPriority
 
 object ACFExtension {
 
     inline fun <reified T : Enum<T>> PaperCommandManager.registerEnum() {
-        val cmdManager = SporeCore.instance.commandManager
-
-        cmdManager.getCommandContexts().registerContext(T::class.java) { context ->
+        commandContexts.registerContext(T::class.java) { context ->
             val input = context.popFirstArg()
             try {
                 enumValueOf<T>(input)
@@ -24,9 +21,7 @@ object ACFExtension {
         clazz: Class<T>,
         resolver: (String) -> T?
     ) {
-        val cmdManager = SporeCore.instance.commandManager
-
-        cmdManager.getCommandContexts().registerContext(clazz) { context ->
+        commandContexts.registerContext(clazz) { context ->
             val input = context.popFirstArg()
             resolver(input) ?: throw InvalidCommandArgument("Value not found: $input", false)
         }

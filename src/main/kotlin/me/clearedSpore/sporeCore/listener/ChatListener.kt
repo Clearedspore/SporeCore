@@ -11,7 +11,7 @@ import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.AutoListener
+import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
@@ -29,7 +29,7 @@ import me.clearedSpore.sporeCore.features.setting.impl.MentionOption
 import me.clearedSpore.sporeCore.features.setting.impl.MentionTitleSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ActionBar.actionBar
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.noTranslate
 import me.clip.placeholderapi.PlaceholderAPI
@@ -41,7 +41,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.AsyncPlayerChatEvent
 
-@AutoListener
+@RegisterListener
 class ChatListener : Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)

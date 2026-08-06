@@ -7,7 +7,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.hook.WGUtil
-import me.clearedSpore.sporeCore.util.ActionBar.actionBar
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Sound

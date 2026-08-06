@@ -11,7 +11,7 @@ import me.clearedSpore.sporeCore.extension.PlayerExtension.toPlayerName
 import me.clearedSpore.sporeCore.features.message.Message
 import me.clearedSpore.sporeCore.menu.user.messages.MessagesMenu
 import me.clearedSpore.sporeCore.user.User
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.wrapWithColors
 import org.bukkit.Material

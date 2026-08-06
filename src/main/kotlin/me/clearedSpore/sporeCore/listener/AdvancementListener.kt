@@ -3,7 +3,7 @@ package me.clearedSpore.sporeCore.listener
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.AutoListener
+import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.event.EventHandler
@@ -11,7 +11,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerAdvancementDoneEvent
 
 
-//@AutoListener
+//@RegisterListener
 class AdvancementListener : Listener {
 
 

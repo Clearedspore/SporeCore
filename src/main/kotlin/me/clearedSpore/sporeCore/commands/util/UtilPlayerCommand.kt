@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.util
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import co.aikar.commands.bukkit.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.util.CC.blue
@@ -11,7 +11,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.vanish.VanishService
@@ -29,8 +29,8 @@ import org.bukkit.inventory.meta.SkullMeta
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
-@SporeCoreCommand
-class UtilPlayerCommand : BaseCommand() {
+@RegisterCommand
+class UtilPlayerCommand : SporeCommand() {
 
     @Subcommand("player uuid")
     @CommandPermission(Perm.UTIL_PLAYER)

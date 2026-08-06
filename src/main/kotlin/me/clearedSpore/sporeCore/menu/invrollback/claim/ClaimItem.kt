@@ -13,7 +13,7 @@ import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

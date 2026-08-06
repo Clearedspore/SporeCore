@@ -17,7 +17,7 @@ import me.clearedSpore.sporeCore.menu.investigation.list.InvestigationListMenu
 import me.clearedSpore.sporeCore.menu.punishment.history.HistoryMenu
 import me.clearedSpore.sporeCore.menu.reports.list.ReportListMenu
 import me.clearedSpore.sporeCore.menu.reports.list.resolve.ResolveMenu
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.button.TextButton
 import org.bukkit.Bukkit

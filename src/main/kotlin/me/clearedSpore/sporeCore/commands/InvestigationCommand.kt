@@ -17,7 +17,6 @@ import me.clearedSpore.sporeCore.features.investigation.IGService.igCollection
 import me.clearedSpore.sporeCore.features.investigation.`object`.enum.InvestigationPriority
 import me.clearedSpore.sporeCore.menu.investigation.list.InvestigationListMenu
 import me.clearedSpore.sporeCore.menu.investigation.manage.ManageIGMenu
-import me.clearedSpore.sporeCore.util.ChatInput
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 import org.dizitart.no2.filters.FluentFilter.where

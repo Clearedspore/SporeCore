@@ -1,12 +1,12 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.StringUtil.capitalizeFirstLetter
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
@@ -16,8 +16,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("pweather")
 @CommandPermission(Perm.PWEATHER)
-@SporeCoreCommand
-class PlayerWeatherCommand : BaseCommand() {
+@RegisterCommand
+class PlayerWeatherCommand : SporeCommand() {
 
     @Default
     @CommandCompletion(" @players")

@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.gamemode
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
@@ -8,7 +8,7 @@ import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
 import net.kyori.adventure.sound.Sound
@@ -18,8 +18,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("creative|gmc")
 @CommandPermission(Perm.CREATIVE)
-@SporeCoreCommand
-class CreativeCommand : BaseCommand() {
+@RegisterCommand
+class CreativeCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@targets")

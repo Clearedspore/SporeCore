@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.util
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.CommandPermission
@@ -13,7 +13,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.util.Perm
@@ -25,8 +25,8 @@ import org.bukkit.inventory.ItemStack
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_INVENTORY)
-@SporeCoreCommand
-class UtilInventoryCommand : BaseCommand() {
+@RegisterCommand
+class UtilInventoryCommand : SporeCommand() {
 
     @Subcommand("inventory view")
     @CommandPermission(Perm.UTIL_INVENTORY_VIEW)

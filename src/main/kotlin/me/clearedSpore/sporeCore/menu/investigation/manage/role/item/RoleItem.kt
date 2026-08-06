@@ -13,7 +13,7 @@ import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
 import me.clearedSpore.sporeCore.features.investigation.`object`.enum.IGLogType
 import me.clearedSpore.sporeCore.menu.investigation.manage.role.RoleManageMenu
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Material
 import org.bukkit.entity.Player
