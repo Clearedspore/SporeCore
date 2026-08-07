@@ -8,7 +8,6 @@ import me.clearedSpore.sporeAPI.util.Logger
 
 import me.clearedSpore.sporeCore.SporeCore
 import org.bukkit.Bukkit
-import org.json.JSONArray
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
