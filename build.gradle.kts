@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "me.clearedSpore"
-version = "2.8.3"
+version = "2.8.3.1"
 
 repositories {
     mavenCentral()
