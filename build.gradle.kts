@@ -8,13 +8,14 @@ plugins {
 }
 
 group = "me.clearedSpore"
-version = "2.8.3.1"
+version = "2.8.3.2"
 
 repositories {
     mavenCentral()
     maven("https://repo.aikar.co/content/groups/aikar/")
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
+    maven("https://repo.sporedev.eu/#/releases/eu/sporedev")
     maven("https://repo.gravemc.net/releases/")
     maven("https://maven.enginehub.org/repo/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
@@ -47,7 +48,7 @@ dependencies {
 
     compileOnly("com.github.ben-manes.caffeine:caffeine:3.2.3")
 
-    compileOnly("net.dv8tion:JDA:6.1.2")
+    compileOnly("net.dv8tion:JDA:6.5.0")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
     compileOnly("net.luckperms:api:5.4")

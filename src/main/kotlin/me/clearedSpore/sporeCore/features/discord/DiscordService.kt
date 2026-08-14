@@ -1,14 +1,21 @@
 package me.clearedSpore.sporeCore.features.discord
 
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.command.DiscordLinkCommand
 import me.clearedSpore.sporeCore.features.discord.`object`.DiscordCommand
+import me.clearedSpore.sporeCore.user.UserManager
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
+import net.dv8tion.jda.api.requests.GatewayIntent
+import org.bukkit.Bukkit
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -56,6 +63,7 @@ object DiscordService : ListenerAdapter() {
                 slash
             }
         ).queue()
+        JDABuilder.createDefault(token).enableIntents(GatewayIntent.MESSAGE_CONTENT)
 
         Logger.info("[Discord] Bot started successfully.")
     }
@@ -92,6 +100,15 @@ object DiscordService : ListenerAdapter() {
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         val cmd = commands[event.name.lowercase()] ?: return
         cmd.execute(event)
+    }
+
+    override fun onMessageReceived(event: MessageReceivedEvent) {
+        val config = SporeCore.instance.coreConfig.discord
+        if (config.chatID.isEmpty()) return
+        if (event.channel.id != config.chatID) return
+        if (event.author.isBot) return
+
+        Bukkit.getLogger().warning("[Discord] DEBUG: \nAuthor: ${event.author.name}\nMessage: ${event.message.contentRaw}\nChannel: ${event.channel.id}")
     }
 
     fun hasCode(player: UUID): Boolean {

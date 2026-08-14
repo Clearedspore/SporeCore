@@ -123,6 +123,12 @@ data class DiscordConfig(
         "If you don't want this feature leave it empty"
     )
     var chat: String = "",
+    @Comment(
+        "When a user sends a message in chat via Discord",
+        "you can make it send in-game.",
+        "If you don't want this feature leave it empty"
+    )
+    var chatID: String = "",
 
     @Comment(
         "Do you want it to send death messages to discord?"
