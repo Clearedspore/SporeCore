@@ -10,7 +10,6 @@ data class Mode(
     var commands: List<String> = emptyList(),
     var permission: String = "",
     var gamemode: String = "SURVIVAL",
-    var invulnerable: Boolean = false,
     var pvp: Boolean = false,
     var vanish: Boolean = false,
     var blockBreak: Boolean = false,

@@ -2,14 +2,23 @@ package me.clearedSpore.sporeCore.features.mode
 
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
+import me.clearedSpore.sporeAPI.Extension.uuid
+import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.mode.config.ModeConfig
 import me.clearedSpore.sporeCore.features.mode.item.ModeItemManager
 import me.clearedSpore.sporeCore.features.mode.`object`.Mode
 import me.clearedSpore.sporeCore.features.mode.`object`.ModeData
+import me.clearedSpore.sporeCore.features.setting.impl.VanishOnMMLeaveSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
+import me.clearedSpore.sporeCore.user.UserManager
+import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.entity.Player
@@ -48,7 +57,7 @@ object ModeService {
         if (activeModes.containsKey(player)) return
 
         val invData = if (mode.clearInv) {
-            InventoryManager.addPlayerInventory(player, "Staffmode join")
+            InventoryManager.addPlayerInventory(player, "Staff Mode Join")
         } else null
 
         if (mode.clearInv) {
@@ -57,21 +66,21 @@ object ModeService {
 
         activeModes[player] = mode
 
-        applyModeSettings(player, mode.copy(clearInv = false))
+        applyModeSettings(player, mode.copy(clearInv = false), false)
     }
 
 
     fun setMode(player: Player, enabled: Boolean, id: String? = null) {
         if (enabled) {
             val current = activeModes[player]!!
-            removeModeSettings(player, current)
+            removeModeSettings(player, current, false)
             activeModes.remove(player)
             activeModeData.remove(player)
         } else {
             val selectedMode = if (id != null) getModeById(id) ?: return else getHighestMode(player)
                 ?: return
             activeModes[player] = selectedMode
-            applyModeSettings(player, selectedMode)
+            applyModeSettings(player, selectedMode, false)
         }
     }
 
@@ -109,33 +118,34 @@ object ModeService {
     fun isInMode(player: Player) = activeModes.containsKey(player)
 
 
-    fun toggleMode(player: Player, id: String? = null): Mode? {
+    fun toggleMode(player: Player, id: String? = null, playerIssued: Boolean): Mode? {
         val selectedMode = if (id != null) getModeById(id) ?: return null else getHighestMode(player)
             ?: return null
 
         val current = activeModes[player]
 
         if (current != null && current.id.equals(selectedMode.id, true)) {
-            removeModeSettings(player, current)
+            removeModeSettings(player, current, playerIssued)
             activeModes.remove(player)
             activeModeData.remove(player)
             return null
         }
 
         if (current != null && current != selectedMode) {
-            removeModeSettings(player, current)
+            removeModeSettings(player, current, playerIssued)
             activeModes.remove(player)
             activeModeData.remove(player)
         }
 
         activeModes[player] = selectedMode
-        applyModeSettings(player, selectedMode)
+        applyModeSettings(player, selectedMode, playerIssued)
 
         return selectedMode
     }
 
 
-    private fun removeModeSettings(player: Player, mode: Mode) {
+    private fun removeModeSettings(player: Player, mode: Mode, playerIssued: Boolean) {
+        val user = UserManager.getIfLoaded(player.uniqueId) ?: return
         try {
             mode.disableCommands?.forEach { cmd ->
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.name))
@@ -149,7 +159,37 @@ object ModeService {
                 }
             }
 
-            if (mode.vanish) VanishService.unVanish(player.uniqueId)
+            if (mode.vanish && !user.getSettingOrDefault(VanishOnMMLeaveSetting()) && playerIssued) {
+                VanishService.unVanish(player.uniqueId)
+                Bukkit.broadcastMessage(
+                    SporeCore.instance.coreConfig.joinLeaveMessages.join
+                        .translate()
+                        .parsePlaceholders(player))
+                if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty()) {
+                    val embed = Webhook.Embed()
+                        .setColor(0x00FF00)
+                        .setDescription("**${player.name} joined the server**")
+
+                    val webhook = Webhook(SporeCore.instance.coreConfig.discord.chat)
+                        .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                        .setUsername(player.name)
+                        .addEmbed(embed)
+
+                    Tasks.runAsync {
+                        try {
+                            webhook.send()
+                        } catch (ex: Exception) {
+                            throw LoggedException(
+                                userMessage = "Failed to send message to Discord.",
+                                internalMessage = "Failed to send message to Discord",
+                                channel = LoggedException.Channel.GENERAL,
+                                developerOnly = false,
+                                cause = ex
+                            ).also { it.log() }
+                        }
+                    }
+                }
+            }
 
             data?.let {
                 player.gameMode = it.previousGamemode
@@ -177,12 +217,13 @@ object ModeService {
         }
     }
 
-    fun applyModeSettings(player: Player, mode: Mode) {
+    fun applyModeSettings(player: Player, mode: Mode, playerIssued: Boolean) {
         try {
             val previousGamemode = player.gameMode
             val previousLocation = player.location
             val previousFlight = player.allowFlight
             val previousInvulnerable = player.isInvulnerable
+            val isVanished = VanishService.isVanished(player.uniqueId)
 
             var inventoryId: String? = null
 
@@ -208,12 +249,8 @@ object ModeService {
             }
 
             val gamemode = GameMode.valueOf(mode.gamemode.uppercase())
-            if (gamemode == null) {
-                Logger.error("Failed to apply gamemode!")
-            } else {
-                player.gameMode = gamemode
-            }
-            player.isInvulnerable = mode.invulnerable
+            player.isInvulnerable = true
+            player.gameMode = gamemode
             player.allowFlight = mode.flight
             player.isFlying = mode.flight
             player.foodLevel = 20
@@ -223,7 +260,40 @@ object ModeService {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.name))
             }
 
-            if (mode.vanish) VanishService.vanish(player.uniqueId)
+            if (mode.vanish && !isVanished && playerIssued) {
+                VanishService.vanish(player.uniqueId)
+                Bukkit.broadcastMessage(
+                    SporeCore.instance.coreConfig.joinLeaveMessages.leave
+                        .translate()
+                        .parsePlaceholders(player))
+
+                if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty()) {
+                    val embed = Webhook.Embed()
+                        .setColor(0xFF0000)
+                        .setDescription("**${player.name} left the server**")
+
+                    val webhook = Webhook(SporeCore.instance.coreConfig.discord.chat)
+                        .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                        .setUsername(player.name)
+                        .addEmbed(embed)
+
+                    Tasks.runAsync {
+                        try {
+                            webhook.send()
+                        } catch (ex: Exception) {
+                            throw LoggedException(
+                                userMessage = "Failed to send message to Discord.",
+                                internalMessage = "Failed to send message to Discord",
+                                channel = LoggedException.Channel.GENERAL,
+                                developerOnly = false,
+                                cause = ex
+                            ).also { it.log() }
+                        }
+                    }
+                }
+            } else if (mode.vanish && !playerIssued) {
+                VanishService.vanish(player.uniqueId)
+            }
 
             activeModeData[player] = ModeData(
                 mode = mode,
@@ -253,7 +323,6 @@ object ModeService {
         }
 
         player.gameMode = GameMode.valueOf(mode.gamemode.uppercase())
-        player.isInvulnerable = mode.invulnerable
         player.allowFlight = mode.flight
         player.isFlying = mode.flight
         player.foodLevel = 20

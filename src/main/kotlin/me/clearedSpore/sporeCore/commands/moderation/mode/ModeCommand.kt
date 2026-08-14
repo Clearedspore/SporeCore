@@ -49,10 +49,10 @@ class ModeCommand : BaseCommand() {
             }
 
             val enabled = service.isInMode(player)
-            val status = if (enabled == true) "Disabled" else "Enabled"
+            val status = if (enabled) "Disabled" else "Enabled"
 
 
-            service.toggleMode(player, highest.id)
+            service.toggleMode(player, highest.id, true)
             player.sendMessage("$status ${highest.name} mode".blue())
             Logger.log(suffix, sender, Perm.LOG, "$status ${highest.name} mode", false)
             return
@@ -78,9 +78,9 @@ class ModeCommand : BaseCommand() {
             }
 
             val enabled = service.isInMode(player)
-            val status = if (enabled == true) "Disabled" else "Enabled"
+            val status = if (enabled) "Disabled" else "Enabled"
 
-            service.toggleMode(player, mode.id)
+            service.toggleMode(player, mode.id, true)
             player.sendMessage("$status ${mode.name} mode".blue())
             Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name}", false)
             return
@@ -100,9 +100,9 @@ class ModeCommand : BaseCommand() {
             }
 
             val enabled = service.isInMode(target.player)
-            val status = if (enabled == true) "Disabled" else "Enabled"
+            val status = if (enabled) "Disabled" else "Enabled"
 
-            service.toggleMode(target.player, mode.id)
+            service.toggleMode(target.player, mode.id, false)
             sender.sendMessage("$status ${mode.name} mode for ${target.player.name}".blue())
             Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name} mode for ${target.player.name}", false)
             return

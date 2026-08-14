@@ -265,7 +265,7 @@ class UserListener : Listener {
             player.hasPermission(Perm.MODE_ALLOW)
         ) {
             val mode = ModeService.getHighestMode(player) ?: return
-            ModeService.toggleMode(player, mode.id)
+            ModeService.toggleMode(player, mode.id, playerIssued = false)
             player.sendMessage("Enabled ${mode.name} mode".blue())
         }
 
@@ -362,7 +362,7 @@ class UserListener : Listener {
             Logger.log(suffix, player, Perm.LOG, "&rleft the game silently", false)
             event.quitMessage = null
             wasVanished = true
-            ModeService.toggleMode(player)
+            ModeService.toggleMode(player, playerIssued = false)
             VanishService.vanishedPlayers.remove(player.uniqueId)
             player.isSleepingIgnored = false
         } else if (features.vanish && VanishService.vanishedPlayers.contains(player.uniqueId)) {
