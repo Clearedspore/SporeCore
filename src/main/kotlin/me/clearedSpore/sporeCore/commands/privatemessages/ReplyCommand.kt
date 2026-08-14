@@ -67,7 +67,7 @@ class ReplyCommand : BaseCommand() {
         PMService.setLastSender(player, target)
 
         Cooldown.addCooldown("msg_cooldown", player.uniqueId)
-        player.sendMessage("You » $suffix${target.name}&r&#1D91FF: &f".blue() + message.noTranslate())
+        player.sendMessage("You » $targetSuffix${target.name}&r&#1D91FF: &f".blue() + message.noTranslate())
         player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f)
 
         target.sendMessage("$suffix${player.name}&r&#1D91FF » You: &f".blue() + message.noTranslate())
