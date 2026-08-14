@@ -242,7 +242,7 @@ class CoreCommand : SporeCommand() {
         }
 
         field.isAccessible = true
-        val value = field.get(user)
+        val value = field.get(user) ?: "null"
         sender.sendMessage("Value of '$fieldName' for ${target.name}: ".blue() + value.toString().green())
     }
 
