@@ -133,12 +133,12 @@ data class DiscordConfig(
     @Comment(
         "Do you want it to send death messages to discord?"
     )
-    var deathMessages: Boolean = true,
-
-    @Comment(
-        "Do you want it to send a message when someone achieves an advancement?"
-    )
-    var advancements: Boolean = true,
+    var deathMessages: Boolean = true
+//
+//    @Comment(
+//        "Do you want it to send a message when someone achieves an advancement?"
+//    )
+//    var advancements: Boolean = false,
 )
 
 @Configuration
