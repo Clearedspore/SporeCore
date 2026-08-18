@@ -7,6 +7,8 @@ import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.command.DiscordLinkCommand
 import me.clearedSpore.sporeCore.features.discord.`object`.DiscordCommand
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -120,7 +122,9 @@ object DiscordService : ListenerAdapter() {
 
             Tasks.runAsync { Bukkit.broadcast(Component.text(format.translate())) }
         } else {
-            event.message.reply("An error occurred while attempting to send this message. \n-# <@827589337142919199>").queue()
+            val guild = event.guild
+            val discordOwner = guild.owner?.id
+            event.message.reply("An error occurred while attempting to send this message. \n-# <@${discordOwner}>").queue()
             Bukkit.getLogger().severe("[Discord] The 'discordFormat' variable was found empty, please check the 'config.yml' file!")
         }
 
