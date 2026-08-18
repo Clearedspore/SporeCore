@@ -131,6 +131,16 @@ data class DiscordConfig(
     var chatID: String = "",
 
     @Comment(
+        "Customize how messages sent ",
+        "from Discord appear in-game",
+        "Placeholders:",
+        "%channel% -> The name of the channel the message was sent in",
+        "%author% -> The name of the author who sent the message",
+        "%message% -> The sent message's content"
+    )
+    var discordFormat: String = "&f[&#5865F2&lDiscord&r&f] &f%author% &r&8» &f%message%",
+
+    @Comment(
         "Do you want it to send death messages to discord?"
     )
     var deathMessages: Boolean = true

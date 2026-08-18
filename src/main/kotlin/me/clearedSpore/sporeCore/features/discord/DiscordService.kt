@@ -1,20 +1,19 @@
 package me.clearedSpore.sporeCore.features.discord
 
 import me.clearedSpore.sporeAPI.task.Tasks
+import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.command.DiscordLinkCommand
 import me.clearedSpore.sporeCore.features.discord.`object`.DiscordCommand
-import me.clearedSpore.sporeCore.user.UserManager
-import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -45,8 +44,13 @@ object DiscordService : ListenerAdapter() {
 
         registerCommands()
 
-        val jda = JDABuilder.createDefault(token)
-            .addEventListeners(this)
+        val jda = JDABuilder.create(
+            token,
+            GatewayIntent.GUILD_PRESENCES,
+            GatewayIntent.GUILD_MEMBERS,
+            GatewayIntent.MESSAGE_CONTENT,
+            GatewayIntent.GUILD_MESSAGES
+        ).addEventListeners(this)
             .build()
 
         jda.updateCommands().addCommands(
@@ -63,7 +67,6 @@ object DiscordService : ListenerAdapter() {
                 slash
             }
         ).queue()
-        JDABuilder.createDefault(token).enableIntents(GatewayIntent.MESSAGE_CONTENT)
 
         Logger.info("[Discord] Bot started successfully.")
     }
@@ -104,11 +107,24 @@ object DiscordService : ListenerAdapter() {
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val config = SporeCore.instance.coreConfig.discord
-        if (config.chatID.isEmpty()) return
-        if (event.channel.id != config.chatID) return
+        if (config.chatID.isNotEmpty() && event.channel.id != config.chatID) return
         if (event.author.isBot) return
 
-        Bukkit.getLogger().warning("[Discord] DEBUG: \nAuthor: ${event.author.name}\nMessage: ${event.message.contentRaw}\nChannel: ${event.channel.id}")
+        val message = event.message.contentRaw.replace(Regex("[§&][0-9a-fk-or]"), "").trim()
+
+        if (config.discordFormat.isNotEmpty()) {
+            val format = config.discordFormat
+                .replace("%channel%", event.channel.name)
+                .replace("%author%", event.author.name)
+                .replace("%message%", message)
+
+            Tasks.runAsync { Bukkit.broadcast(Component.text(format.translate())) }
+        } else {
+            event.message.reply("An error occurred while attempting to send this message. \n-# <@827589337142919199>").queue()
+            Bukkit.getLogger().severe("[Discord] The 'discordFormat' variable was found empty, please check the 'config.yml' file!")
+        }
+
+//        Bukkit.getLogger().warning("[Discord] DEBUG: \nAuthor: ${event.author.name}\nMessage: ${event.message.contentRaw}\nChannel: ${event.channel.id}")
     }
 
     fun hasCode(player: UUID): Boolean {
