@@ -58,6 +58,7 @@ data class User(
     var chatFormat: ChatFormat? = null,
     var punishments: MutableList<Punishment> = mutableListOf(),
     var lastIp: String? = null,
+    var isIPBanExempt: Boolean,
     var ipHistory: MutableList<String> = mutableListOf(),
     var channel: String? = null,
     var staffStats: MutableList<StaffPunishmentStats> = mutableListOf(),
@@ -99,6 +100,7 @@ data class User(
         .put("chatFormat", chatFormat?.toDocument())
         .putDocuments("punishments", punishments.map { it.toDocument() })
         .putString("lastIp", lastIp ?: "")
+        .putBoolean("isIPBanExempt", isIPBanExempt)
         .putList("ipHistory", ipHistory)
         .put("channel", channel)
         .putDocuments("staffStats", staffStats.map { it.toDocument() })
@@ -177,6 +179,7 @@ data class User(
                     Punishment.fromDocument(punDoc)
                 }.toMutableList(),
                 lastIp = doc.string("lastIp"),
+                isIPBanExempt = doc.boolean("isIPBanExempt"),
                 ipHistory = doc.list("ipHistory").filterIsInstance<String>().toMutableList(),
                 channel = doc.string("channel"),
                 staffStats = doc.documents("staffStats").mapNotNull { StaffPunishmentStats.fromDocument(it) }
@@ -196,7 +199,8 @@ data class User(
             val user = User(
                 uuidStr = uuid.toString(),
                 playerName = name,
-                hasJoinedBefore = true
+                hasJoinedBefore = true,
+                isIPBanExempt = false
             )
             collection.insert(user.toDocument())
             Logger.infoDB("Created new user $name ($uuid)")

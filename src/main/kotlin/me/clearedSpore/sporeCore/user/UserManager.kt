@@ -78,7 +78,8 @@ object UserManager {
     fun getConsoleUser(): User {
         return users[consoleUUID] ?: User(
             uuidStr = consoleUUID.toString(),
-            playerName = "&4Console"
+            playerName = "&4Console",
+            isIPBanExempt = true
         ).also { users[consoleUUID] = it }
     }
 

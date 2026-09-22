@@ -269,7 +269,7 @@ class SporeCore : SporePlugin() {
         if (features.vanish) {
             Logger.info("Unvanishing everyone....")
             val vanished = VanishService.vanishedPlayers.size
-            VanishService.vanishedPlayers.forEach { uuid -> VanishService.unVanish(uuid) }
+            VanishService.vanishedPlayers.forEach { uuid -> VanishService.unVanish(uuid, false) }
             Logger.info("Unvanished $vanished players")
 
             VanishTask.stop()
@@ -351,6 +351,7 @@ class SporeCore : SporePlugin() {
             registerCommand(HistoryCommand())
             registerCommand(AltsCommand())
             registerCommand(ClearChatCommand())
+            registerCommand(UserManageCommand())
             PunishmentService.load()
         }
     }
@@ -388,7 +389,7 @@ class SporeCore : SporePlugin() {
 
     fun logStartupBanner() {
         val pluginName = "SporeCore"
-        val author = "ClearedSpore, kittyisdev"
+        val author = "ClearedSpore, DumbAtSkyblock"
         val serverType = Bukkit.getServer().name + " - " + Bukkit.getServer().version
 
         val features = mutableListOf<String>()
