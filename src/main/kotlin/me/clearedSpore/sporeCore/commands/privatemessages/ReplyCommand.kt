@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import co.aikar.commands.annotation.Syntax
+import com.sk89q.wepif.PermissionsResolverManager
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
@@ -12,12 +13,12 @@ import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
-import me.clearedSpore.sporeCore.extension.PlayerExtension.uuid
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.setting.impl.PrivateMessagesSetting
+import me.clearedSpore.sporeCore.features.setting.impl.SocialSpySetting
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.noTranslate
@@ -73,6 +74,15 @@ class ReplyCommand : BaseCommand() {
 
         target.sendMessage("$suffix${player.name}&r&#1D91FF » You: &f".blue() + message.noTranslate())
         target.playSound(target.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
+
+        for (recipient in Bukkit.getOnlinePlayers()) {
+            if (recipient.hasPermission(Perm.PM_BYPASS)) {
+                val user = UserManager.get(recipient)
+                if (user != null && user.getSettingOrDefault(SocialSpySetting())) {
+                    recipient.sendMessage("[SocialSpy]".blue() + "&f${suffix}${player.name} &cb\uD83E\uDC1A &f${targetSuffix}${target.name}&f:".translate() + message.noTranslate())
+                }
+            }
+        }
 
         if (SporeCore.instance.coreConfig.logs.privateMessages) {
             LogsService.addLog(

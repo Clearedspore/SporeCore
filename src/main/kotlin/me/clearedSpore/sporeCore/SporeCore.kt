@@ -44,6 +44,7 @@ import me.clearedSpore.sporeCore.commands.moderation.mode.CustomModeCommand
 import me.clearedSpore.sporeCore.commands.moderation.mode.ModeCommand
 import me.clearedSpore.sporeCore.commands.privatemessages.PrivateMessageCommand
 import me.clearedSpore.sporeCore.commands.privatemessages.ReplyCommand
+import me.clearedSpore.sporeCore.commands.privatemessages.SocialSpyCommand
 import me.clearedSpore.sporeCore.commands.spawn.SetSpawnCommand
 import me.clearedSpore.sporeCore.commands.spawn.SpawnCommand
 import me.clearedSpore.sporeCore.commands.teleport.TpaAcceptCommand
@@ -462,6 +463,7 @@ class SporeCore : SporePlugin() {
         if (features.privateMessages) {
             registerCommand(PrivateMessageCommand())
             registerCommand(ReplyCommand())
+            registerCommand(SocialSpyCommand())
         }
 
         if (features.utilityMenus) {
