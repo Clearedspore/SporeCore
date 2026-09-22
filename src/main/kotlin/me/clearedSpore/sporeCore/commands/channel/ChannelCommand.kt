@@ -36,10 +36,10 @@ class ChannelCommand(val channel: Channel) : BaseCommand() {
         if (messageParts.isEmpty()) {
             if (user.channel == channel.id) {
                 ChatChannelService.resetChannel(user)
-                player.actionBar("channel", "Disabled ${channel.prefix} chat".blue())
+                player.actionBar("channel", "✔ | You have disabled ${channel.prefix} &cbchat".blue())
             } else {
                 ChatChannelService.setChannel(user, channel)
-                player.actionBar("channel", "Enabled ${channel.prefix} chat".blue())
+                player.actionBar("channel", "✔ | You have enabled ${channel.prefix} &cbchat".blue())
             }
         } else {
             val message = messageParts.joinToString(" ")
