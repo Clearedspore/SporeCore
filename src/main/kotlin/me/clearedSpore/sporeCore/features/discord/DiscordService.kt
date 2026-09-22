@@ -3,12 +3,24 @@ package me.clearedSpore.sporeCore.features.discord
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeCore.ChannelConfig
+import me.clearedSpore.sporeCore.Database
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.config
+import me.clearedSpore.sporeCore.features.chat.channel.`object`.Channel
 import me.clearedSpore.sporeCore.features.discord.command.DiscordLinkCommand
 import me.clearedSpore.sporeCore.features.discord.`object`.DiscordCommand
+import me.clearedSpore.sporeCore.features.setting.impl.ChannelMessagesSetting
+import me.clearedSpore.sporeCore.user.UserManager
+import me.clearedSpore.sporeCore.util.Perm
+import me.clip.placeholderapi.PlaceholderAPI
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -74,8 +86,7 @@ object DiscordService : ListenerAdapter() {
     }
 
     fun validateConfig(token: String): Boolean {
-        if (token.isBlank()) return false
-        return try {
+        return token.isNotBlank() && try {
             val jda = JDABuilder.createLight(token).build()
             jda.awaitReady()
 
@@ -86,8 +97,8 @@ object DiscordService : ListenerAdapter() {
         }
     }
 
-    fun getAvatarURL(UUID: UUID): String {
-        return "https://mc-heads.net/avatar/${UUID}/100"
+    fun getAvatarURL(uuid: UUID): String {
+        return "https://mc-heads.net/avatar/${uuid}/100"
     }
 
     fun getConsoleAvatar() : String {
@@ -109,10 +120,40 @@ object DiscordService : ListenerAdapter() {
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val config = SporeCore.instance.coreConfig.discord
-        if (config.chatID.isNotEmpty() && event.channel.id != config.chatID) return
         if (event.author.isBot) return
+        if (config.chatID.isNotEmpty() && event.channel.id != config.chatID) {
+            val channel = ChatChannelService.getChannels().first { it.discordID == event.channel.id }
+            val channelMessage = channel.message
+            val serverName = "&dDiscord".translate()
+            if (event.author.isBot) return
 
-        val message = event.message.contentRaw.replace(Regex("[§&][0-9a-fk-or]"), "").trim()
+            val message = event.message.contentRaw.replace(Regex("[§&][0-9aA-fk-or]"), "").trim()
+
+            var format = channelMessage
+                .replace("%servername%", "&7(${serverName}&7)")
+                .replace("%rankprefix%", "")
+                .replace("%ranksuffix%", "")
+                .replace("%player_name%", event.author.name)
+                .replace("%message%", message)
+
+            val translatedTemplate = format.translate()
+            val formattedMessage = translatedTemplate.replace("%MESSAGE%", message)
+
+            for (recipient in Bukkit.getOnlinePlayers()) {
+                if (recipient.hasPermission(channel.permission) && recipient.hasPermission(Perm.CHANNEL_ALLOW)) {
+                    val user = UserManager.get(recipient)
+                    if (user != null && user.getSettingOrDefault(ChannelMessagesSetting())) {
+                        recipient.sendMessage(formattedMessage)
+                    }
+                }
+            }
+            return
+        }
+
+        val message = event.message.contentRaw
+            .replace(Regex("&[0-9a-fk-orA-FK-OR]"), "")
+            .replace(Regex("<#[a-fA-F0-9]{6}>"), "")
+            .replace(Regex("<[a-zA-Z_:]+>"), "")
 
         if (config.discordFormat.isNotEmpty()) {
             val format = config.discordFormat

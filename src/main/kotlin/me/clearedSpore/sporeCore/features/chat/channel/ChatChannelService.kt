@@ -1,12 +1,16 @@
 package me.clearedSpore.sporeCore.features.chat.channel
 
+import me.clearedSpore.sporeAPI.exception.LoggedException
+import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
+import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.ChannelConfig
 import me.clearedSpore.sporeCore.ChatChannelsConfig
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.chat.ChatService
 import me.clearedSpore.sporeCore.features.chat.channel.`object`.Channel
+import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.setting.impl.ChannelMessagesSetting
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
@@ -36,10 +40,12 @@ object ChatChannelService {
     fun sendChannelMessage(player: Player, message: String, channel: Channel) {
         val permission = channel.permission
         val channelMessage = channel.message
+        val serverName = config.general.serverName
         val prefix = chatService?.getPlayerPrefix(player)?.translate() ?: ""
         var suffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
 
         var format = channelMessage
+            .replace("%servername%", "&7(${serverName}&7)")
             .replace("%rankprefix%", prefix)
             .replace("%ranksuffix%", suffix)
             .replace("%player_name%", player.name)
@@ -51,6 +57,27 @@ object ChatChannelService {
 
         val translatedTemplate = format.translate()
         val formattedMessage = translatedTemplate.replace("%MESSAGE%", message)
+
+        if (channel.discordWebhook.isNotEmpty()) {
+            val dcMessage = org.bukkit.ChatColor.stripColor(message)!!.replace("@", "")
+            val webhook = Webhook(channel.discordWebhook)
+                .setMessage(dcMessage)
+                .setUsername("${player.name} (${serverName})")
+                .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
+            }
+        }
 
         for (recipient in Bukkit.getOnlinePlayers()) {
             if (recipient.hasPermission(permission) && recipient.hasPermission(Perm.CHANNEL_ALLOW)) {
@@ -82,6 +109,8 @@ object ChatChannelService {
             Channel(
                 channelConfig.name,
                 channelConfig.id,
+                channelConfig.discordWebhook,
+                channelConfig.discordID,
                 channelConfig.permission,
                 channelConfig.prefix,
                 channelConfig.message,
@@ -96,6 +125,8 @@ object ChatChannelService {
         return Channel(
             name = name,
             id = id,
+            discordWebhook = discordWebhook,
+            discordID = discordID,
             permission = permission,
             prefix = prefix,
             message = message,

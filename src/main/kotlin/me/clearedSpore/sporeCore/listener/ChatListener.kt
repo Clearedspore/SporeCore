@@ -30,6 +30,7 @@ import me.clearedSpore.sporeCore.features.setting.impl.MentionTitleSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.config
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.noTranslate
 import me.clip.placeholderapi.PlaceholderAPI
@@ -131,6 +132,26 @@ class ChatListener : Listener {
                     return
                 }
                 ChatChannelService.sendChannelMessage(player, event.message, channel)
+                if (channel.discordWebhook.isNotEmpty()) {
+                    val dcMessage = org.bukkit.ChatColor.stripColor(event.message)!!.replace("@", "")
+                    val webhook = Webhook(channel.discordWebhook)
+                        .setMessage(dcMessage)
+                        .setUsername("${player.name} (${config.general.serverName}")
+                        .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                    Tasks.runAsync {
+                        try {
+                            webhook.send()
+                        } catch (ex: Exception) {
+                            throw LoggedException(
+                                userMessage = "Failed to send message to Discord.",
+                                internalMessage = "Failed to send message to Discord",
+                                channel = LoggedException.Channel.GENERAL,
+                                developerOnly = false,
+                                cause = ex
+                            ).also { it.log() }
+                        }
+                    }
+                }
                 event.isCancelled = true
                 return
             } else {
@@ -170,7 +191,7 @@ class ChatListener : Listener {
             message = message
                 .replace(Regex("&[0-9a-fk-orA-FK-OR]"), "")
                 .replace(Regex("<#[a-fA-F0-9]{6}>"), "")
-                .replace(Regex("<[a-zA-Z_]+>"), "")
+                .replace(Regex("<[a-zA-Z_:]+>"), "")
         }
 
         val chatColor = if (config.chat.chatColor.enabled) ChatColorService.getColor(senderUser) else null

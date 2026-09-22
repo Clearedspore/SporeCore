@@ -484,8 +484,9 @@ data class ChatChannelsConfig(
         "IN ORDER TO TYPE IN ANY CHANNEL THE PLAYER",
         "MUST HAVE THE sporecore.channel.allow PERMISSION!!",
         "Placeholders:",
-        "%player% -> Player that sends the message",
-        "%message% -> The message from the player",
+        "%player% → Player that sends the message",
+        "%message% → The message from the player",
+        "%servername% → The name of the server",
         "%rankprefix% → Vault rank prefix of the player",
         "%ranksuffix% → Vault rank suffix of the player"
     )
@@ -493,18 +494,22 @@ data class ChatChannelsConfig(
         "staff" to ChannelConfig(
             "Staff",
             "staff",
+            "",
+            "",
             "sporecore.channel.staff",
             "&b&lStaff",
-            "&b&lStaff &7-> &9%ranksuffix%%player%&f: %message%",
+            "&b&lStaff %servername% &7-> &9%ranksuffix%%player%&f: %message%",
             listOf("staffchat", "sc"),
             "#"
         ),
         "admin" to ChannelConfig(
             "Admin",
             "admin",
+            "",
+            "",
             "sporecore.channel.admin",
             "&c&lAdmin",
-            "&c&lAdmin &7-> &c%ranksuffix%%player%&f: %message%",
+            "&c&lAdmin %servername% &7-> &c%ranksuffix%%player%&f: %message%",
             listOf("adminchat", "ac"),
             "@"
         )
@@ -515,9 +520,11 @@ data class ChatChannelsConfig(
 data class ChannelConfig(
     var name: String = "Staff",
     var id: String = "staff",
+    var discordWebhook: String = "",
+    var discordID: String = "",
     var permission: String = "sporecore.channel.staff",
     var prefix: String = "&b&lStaff",
-    var message: String = "&b&lStaff &7-> &9%ranksuffix%%player%&f: %message%",
+    var message: String = "&b&lStaff %servername% &7-> &9%ranksuffix%%player%&f: %message%",
     var commands: List<String> = listOf("staff", "sc"),
     var symbol: String = "#"
 )
@@ -640,6 +647,11 @@ data class GeneralConfig(
         "player is not vanished!"
     )
     var vanishTag: String = " &7[&bV&7]",
+
+    @Comment(
+        "Sets the name of the server.",
+    )
+    var serverName: String = "undefined",
 
     @Comment(
         "Commands that can be run when a player",
