@@ -30,12 +30,9 @@ class VanishCommand : BaseCommand() {
         }
 
         if (target == null) {
-            val player = Bukkit.getPlayer(sender.name)
-            if (player == null) {
-                return
-            }
+            val player = Bukkit.getPlayer(sender.name) ?: return
 
-            VanishService.toggle(player.uniqueId)
+            VanishService.toggle(player.uniqueId, true)
             val isVanished = VanishService.isVanished(player.uniqueId)
             player.sendMessage(if (isVanished) "Enabled Vanish".blue() else "Disabled Vanish".red())
             Logger.log(suffix, sender, Perm.LOG, if (isVanished) "enabled vanish" else "disabled vanish", false)
@@ -45,7 +42,7 @@ class VanishCommand : BaseCommand() {
                 return
             }
 
-            VanishService.toggle(target.player.uniqueId)
+            VanishService.toggle(target.player.uniqueId, sender !is ConsoleCommandSender)
             val isVanished = VanishService.isVanished(target.player.uniqueId)
             sender.sendMessage(if (isVanished) "Enabled Vanish for ${targetSuffix}${target.player.name}".blue() else "Disabled Vanish for ${targetSuffix}${target.player.name}".red())
             Logger.log(

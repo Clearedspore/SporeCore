@@ -1,10 +1,8 @@
 package me.clearedSpore.sporeCore.features.vanish
 
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes.player
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.translate
-import me.clearedSpore.sporeAPI.util.CC.yellow
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.discord.DiscordService
@@ -12,7 +10,6 @@ import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
 import org.bukkit.Bukkit
-import org.bukkit.ChatColor
 import java.util.*
 
 
@@ -20,14 +17,14 @@ object VanishService {
 
     var vanishedPlayers: MutableList<UUID> = mutableListOf()
 
-    fun vanish(uuid: UUID) {
+    fun vanish(uuid: UUID, playerIssued: Boolean) {
         val userPlayer = Bukkit.getPlayer(uuid) ?: return
         val wasInMode = ModeService.isInMode(userPlayer)
 
         vanishedPlayers.add(uuid)
         userPlayer.isSleepingIgnored = true
         val config = SporeCore.instance.coreConfig
-        if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.leave.isNotEmpty()) {
+        if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.leave.isNotEmpty() && playerIssued) {
             Bukkit.broadcastMessage(
                 config.joinLeaveMessages.leave
                     .translate()
@@ -40,7 +37,7 @@ object VanishService {
             player.hidePlayer(SporeCore.instance, userPlayer)
         }
 
-        if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty() && !wasInMode) {
+        if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty() && !wasInMode && playerIssued) {
             val embed = Webhook.Embed()
                 .setColor(0xFF0000)
                 .setDescription("**${userPlayer.name} left the server**")
@@ -67,7 +64,7 @@ object VanishService {
     }
 
 
-    fun unVanish(uuid: UUID) {
+    fun unVanish(uuid: UUID, playerIssued: Boolean) {
         val userPlayer = Bukkit.getPlayer(uuid) ?: return
         val wasInMode = ModeService.isInMode(userPlayer)
 
@@ -76,16 +73,16 @@ object VanishService {
         }
 
         vanishedPlayers.remove(uuid)
-        userPlayer.isSleepingIgnored = false
+        userPlayer.isSleepingIgnored = playerIssued
         val config = SporeCore.instance.coreConfig
-        if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.join.isNotEmpty()) {
+        if (!wasInMode && config.joinLeaveMessages.vanish && config.joinLeaveMessages.join.isNotEmpty() && playerIssued) {
             Bukkit.broadcastMessage(
                 config.joinLeaveMessages.join
                     .translate()
                     .parsePlaceholders(userPlayer))
         }
 
-        if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty() && !wasInMode) {
+        if (SporeCore.instance.coreConfig.discord.chat.isNotEmpty() && !wasInMode && playerIssued) {
             val embed = Webhook.Embed()
                 .setColor(0x00FF00)
                 .setDescription("**${userPlayer.name} joined the server**")
@@ -103,7 +100,7 @@ object VanishService {
                         userMessage = "Failed to send message to Discord.",
                         internalMessage = "Failed to send message to Discord",
                         channel = LoggedException.Channel.GENERAL,
-                        developerOnly = false,
+                        developerOnly = playerIssued,
                         cause = ex
                     ).also { it.log() }
                 }
@@ -111,11 +108,11 @@ object VanishService {
         }
     }
 
-    fun toggle(uuid: UUID) {
+    fun toggle(uuid: UUID, playerIssued: Boolean) {
         if (isVanished(uuid)) {
-            unVanish(uuid)
+            unVanish(uuid, playerIssued)
         } else {
-            vanish(uuid)
+            vanish(uuid, playerIssued)
         }
     }
 

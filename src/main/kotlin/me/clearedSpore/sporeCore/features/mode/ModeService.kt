@@ -2,7 +2,6 @@ package me.clearedSpore.sporeCore.features.mode
 
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
-import me.clearedSpore.sporeAPI.Extension.uuid
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.translate
@@ -160,7 +159,7 @@ object ModeService {
             }
 
             if (mode.vanish && !user.getSettingOrDefault(VanishOnMMLeaveSetting()) && playerIssued) {
-                VanishService.unVanish(player.uniqueId)
+                VanishService.unVanish(player.uniqueId, true)
                 Bukkit.broadcastMessage(
                     SporeCore.instance.coreConfig.joinLeaveMessages.join
                         .translate()
@@ -261,7 +260,7 @@ object ModeService {
             }
 
             if (mode.vanish && !isVanished && playerIssued) {
-                VanishService.vanish(player.uniqueId)
+                VanishService.vanish(player.uniqueId, true)
                 Bukkit.broadcastMessage(
                     SporeCore.instance.coreConfig.joinLeaveMessages.leave
                         .translate()
@@ -292,7 +291,7 @@ object ModeService {
                     }
                 }
             } else if (mode.vanish && !playerIssued) {
-                VanishService.vanish(player.uniqueId)
+                VanishService.vanish(player.uniqueId, false)
             }
 
             activeModeData[player] = ModeData(
@@ -332,7 +331,7 @@ object ModeService {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.name))
         }
 
-        if (mode.vanish) VanishService.vanish(player.uniqueId)
+        if (mode.vanish) VanishService.vanish(player.uniqueId, false)
 
         activeModeData[player] = ModeData(
             mode = mode,
@@ -350,7 +349,7 @@ object ModeService {
         if (activeModeData.containsKey(player)) return
 
         activeModes[player] = mode
-        applyModeSettingsNonDestructive(player, mode)
+//        applyModeSettingsNonDestructive(player, mode)
     }
 
 
