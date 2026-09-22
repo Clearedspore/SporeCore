@@ -35,14 +35,14 @@ class UserManageCommand : BaseCommand() {
 
         if (user.isIPBanExempt) {
             user.isIPBanExempt = false
-            sender.sendMessage("You have un-exempted $target from IP Bans!".blue())
+            sender.sendMessage("You have un-exempted ${target.name} from IP Bans!".blue())
             user.save()
-            Logger.log(suffix, sender, Perm.LOG, "un-exempted ${targetSuffix}${target} from IP Bans", false)
+            Logger.log(suffix, sender, Perm.LOG, "un-exempted ${target.name} from IP Bans", false)
         } else {
             user.isIPBanExempt = true
-            sender.sendMessage("You have exempted $target from IP Bans!".blue())
+            sender.sendMessage("You have exempted ${target.name} from IP Bans!".blue())
             user.save()
-            Logger.log(suffix, sender, Perm.LOG, "exempted ${targetSuffix}${target} from IP Bans", false)
+            Logger.log(suffix, sender, Perm.LOG, "exempted ${target.name} from IP Bans", false)
         }
     }
 }
