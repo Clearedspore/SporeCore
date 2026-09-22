@@ -12,6 +12,7 @@ import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.StringUtil.joinWithSpaces
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
+import me.clearedSpore.sporeCore.extension.PlayerExtension.uuid
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -46,7 +47,7 @@ class ReplyCommand : BaseCommand() {
         }
 
         val target = Bukkit.getPlayer(lastSenderId)
-        var targetSuffix = chatService?.getPlayerSuffix(player)?.translate() ?: ""
+        var targetSuffix = chatService?.getPlayerSuffix(target)?.translate() ?: ""
         if (target == null || !target.isOnline) {
             player.sendErrorMessage("Your last sender is not online.")
             return
