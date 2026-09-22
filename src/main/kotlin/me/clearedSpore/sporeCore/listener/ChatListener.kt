@@ -1,8 +1,10 @@
 package me.clearedSpore.sporeCore.listener
 
+//import me.clearedSpore.sporeCore.features.setting.impl.ChatEnabledSetting
+import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.task.Tasks
-import me.clearedSpore.sporeAPI.util.CC
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.ChatInputService
@@ -11,12 +13,11 @@ import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.config
 import me.clearedSpore.sporeCore.features.chat.color.ChatColorService
-import me.clearedSpore.sporeCore.features.chat.color.`object`.ChatColor
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -24,17 +25,13 @@ import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
-import me.clearedSpore.sporeCore.features.setting.impl.ChatEnabledSetting
 import me.clearedSpore.sporeCore.features.setting.impl.MentionOption
 import me.clearedSpore.sporeCore.features.setting.impl.MentionTitleSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
-import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.config
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.noTranslate
 import me.clip.placeholderapi.PlaceholderAPI
-import net.dv8tion.jda.api.managers.WebhookManager
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -72,11 +69,11 @@ class ChatListener : Listener {
             return
         }
 
-        if (!senderUser.getSettingOrDefault(ChatEnabledSetting())) {
-            player.sendErrorMessage("You can't send messages while having chat disabled!")
-            event.isCancelled = true
-            return
-        }
+//        if (!senderUser.getSettingOrDefault(ChatEnabledSetting())) {
+//            player.sendErrorMessage("You can't send messages while having chat disabled!")
+//            event.isCancelled = true
+//            return
+//        }
 
         if (senderUser.isMuted() && SporeCore.instance.coreConfig.features.punishments) {
             val mute = senderUser.getActivePunishment(PunishmentType.MUTE) ?: run {
@@ -169,13 +166,13 @@ class ChatListener : Listener {
             }
         }
 
-        val toRemove = event.recipients.filter {
-            val recipientUser = UserManager.get(it)
-            recipientUser == null ||
-                    (!player.hasPermission(Perm.CHAT_BYPASS) && !recipientUser.getSettingOrDefault(ChatEnabledSetting()))
-        }
-
-        Tasks.run { event.recipients.removeAll(toRemove) }
+//        val toRemove = event.recipients.filter {
+//            val recipientUser = UserManager.get(it)
+//            recipientUser == null ||
+//                    (!player.hasPermission(Perm.CHAT_BYPASS) && !recipientUser.getSettingOrDefault(ChatEnabledSetting()))
+//        }
+//
+//        Tasks.run { event.recipients.removeAll(toRemove) }
 
         val config = SporeCore.instance.coreConfig
         val chatService = SporeCore.instance.chat
