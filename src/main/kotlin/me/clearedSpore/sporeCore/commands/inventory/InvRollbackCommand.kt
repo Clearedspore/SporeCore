@@ -14,7 +14,6 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 
 @CommandAlias("invrollback|invrestore|restoreinv")
-@CommandPermission(Perm.INV_ROLLBACK)
 class InvRollbackCommand : BaseCommand() {
 
     @Default
@@ -37,7 +36,7 @@ class InvRollbackCommand : BaseCommand() {
             }
 
             ClaimMenu(player).open(player)
-        } else {
+        } else if (targetName.isNotEmpty() && player.hasPermission(Perm.INV_ROLLBACK)) {
             val target = Bukkit.getOfflinePlayer(targetName)
 
             if (!target.hasPlayedBefore()) {
@@ -46,6 +45,8 @@ class InvRollbackCommand : BaseCommand() {
             }
 
             InvRollBackMenu(player, target).open(player)
+        } else {
+            player.sendErrorMessage("You don't have permission to perform this command!")
         }
     }
 }

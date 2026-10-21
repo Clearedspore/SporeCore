@@ -6,12 +6,15 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandCompletion
 import co.aikar.commands.annotation.Default
 import co.aikar.commands.annotation.Optional
+import me.clearedSpore.sporeAPI.Extension.uuid
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
 import me.clearedSpore.sporeAPI.annotation.RegisterCommand
+import me.clearedSpore.sporeAPI.util.Confirmation
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.util.Perm
+import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -22,6 +25,17 @@ class ClearinvCommand : SporeCommand() {
     @Default
     @CommandCompletion("@targets")
     fun onClear(sender: CommandSender, @Optional targets: TargetPlayers?) {
+        val player = sender as Player 
+
+        if (targets == null && Confirmation.isPlayerPending(player.uniqueId)) {
+            player.inventory.clear()
+            player.sendMessage("Your inventory has been cleared.".blue())
+            Confirmation.removePlayer(player.uniqueId)
+        } else if (targets == null && !Confirmation.isPlayerPending(player.uniqueId)) {
+            Confirmation.addPlayer(player.uniqueId)
+            return
+        }
+
 
         val resolved = targets ?: when (sender) {
             is Player -> listOf(sender)

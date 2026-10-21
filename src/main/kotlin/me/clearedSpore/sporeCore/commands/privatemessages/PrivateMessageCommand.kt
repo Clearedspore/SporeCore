@@ -45,7 +45,7 @@ class PrivateMessageCommand : BaseCommand() {
         }
 
 
-        if (target == null) {
+        if (target == null || !target.isOnline) {
             player.sendErrorMessage("That player is not online!")
             return
         }
