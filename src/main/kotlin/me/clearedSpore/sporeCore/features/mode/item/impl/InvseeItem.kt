@@ -4,6 +4,7 @@ import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeCore.features.mode.item.`object`.ModeItem
 import me.clearedSpore.sporeAPI.util.ItemBuilder
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -36,6 +37,10 @@ class InvseeItem : ModeItem("invsee"), Listener {
         if (!canUse(player)) return
 
         triggerCooldown(player)
-        player.performCommand("util inventory view ${entity.name}")
+        player.performCommand(
+            if (Bukkit.getPluginManager().isPluginEnabled("OpenInv"))
+                "openinv ${entity.name}"
+            else
+                "util inventory view ${entity.name}")
     }
 }

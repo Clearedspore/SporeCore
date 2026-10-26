@@ -131,6 +131,20 @@ data class DiscordConfig(
     var chatID: String = "",
 
     @Comment(
+        "Set a custom activity on your bot",
+        "to display certain information",
+        "about your server.",
+        "You can also change the status indicator",
+        "of the bot!",
+        "You can set the activity to 'NONE' if you wish ",
+        "to display nothing on the bots activity status",
+        "Statuses: ONLINE, IDLE, DO_NOT_DISTURB",
+        "THESE CHANGES WILL REQUIRE A RESTART",
+    )
+    var activity: String = "NONE",
+    var status: String = "ONLINE",
+
+    @Comment(
         "Customize how messages sent ",
         "from Discord appear in-game",
         "Placeholders:",
@@ -463,7 +477,7 @@ data class ChatFormatterConfig(
 
     var enabled: Boolean = true,
 
-    var format: String = "%rankprefix% %player_name% %ranksuffix%: %message%",
+    var format: String = "%rankprefix%%player_name%%ranksuffix%&r: %message%",
 
     @Comment(
         "When a player is in vanish and you use Luckperms",
@@ -484,7 +498,7 @@ data class ChatChannelsConfig(
         "IN ORDER TO TYPE IN ANY CHANNEL THE PLAYER",
         "MUST HAVE THE sporecore.channel.allow PERMISSION!!",
         "Placeholders:",
-        "%player% → Player that sends the message",
+        "%player_name% → Player that sends the message",
         "%message% → The message from the player",
         "%servername% → The name of the server",
         "%rankprefix% → Vault rank prefix of the player",
@@ -498,7 +512,7 @@ data class ChatChannelsConfig(
             "",
             "sporecore.channel.staff",
             "&b&lStaff",
-            "&b&lStaff %servername% &7-> &9%ranksuffix%%player%&f: %message%",
+            "&b&lStaff %servername% &7-> &9%ranksuffix%%player_name%&f: %message%",
             listOf("staffchat", "sc"),
             "#"
         ),
@@ -509,7 +523,7 @@ data class ChatChannelsConfig(
             "",
             "sporecore.channel.admin",
             "&c&lAdmin",
-            "&c&lAdmin %servername% &7-> &c%ranksuffix%%player%&f: %message%",
+            "&c&lAdmin %servername% &7-> &c%ranksuffix%%player_name%&f: %message%",
             listOf("adminchat", "ac"),
             "@"
         )
@@ -810,6 +824,8 @@ data class FeaturesConfig(
     var utilityMenus: Boolean = true,
 
     var privateMessages: Boolean = true,
+
+    var commandSpy: Boolean = true,
 
     var spawn: Boolean = true,
 

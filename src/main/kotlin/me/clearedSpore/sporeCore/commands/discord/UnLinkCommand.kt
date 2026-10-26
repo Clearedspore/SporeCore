@@ -9,6 +9,7 @@ import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Confirmation
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
+import me.clearedSpore.sporeCore.features.discord.`object`.DiscordLinks
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
@@ -25,15 +26,19 @@ class UnLinkCommand : BaseCommand() {
             return
         }
 
-        if (user.discordID == null) {
+
+        val discordId = user.discordID ?: DiscordLinks.discordIdFor(player.uniqueId)
+
+        if (discordId == null) {
             player.sendMessage("You have not linked your account yet!".red())
             player.sendMessage("Run".red() + " /link".white() + " to link".red())
             return
         }
 
         if (Confirmation.isPlayerPending(player.uniqueId)) {
+            DiscordLinks.unlink(discordId)
             user.discordID = null
-            user.save()
+            UserManager.save(user)
             player.sendSuccessMessage("Successfully unlinked your account!")
             Confirmation.removePlayer(player.uniqueId)
         } else {

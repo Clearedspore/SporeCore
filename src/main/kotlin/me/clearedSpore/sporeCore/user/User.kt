@@ -105,7 +105,7 @@ data class User(
         .put("channel", channel)
         .putDocuments("staffStats", staffStats.map { it.toDocument() })
         .put("lastServerIP", lastServerIP)
-        .put("discordID", discordID)
+        .put("discordID", discordID ?: "")
         .putList("pendingInventories", pendingInventories.toList())
         .putBoolean("tpsBar", tpsBar)
         .putDocuments("pastReports", pastReports.map { it.toDocument() })
@@ -114,6 +114,7 @@ data class User(
     fun ChatColor.toDocument(): Document = DocWriter()
         .putString("name", name)
         .putString("colorString", colorString)
+        .putString("material", material)
         .build()
 
     fun ChatFormat.toDocument(): Document = DocWriter()
@@ -185,7 +186,7 @@ data class User(
                 staffStats = doc.documents("staffStats").mapNotNull { StaffPunishmentStats.fromDocument(it) }
                     .toMutableList(),
                 lastServerIP = doc.string("lastServerIP"),
-                discordID = doc.string("discordID"),
+                discordID = doc.string("discordID")?.takeIf { it.isNotBlank() },
                 pendingInventories = doc.list("pendingInventories")
                     .mapNotNull { it?.toString() }
                     .toMutableSet(),

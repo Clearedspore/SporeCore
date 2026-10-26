@@ -74,7 +74,7 @@ class PrivateMessageCommand : BaseCommand() {
         for (recipient in Bukkit.getOnlinePlayers()) {
             if (recipient.hasPermission(Perm.PM_BYPASS)) {
                 val user = UserManager.get(recipient)
-                if (user != null && user.getSettingOrDefault(SocialSpySetting())) {
+                if (user != null && recipient != player && user.getSettingOrDefault(SocialSpySetting())) {
                     recipient.sendMessage("[SocialSpy] ".blue() + "&f${suffix}${player.name} &cb\uD83E\uDC1A &f${targetSuffix}${target.name}&f: ".translate() + message.noTranslate())
                 }
             }

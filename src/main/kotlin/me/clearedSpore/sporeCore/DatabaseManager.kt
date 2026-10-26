@@ -3,6 +3,7 @@ package me.clearedSpore.sporeCore
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.inventory.InventoryManager
+import me.clearedSpore.sporeCore.user.UserManager
 import org.dizitart.no2.Nitrite
 import org.dizitart.no2.collection.NitriteCollection
 import org.dizitart.no2.mvstore.MVStoreModule
@@ -19,6 +20,7 @@ object DatabaseManager {
     private lateinit var investigationCollection: NitriteCollection
 
     private lateinit var serverData: Database
+    private lateinit var userData: Database
 
     fun init(pluginFolder: File) {
         if (!pluginFolder.exists()) pluginFolder.mkdirs()
@@ -80,7 +82,7 @@ object DatabaseManager {
         }
 
         serverData = Database.load(serverCollection)
-        InventoryManager.loadAllInventories()
+        InventoryManager.loadAllInventories(inventoryCollection)
         Logger.infoDB("Nitrite database ready at ${dbFile.absolutePath}")
     }
 
@@ -98,9 +100,15 @@ object DatabaseManager {
         Logger.infoDB("Saved global server data")
     }
 
+    fun saveUserData() {
+        userData.save(userCollection)
+        Logger.infoDB("Saved user data")
+    }
+
     fun close() {
         InventoryManager.saveAllInventories()
         saveServerData()
+        saveUserData()
         db.close()
     }
 }

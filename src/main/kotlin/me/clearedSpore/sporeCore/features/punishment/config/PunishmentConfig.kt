@@ -256,7 +256,7 @@ data class PunishmentLogConfig(
         "Vault Dependent suffixes are as follows",
         "%punisherSuffix%, %targetSuffix%, %ranksuffix%"
     )
-    var ban: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &cbanned &f%targetSuffix%%target% &7for &e%reason% (&7Expires in &e%time%)",
+    var ban: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has&c banned &f%targetSuffix%%target% &7for &e%reason% (&7Expires in &e%time%)",
     var tempBan: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &ctemp-banned &f%targetSuffix%%target% &7for &e%reason% (&7Expires in &e%time%)",
     var kick: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &ckicked &f%targetSuffix%%target% &7for &e%reason%",
     var mute: String = "&9[SporeCore] &f%punisherSuffix%%user% &7has &cmuted &f%targetSuffix%%target% &7for &e%reason%",
@@ -276,8 +276,8 @@ data class PunishmentLogConfig(
     )
     var tryMute: String = "&9[SporeCore] &f%user% &7tried to talk while being &cmuted &7for &e%reason%",
     var tryTempMute: String = "&9[SporeCore] &f%user% &7tried to talk while being &cmuted &7for &e%reason% &c(Expires in: &e%time%)",
-    var tryBan: String = "&9[SporeCore] &f%user% &7tried to join while being &cbanned &7for &e%reason%",
-    var tryTempBan: String = "&9[SporeCore] &f%user% &7tried to join while being &cbanned &7for &e%reason% &c(Expires in: &e%time%)"
+    var tryBan: String = "&9[SporeCore] &f%user% &7tried to join while being&c banned &7for &e%reason%",
+    var tryTempBan: String = "&9[SporeCore] &f%user% &7tried to join while being&c banned &7for &e%reason% &c(Expires in: &e%time%)"
 )
 
 @Configuration

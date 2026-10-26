@@ -9,7 +9,6 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.StringUtil.firstPart
 import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
 import me.clearedSpore.sporeAPI.util.Webhook
-import me.clearedSpore.sporeCore.ChannelConfig
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
@@ -296,10 +295,15 @@ class UserListener : Listener {
         }
 
 
-        if (config.joinLeaveMessages.join.isNotBlank() && !autoStaff && !VanishService.vanishedPlayers.contains(player.uniqueId)) {
+        if (config.joinLeaveMessages.enabled
+            && config.joinLeaveMessages.join.isNotBlank()
+            && !autoStaff
+            && !VanishService.vanishedPlayers.contains(player.uniqueId)) {
             event.joinMessage = config.joinLeaveMessages.join
                 .translate()
                 .parsePlaceholders(player)
+        } else if (!config.joinLeaveMessages.enabled) {
+            event.joinMessage = null
         }
 
         if(user.messages.isNotEmpty()) {
@@ -425,11 +429,14 @@ class UserListener : Listener {
         if (wasVanished) {
             event.quitMessage = null
         } else {
-            if (config.joinLeaveMessages.leave.isNotBlank()) {
+            if (config.joinLeaveMessages.enabled && config.joinLeaveMessages.leave.isNotBlank()) {
                 event.quitMessage = config.joinLeaveMessages.leave
                     .translate()
                     .parsePlaceholders(player)
+            } else if (!config.joinLeaveMessages.enabled) {
+                event.quitMessage = null
             }
+
         }
 
         if (config.discord.chat.isNotEmpty() && !wasVanished) {

@@ -1,24 +1,24 @@
 package me.clearedSpore.sporeCore.commands.util
 
-import me.clearedSpore.sporeAPI.command.SporeCommand
-import co.aikar.commands.CommandHelp
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandPermission
-import co.aikar.commands.annotation.Default
 import co.aikar.commands.annotation.Name
 import co.aikar.commands.annotation.Subcommand
 import com.google.gson.Gson
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.ItemUtil
+import me.clearedSpore.sporeAPI.util.ItemUtil.itemStackFromBase64
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.button.TextButton
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
@@ -162,6 +162,12 @@ class UtilItemCommand : SporeCommand() {
         } catch (ex: Exception) {
             player.sendErrorMessage("Invalid NBT data provided!")
         }
+    }
+
+    fun itemStackFromBase64OrNull(data: String): ItemStack? = try {
+        itemStackFromBase64(data)
+    } catch (e: Exception) {
+        null
     }
 
 

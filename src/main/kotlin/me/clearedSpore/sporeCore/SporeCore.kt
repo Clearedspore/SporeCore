@@ -55,6 +55,7 @@ import me.clearedSpore.sporeCore.commands.utilitymenus.*
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
 import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.discord.DiscordService
+import me.clearedSpore.sporeCore.features.discord.`object`.DiscordLinks
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.eco.PaymentCooldownService
 import me.clearedSpore.sporeCore.features.eco.VaultEco
@@ -203,6 +204,7 @@ class SporeCore : SporePlugin() {
 
         if (coreConfig.discord.enabled) {
             loadDiscord()
+            DiscordLinks.load(UserManager.userCollection)
         }
 
         if (features.vanish) {

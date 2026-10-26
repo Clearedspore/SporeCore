@@ -109,6 +109,8 @@ object Perm {
     const val ALTS = "$PUNISHMENTS.alts"
     const val ALTS_DEEP = "$PUNISHMENTS.alts.deep"
     const val FREEZE = MAIN + "freeze"
+    const val MSG_SPY = MAIN + "msgspy"
+    const val COMMAND_SPY = MAIN + "commandspy"
 
     const val CLEAR_CHAT = MAIN + "clearchat"
 
