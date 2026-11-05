@@ -11,7 +11,7 @@ import me.clearedSpore.sporeCore.features.reports.`object`.ReportType
 import me.clearedSpore.sporeCore.menu.reports.list.item.ReportItem
 import me.clearedSpore.sporeCore.menu.reports.report.EvidenceMenu
 import me.clearedSpore.sporeCore.menu.reports.report.item.evidence.EvidenceItem
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player

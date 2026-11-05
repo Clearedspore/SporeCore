@@ -38,7 +38,7 @@ object InventoryManager {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 1) { cleanupExpired() }
+        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 1.hours.toTicks()) { cleanupExpired() }
     }
 
     fun hasPendingInventory(playerId: UUID): Boolean {

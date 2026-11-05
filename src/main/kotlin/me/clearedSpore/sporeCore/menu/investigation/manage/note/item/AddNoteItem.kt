@@ -18,7 +18,7 @@ import me.clearedSpore.sporeCore.menu.investigation.manage.note.ManageNotesMenu
 import me.clearedSpore.sporeCore.menu.investigation.manage.role.RoleManageMenu
 import me.clearedSpore.sporeCore.menu.investigation.manage.suspect.SuspectMenu
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType

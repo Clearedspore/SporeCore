@@ -1,21 +1,21 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.command.CommandSender
 
 
 @CommandAlias("broadcast|bc|alert|announce")
 @CommandPermission(Perm.BROADCAST)
-@SporeCoreCommand
-class BroadcastCommand : BaseCommand() {
+@RegisterCommand
+class BroadcastCommand : SporeCommand() {
 
     private val quoteRegex = "\"([^\"]+)\"".toRegex()
 

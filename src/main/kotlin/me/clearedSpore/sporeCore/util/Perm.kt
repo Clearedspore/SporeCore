@@ -13,7 +13,7 @@ object Perm {
 
     const val TELEPORT_BYPASS = BYPASS + "teleport"
     const val PM_BYPASS = BYPASS + "privatemessage"
-    const val CHAT_BYPASS = BYPASS + "chat"
+//    const val CHAT_BYPASS = BYPASS + "chat"
     const val CLEAR_CHAT_BYPASS = BYPASS + "clearchat"
     const val FREEZE_BYPASS = BYPASS + "freeze"
 

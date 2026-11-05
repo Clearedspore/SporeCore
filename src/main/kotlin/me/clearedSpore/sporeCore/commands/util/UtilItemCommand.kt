@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.util
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.CommandHelp
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandPermission
@@ -14,7 +14,7 @@ import me.clearedSpore.sporeAPI.util.ItemUtil
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.button.TextButton
 import org.bukkit.Material
@@ -22,8 +22,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
-@SporeCoreCommand
-class UtilItemCommand : BaseCommand() {
+@RegisterCommand
+class UtilItemCommand : SporeCommand() {
 
     @Subcommand("item toBase64")
     @CommandPermission(Perm.UTIL_ITEM)

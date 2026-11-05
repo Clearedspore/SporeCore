@@ -1,5 +1,6 @@
 package me.clearedSpore.sporeCore.util.doc
 
+import me.clearedSpore.sporeAPI.serialization.codec.LocationCodec
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.dizitart.no2.collection.Document
@@ -28,6 +29,11 @@ class DocReader(val doc: Document) {
 
     fun location(key: String): Location? {
         val str = string(key) ?: return null
+        return LocationCodec().decode(str) ?: legacyLocation(str)
+    }
+
+    /** Falls back to the pre-JSON "world,x,y,z,yaw,pitch" format so locations saved before the LocationCodec migration still load. */
+    private fun legacyLocation(str: String): Location? {
         val parts = str.split(",")
         if (parts.size != 6) return null
         val world = Bukkit.getWorld(parts[0]) ?: return null

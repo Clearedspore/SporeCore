@@ -1,5 +1,6 @@
 package me.clearedSpore.sporeCore.util.doc
 
+import me.clearedSpore.sporeAPI.serialization.codec.LocationCodec
 import org.bukkit.Location
 import org.dizitart.no2.collection.Document
 import java.util.UUID
@@ -24,8 +25,7 @@ class DocWriter {
 
     fun putLocation(key: String, location: Location?) = apply {
         location?.let {
-            val str = "${it.world.name},${it.x},${it.y},${it.z},${it.yaw},${it.pitch}"
-            doc.put(key, str)
+            doc.put(key, LocationCodec().encode(it))
         }
     }
 

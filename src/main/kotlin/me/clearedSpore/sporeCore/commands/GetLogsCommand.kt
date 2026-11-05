@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
 import me.clearedSpore.sporeAPI.task.Tasks
@@ -9,7 +9,7 @@ import me.clearedSpore.sporeAPI.util.CC.gray
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.util.Perm
@@ -22,8 +22,8 @@ import java.util.*
 
 @CommandAlias("getlogs")
 @CommandPermission(Perm.VIEW_LOGS)
-@SporeCoreCommand
-class GetLogsCommand : BaseCommand() {
+@RegisterCommand
+class GetLogsCommand : SporeCommand() {
 
     private val pageSize = 6
 

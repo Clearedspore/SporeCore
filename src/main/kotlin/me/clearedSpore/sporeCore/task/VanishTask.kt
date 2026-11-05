@@ -7,7 +7,7 @@ import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ActionBar.actionBar
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import org.bukkit.Bukkit
 import org.bukkit.scheduler.BukkitRunnable
 

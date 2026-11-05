@@ -18,6 +18,7 @@ import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatSe
 import me.clearedSpore.sporeCore.features.logs.LogsService
 import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.setting.impl.PrivateMessagesSetting
+import me.clearedSpore.sporeCore.features.setting.impl.SocialSpySetting
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.noTranslate
@@ -69,6 +70,15 @@ class PrivateMessageCommand : BaseCommand() {
 
         target.sendMessage("$suffix${player.name}&r&#1D91FF » You: &f".blue() + message.noTranslate())
         target.playSound(target, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
+
+        for (recipient in Bukkit.getOnlinePlayers()) {
+            if (recipient.hasPermission(Perm.PM_BYPASS)) {
+                val user = UserManager.get(recipient)
+                if (user != null && user.getSettingOrDefault(SocialSpySetting())) {
+                    recipient.sendMessage("[SocialSpy] ".blue() + "&f${suffix}${player.name} &cb\uD83E\uDC1A &f${targetSuffix}${target.name}&f: ".translate() + message.noTranslate())
+                }
+            }
+        }
 
         if (SporeCore.instance.coreConfig.logs.privateMessages) {
             LogsService.addLog(

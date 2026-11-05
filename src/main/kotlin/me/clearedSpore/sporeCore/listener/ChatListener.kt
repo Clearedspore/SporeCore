@@ -1,8 +1,10 @@
 package me.clearedSpore.sporeCore.listener
 
+//import me.clearedSpore.sporeCore.features.setting.impl.ChatEnabledSetting
+import me.clearedSpore.sporeAPI.annotation.RegisterListener
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.task.Tasks
-import me.clearedSpore.sporeAPI.util.CC
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.ChatInputService
@@ -11,12 +13,11 @@ import me.clearedSpore.sporeAPI.util.Message
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.AutoListener
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.config
 import me.clearedSpore.sporeCore.features.chat.color.ChatColorService
-import me.clearedSpore.sporeCore.features.chat.color.`object`.ChatColor
 import me.clearedSpore.sporeCore.features.chat.`object`.ChatFormat
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -24,16 +25,13 @@ import me.clearedSpore.sporeCore.features.logs.`object`.LogType
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
 import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
-import me.clearedSpore.sporeCore.features.setting.impl.ChatEnabledSetting
 import me.clearedSpore.sporeCore.features.setting.impl.MentionOption
 import me.clearedSpore.sporeCore.features.setting.impl.MentionTitleSetting
 import me.clearedSpore.sporeCore.features.vanish.VanishService
 import me.clearedSpore.sporeCore.user.UserManager
-import me.clearedSpore.sporeCore.util.ActionBar.actionBar
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.noTranslate
 import me.clip.placeholderapi.PlaceholderAPI
-import net.dv8tion.jda.api.managers.WebhookManager
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -41,7 +39,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.AsyncPlayerChatEvent
 
-@AutoListener
+@RegisterListener
 class ChatListener : Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -71,11 +69,11 @@ class ChatListener : Listener {
             return
         }
 
-        if (!senderUser.getSettingOrDefault(ChatEnabledSetting())) {
-            player.sendErrorMessage("You can't send messages while having chat disabled!")
-            event.isCancelled = true
-            return
-        }
+//        if (!senderUser.getSettingOrDefault(ChatEnabledSetting())) {
+//            player.sendErrorMessage("You can't send messages while having chat disabled!")
+//            event.isCancelled = true
+//            return
+//        }
 
         if (senderUser.isMuted() && SporeCore.instance.coreConfig.features.punishments) {
             val mute = senderUser.getActivePunishment(PunishmentType.MUTE) ?: run {
@@ -131,6 +129,26 @@ class ChatListener : Listener {
                     return
                 }
                 ChatChannelService.sendChannelMessage(player, event.message, channel)
+                if (channel.discordWebhook.isNotEmpty()) {
+                    val dcMessage = org.bukkit.ChatColor.stripColor(event.message)!!.replace("@", "")
+                    val webhook = Webhook(channel.discordWebhook)
+                        .setMessage(dcMessage)
+                        .setUsername("${player.name} (${config.general.serverName}")
+                        .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                    Tasks.runAsync {
+                        try {
+                            webhook.send()
+                        } catch (ex: Exception) {
+                            throw LoggedException(
+                                userMessage = "Failed to send message to Discord.",
+                                internalMessage = "Failed to send message to Discord",
+                                channel = LoggedException.Channel.GENERAL,
+                                developerOnly = false,
+                                cause = ex
+                            ).also { it.log() }
+                        }
+                    }
+                }
                 event.isCancelled = true
                 return
             } else {
@@ -148,13 +166,13 @@ class ChatListener : Listener {
             }
         }
 
-        val toRemove = event.recipients.filter {
-            val recipientUser = UserManager.get(it)
-            recipientUser == null ||
-                    (!player.hasPermission(Perm.CHAT_BYPASS) && !recipientUser.getSettingOrDefault(ChatEnabledSetting()))
-        }
-
-        Tasks.run { event.recipients.removeAll(toRemove) }
+//        val toRemove = event.recipients.filter {
+//            val recipientUser = UserManager.get(it)
+//            recipientUser == null ||
+//                    (!player.hasPermission(Perm.CHAT_BYPASS) && !recipientUser.getSettingOrDefault(ChatEnabledSetting()))
+//        }
+//
+//        Tasks.run { event.recipients.removeAll(toRemove) }
 
         val config = SporeCore.instance.coreConfig
         val chatService = SporeCore.instance.chat
@@ -170,7 +188,7 @@ class ChatListener : Listener {
             message = message
                 .replace(Regex("&[0-9a-fk-orA-FK-OR]"), "")
                 .replace(Regex("<#[a-fA-F0-9]{6}>"), "")
-                .replace(Regex("<[a-zA-Z_]+>"), "")
+                .replace(Regex("<[a-zA-Z_:]+>"), "")
         }
 
         val chatColor = if (config.chat.chatColor.enabled) ChatColorService.getColor(senderUser) else null

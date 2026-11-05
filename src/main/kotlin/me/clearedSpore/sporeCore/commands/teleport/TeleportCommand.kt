@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.teleport
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.CC.translate
@@ -8,7 +8,7 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.acf.targets.`object`.TargetPlayers
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -21,8 +21,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("tp|teleport|goto")
 @CommandPermission(Perm.TELEPORT)
-@SporeCoreCommand()
-class TeleportCommand : BaseCommand() {
+@RegisterCommand()
+class TeleportCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@targets|~ @targets|~ ~ ~")

@@ -8,7 +8,7 @@ import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.reports.ReportService
 import me.clearedSpore.sporeCore.features.reports.`object`.ReportType
 import me.clearedSpore.sporeCore.menu.reports.report.EvidenceMenu
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player

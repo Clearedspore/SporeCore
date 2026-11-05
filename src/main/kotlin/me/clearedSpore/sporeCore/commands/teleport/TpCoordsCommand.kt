@@ -1,11 +1,11 @@
 package me.clearedSpore.sporeCore.commands.teleport
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import me.clearedSpore.sporeAPI.util.CC.blue
 import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.Location
@@ -13,8 +13,8 @@ import org.bukkit.entity.Player
 
 @CommandAlias("tpcoords|tpc|tppos")
 @CommandPermission(Perm.TELEPORT_CORDS)
-@SporeCoreCommand
-class TpCoordsCommand : BaseCommand() {
+@RegisterCommand
+class TpCoordsCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@players|~ ~ ~ ~")

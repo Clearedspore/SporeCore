@@ -10,7 +10,7 @@ import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
 import me.clearedSpore.sporeCore.features.chat.channel.`object`.Channel
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
-import me.clearedSpore.sporeCore.util.ActionBar.actionBar
+import me.clearedSpore.sporeAPI.util.ActionBar.actionBar
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.entity.Player
 
@@ -36,10 +36,10 @@ class ChannelCommand(val channel: Channel) : BaseCommand() {
         if (messageParts.isEmpty()) {
             if (user.channel == channel.id) {
                 ChatChannelService.resetChannel(user)
-                player.actionBar("channel", "Disabled ${channel.prefix} chat".blue())
+                player.actionBar("channel", "✔ | You have disabled ${channel.prefix} &cbchat".blue())
             } else {
                 ChatChannelService.setChannel(user, channel)
-                player.actionBar("channel", "Enabled ${channel.prefix} chat".blue())
+                player.actionBar("channel", "✔ | You have enabled ${channel.prefix} &cbchat".blue())
             }
         } else {
             val message = messageParts.joinToString(" ")

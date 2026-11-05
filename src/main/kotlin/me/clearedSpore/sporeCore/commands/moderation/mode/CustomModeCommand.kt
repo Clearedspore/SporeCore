@@ -28,7 +28,7 @@ class CustomModeCommand(
     fun onModeToggle(sender: CommandSender, @Optional @Name("target") target: OnlinePlayer?) {
         var suffix = if (sender is Player) chatService?.getPlayerSuffix(sender)?.translate() ?: "" else ""
         if (target == null && sender is ConsoleCommandSender) {
-            sender.sendMessage("Console must provide a target!")
+            sender.sendMessage("§cConsole must provide a target!")
             return
         }
 
@@ -53,7 +53,7 @@ class CustomModeCommand(
             val enabled = service.isInMode(player)
             val status = if (enabled == true) "Disabled" else "Enabled"
 
-            service.toggleMode(player, mode.id)
+            service.toggleMode(player, mode.id, true)
             sender.sendMessage("$status ${mode.name} mode".blue())
             Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name}", false)
         } else {
@@ -66,7 +66,7 @@ class CustomModeCommand(
             val enabled = service.isInMode(target.player)
             val status = if (enabled == true) "Disabled" else "Enabled"
 
-            service.toggleMode(target.player, mode.id)
+            service.toggleMode(target.player, mode.id, false)
             sender.sendMessage("$status ${mode.name} mode for ${target.player.name}".blue())
             Logger.log(suffix, sender, Perm.LOG, "$status ${mode.name} mode for ${target.player.name}", false)
         }

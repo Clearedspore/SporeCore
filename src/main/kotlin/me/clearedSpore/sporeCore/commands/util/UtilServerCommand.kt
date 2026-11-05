@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands.util
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.CommandPermission
 import co.aikar.commands.annotation.Subcommand
@@ -9,7 +9,7 @@ import me.clearedSpore.sporeAPI.util.CC.green
 import me.clearedSpore.sporeAPI.util.CC.white
 import me.clearedSpore.sporeAPI.util.Message.sendSuccessMessage
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.util.Perm
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -20,8 +20,8 @@ import kotlin.math.min
 
 @CommandAlias("util")
 @CommandPermission(Perm.UTIL_COMMAND)
-@SporeCoreCommand
-class UtilServerCommand : BaseCommand() {
+@RegisterCommand
+class UtilServerCommand : SporeCommand() {
 
     @Subcommand("server players")
     @CommandPermission(Perm.UTIL_SERVER)

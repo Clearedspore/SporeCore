@@ -29,7 +29,6 @@ import me.clearedSpore.sporeCore.inventory.InventoryManager
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.parsePlaceholders
-import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Sound
@@ -106,7 +105,7 @@ class UserListener : Listener {
             val altPunishment = bannedAlt.getActivePunishment(PunishmentType.BAN)
                 ?: bannedAlt.getActivePunishment(PunishmentType.TEMPBAN)
 
-            if (altPunishment != null) {
+            if (altPunishment != null && !user.isIPBanExempt) {
                 if (PunishmentService.config.alts.autoBan) {
                     val evasionScreen = PunishmentService.buildAltEvasionScreen(user, altPunishment)
                     event.disallow(PlayerLoginEvent.Result.KICK_OTHER, evasionScreen.joinToString("\n"))
@@ -265,7 +264,7 @@ class UserListener : Listener {
             player.hasPermission(Perm.MODE_ALLOW)
         ) {
             val mode = ModeService.getHighestMode(player) ?: return
-            ModeService.toggleMode(player, mode.id)
+            ModeService.toggleMode(player, mode.id, playerIssued = false)
             player.sendMessage("Enabled ${mode.name} mode".blue())
         }
 
@@ -362,8 +361,8 @@ class UserListener : Listener {
             Logger.log(suffix, player, Perm.LOG, "&rleft the game silently", false)
             event.quitMessage = null
             wasVanished = true
-            ModeService.toggleMode(player)
-            VanishService.vanishedPlayers.remove(player.uniqueId)
+            ModeService.toggleMode(player, playerIssued = false)
+            VanishService.unVanish(player.uniqueId, playerIssued = false)
             player.isSleepingIgnored = false
         } else if (features.vanish && VanishService.vanishedPlayers.contains(player.uniqueId)) {
             Logger.log(suffix, player, Perm.LOG, "&rleft the game silently", false)

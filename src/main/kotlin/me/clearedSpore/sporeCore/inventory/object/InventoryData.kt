@@ -1,17 +1,13 @@
 package me.clearedSpore.sporeCore.inventory.`object`
 
+import me.clearedSpore.sporeAPI.util.ItemUtil
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.util.doc.DocReader
 import me.clearedSpore.sporeCore.util.doc.DocWriter
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.bukkit.util.io.BukkitObjectInputStream
-import org.bukkit.util.io.BukkitObjectOutputStream
 import org.dizitart.no2.collection.Document
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.util.*
 
 
 data class InventoryData(
@@ -31,9 +27,9 @@ data class InventoryData(
     fun toDocument(): Document = DocWriter()
         .put("id", id)
         .put("owner", owner)
-        .put("contents", contents.map { it.encodeToBase64() })
-        .put("armor", armor.map { it.encodeToBase64() })
-        .put("offhand", offhand.encodeToBase64())
+        .put("contents", contents.map { ItemUtil.itemStackToBase64(it) })
+        .put("armor", armor.map { ItemUtil.itemStackToBase64(it) })
+        .put("offhand", ItemUtil.itemStackToBase64(offhand))
         .put("timestamp", timestamp)
         .putLocation("saveLocation", saveLocation)
         .put("experience", experience)
@@ -73,9 +69,9 @@ data class InventoryData(
             val id = reader.string("id") ?: throw IllegalArgumentException("Invalid inventory document")
             val owner = reader.string("owner") ?: throw IllegalArgumentException("Invalid inventory document")
 
-            val contents = reader.list("contents").mapNotNull { (it as? String)?.decodeItem() }
-            val armor = reader.list("armor").mapNotNull { (it as? String)?.decodeItem() }
-            val offhand = (doc["offhand"] as? String)?.decodeItem()
+            val contents = reader.list("contents").mapNotNull { ItemUtil.itemStackFromBase64(it as? String) }
+            val armor = reader.list("armor").mapNotNull { ItemUtil.itemStackFromBase64(it as? String) }
+            val offhand = ItemUtil.itemStackFromBase64(doc["offhand"] as? String)
 
             val timestamp = reader.long("timestamp")
             val saveLocation = reader.location("saveLocation")
@@ -114,35 +110,6 @@ data class InventoryData(
     }
 
 }
-
-private fun ItemStack?.encodeToBase64(): String? {
-    if (this == null) return null
-    return try {
-        val output = ByteArrayOutputStream()
-        val dataOutput = BukkitObjectOutputStream(output)
-        dataOutput.writeObject(this)
-        dataOutput.close()
-        Base64.getEncoder().encodeToString(output.toByteArray())
-    } catch (ex: Exception) {
-        ex.printStackTrace()
-        null
-    }
-}
-
-private fun String.decodeItem(): ItemStack? {
-    return try {
-        val bytes = Base64.getDecoder().decode(this)
-        val input = ByteArrayInputStream(bytes)
-        val dataInput = BukkitObjectInputStream(input)
-        val item = dataInput.readObject() as ItemStack
-        dataInput.close()
-        item
-    } catch (ex: Exception) {
-        ex.printStackTrace()
-        null
-    }
-}
-
 
 private fun Location.rounded(): Location {
     return Location(

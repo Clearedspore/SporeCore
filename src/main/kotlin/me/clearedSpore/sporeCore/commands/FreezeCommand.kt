@@ -1,6 +1,6 @@
 package me.clearedSpore.sporeCore.commands
 
-import co.aikar.commands.BaseCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.annotation.*
 import co.aikar.commands.bukkit.contexts.OnlinePlayer
 import me.clearedSpore.sporeAPI.util.CC.blue
@@ -8,7 +8,7 @@ import me.clearedSpore.sporeAPI.util.CC.red
 import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
-import me.clearedSpore.sporeCore.annotations.SporeCoreCommand
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.logs.LogsService
@@ -20,8 +20,8 @@ import org.bukkit.metadata.FixedMetadataValue
 
 @CommandAlias("freeze")
 @CommandPermission(Perm.FREEZE)
-@SporeCoreCommand
-class FreezeCommand : BaseCommand() {
+@RegisterCommand
+class FreezeCommand : SporeCommand() {
 
     @Default
     @CommandCompletion("@players")

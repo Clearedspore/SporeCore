@@ -32,7 +32,8 @@ class UnLinkCommand : BaseCommand() {
         }
 
         if (Confirmation.isPlayerPending(player.uniqueId)) {
-            user.discordID == null
+            user.discordID = null
+            user.save()
             player.sendSuccessMessage("Successfully unlinked your account!")
             Confirmation.removePlayer(player.uniqueId)
         } else {

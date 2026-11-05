@@ -44,7 +44,7 @@ object LogsService {
 
     fun startCleanupTask() {
         cleanupTask?.cancel()
-        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 0) { cleanupLogs() }
+        cleanupTask = Tasks.runRepeatedAsync(1.hours.toTicks(), 1.hours.toTicks()) { cleanupLogs() }
     }
 
     fun stopCleanupTask() {

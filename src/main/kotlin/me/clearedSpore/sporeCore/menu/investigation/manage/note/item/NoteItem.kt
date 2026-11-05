@@ -10,7 +10,7 @@ import me.clearedSpore.sporeCore.features.investigation.`object`.Investigation
 import me.clearedSpore.sporeCore.features.investigation.`object`.note.Note
 import me.clearedSpore.sporeCore.menu.investigation.manage.note.ManageNotesMenu
 import me.clearedSpore.sporeCore.menu.util.confirm.ConfirmMenu
-import me.clearedSpore.sporeCore.util.ItemBuilder
+import me.clearedSpore.sporeAPI.util.ItemBuilder
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.wrapWithColors
 import org.bukkit.Material
