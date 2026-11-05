@@ -53,7 +53,7 @@ class TeleportCommand : SporeCommand() {
                 val firstSuffix = chatService?.getPlayerSuffix(firstTargets.first())?.translate() ?: ""
                 playerSender.teleportAsync(target.location)
                 Logger.log(suffix, sender, Perm.LOG, "teleported to $firstSuffix${target.name}", false)
-                sender.sendMessage("Teleported to $firstSuffix${target.name}.".blue())
+                sender.sendMessage("Teleported to $firstSuffix${target.name}&r&cb.".blue())
                 if (shouldLog) {
                     LogsService.addLog(sender.uuidStr(), "Teleported to $firstSuffix${target.name}", LogType.TELEPORT)
                 }
@@ -76,7 +76,7 @@ class TeleportCommand : SporeCommand() {
                 firstTargets.forEach { it.teleportAsync(secondTarget.location) }
                 firstTargets.forEach {
                     Logger.log(suffix, sender, Perm.LOG, "teleported $firstSuffix${it.name}&r to $secondSuffix${secondTarget.name}", false)
-                    sender.sendMessage("Teleported $firstSuffix${it.name}&r to $secondSuffix${secondTarget.name}.".blue())
+                    sender.sendMessage("Teleported $firstSuffix${it.name}&r to $secondSuffix${secondTarget.name}&r&cb.".blue())
                     if (shouldLog) {
                         LogsService.addLog(
                             sender.uuidStr(),

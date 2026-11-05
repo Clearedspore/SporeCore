@@ -8,6 +8,7 @@ import me.clearedSpore.sporeAPI.util.StringUtil.hasFlag
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeAPI.annotation.RegisterListener
+import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -52,7 +53,13 @@ class DeathListener : Listener {
     fun onRespawn(event: PlayerRespawnEvent) {
         val player = event.player
         val config = SporeCore.instance.coreConfig
-        val kitService = SporeCore.instance.kitService
+        val serverData = DatabaseManager.getServerData()
+
+        if (serverData.spawn != null) {
+            player.teleportAsync(serverData.spawn!!)
+        }
+
+        val kitService = if (config.features.kits) SporeCore.instance.kitService else return
 
         if (config.kits.deathKit.isNotEmpty()) {
             val kitName = config.kits.deathKit.firstPart()

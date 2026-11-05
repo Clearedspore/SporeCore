@@ -130,7 +130,7 @@ class ModeListener(private val modeProvider: (Player) -> Mode?) : Listener {
         val type = block.type
 
         if (type == Material.CHEST || type == Material.TRAPPED_CHEST ||
-            type == Material.ENDER_CHEST || type.name.contains("SHULKER_BOX")
+            type == Material.ENDER_CHEST || type.name.contains("SHULKER_BOX") || type == Material.BARREL
         ) {
 
             event.isCancelled = true

@@ -5,16 +5,16 @@ import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeAPI.util.time.TimeUtil.hours
 import me.clearedSpore.sporeAPI.util.time.TimeUtil.toTicks
-import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
+import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.inventory.`object`.InventoryData
 import me.clearedSpore.sporeCore.user.UserManager
 import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
+import org.dizitart.no2.collection.NitriteCollection
 import org.dizitart.no2.filters.FluentFilter
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 object InventoryManager {
 
@@ -23,12 +23,24 @@ object InventoryManager {
     private val cachedInventories = mutableMapOf<String, InventoryData>()
     private var cleanupTask: BukkitTask? = null
 
-    fun loadAllInventories() {
-        inventoryCollection.find().forEach { doc ->
-            InventoryData.fromDocument(doc)?.let { inv ->
-                cachedInventories[inv.id] = inv
+    fun loadAllInventories(collection: NitriteCollection) {
+        var loaded = 0
+        val failed = mutableListOf<String>()
+
+        collection.find().forEach { doc ->
+            // use whatever identifies the entry: owner UUID, inventory name, or the document id
+            val label = doc.get("uuidStr")?.toString() ?: doc.id.toString()
+            try {
+                val data = InventoryData.fromDocument(doc)
+                // ...your existing code that stores/registers `data`...
+                loaded++
+            } catch (e: Exception) {
+                failed.add(label)
+                Logger.warn("Failed to load inventory $label: ${e.cause?.message ?: e.message}")
             }
         }
+
+        Logger.info("Inventories: $loaded loaded, ${failed.size} failed")
     }
 
     fun saveAllInventories() {

@@ -12,6 +12,7 @@ import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeCore.DatabaseManager
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.extension.PlayerExtension.uuidStr
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
 import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
@@ -295,10 +296,15 @@ class UserListener : Listener {
         }
 
 
-        if (config.joinLeaveMessages.join.isNotBlank() && !autoStaff && !VanishService.vanishedPlayers.contains(player.uniqueId)) {
+        if (config.joinLeaveMessages.enabled
+            && config.joinLeaveMessages.join.isNotBlank()
+            && !autoStaff
+            && !VanishService.vanishedPlayers.contains(player.uniqueId)) {
             event.joinMessage = config.joinLeaveMessages.join
                 .translate()
                 .parsePlaceholders(player)
+        } else if (!config.joinLeaveMessages.enabled) {
+            event.joinMessage = null
         }
 
         if(user.messages.isNotEmpty()) {
@@ -323,6 +329,32 @@ class UserListener : Listener {
             val webhook = Webhook(config.discord.chat)
                 .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
                 .setUsername(player.name)
+                .addEmbed(embed)
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
+            }
+        }
+
+        if (config.features.channels &&
+            ChatChannelService.getChannels().first().discordWebhook.isNotEmpty() &&
+            player.hasPermission(Perm.MODE_ALLOW)) {
+            val embed = Webhook.Embed()
+                .setColor(0x00FF00)
+                .setDescription("**${player.name} joined the server**")
+
+            val webhook = Webhook(ChatChannelService.getChannels().first().discordWebhook)
+                .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                .setUsername("${player.name} (${config.general.serverName})")
                 .addEmbed(embed)
             Tasks.runAsync {
                 try {
@@ -398,11 +430,14 @@ class UserListener : Listener {
         if (wasVanished) {
             event.quitMessage = null
         } else {
-            if (config.joinLeaveMessages.leave.isNotBlank()) {
+            if (config.joinLeaveMessages.enabled && config.joinLeaveMessages.leave.isNotBlank()) {
                 event.quitMessage = config.joinLeaveMessages.leave
                     .translate()
                     .parsePlaceholders(player)
+            } else if (!config.joinLeaveMessages.enabled) {
+                event.quitMessage = null
             }
+
         }
 
         if (config.discord.chat.isNotEmpty() && !wasVanished) {
@@ -415,6 +450,32 @@ class UserListener : Listener {
                 .setUsername(player.name)
                 .addEmbed(embed)
 
+            Tasks.runAsync {
+                try {
+                    webhook.send()
+                } catch (ex: Exception) {
+                    throw LoggedException(
+                        userMessage = "Failed to send message to Discord.",
+                        internalMessage = "Failed to send message to Discord",
+                        channel = LoggedException.Channel.GENERAL,
+                        developerOnly = false,
+                        cause = ex
+                    ).also { it.log() }
+                }
+            }
+        }
+
+        if (config.features.channels &&
+            ChatChannelService.getChannels().first().discordWebhook.isNotEmpty() &&
+            player.hasPermission(Perm.MODE_ALLOW)) {
+            val embed = Webhook.Embed()
+                .setColor(0xFF0000)
+                .setDescription("**${player.name} left the server**")
+
+            val webhook = Webhook(ChatChannelService.getChannels().first().discordWebhook)
+                .setProfileURL(DiscordService.getAvatarURL(player.uniqueId))
+                .setUsername("${player.name} (${config.general.serverName})")
+                .addEmbed(embed)
             Tasks.runAsync {
                 try {
                     webhook.send()

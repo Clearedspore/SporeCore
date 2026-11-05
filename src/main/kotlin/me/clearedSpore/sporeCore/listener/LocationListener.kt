@@ -14,11 +14,10 @@ class LocationListener : Listener {
     @EventHandler
     fun onLeave(event: PlayerQuitEvent) {
         val player = event.player
-        val user = UserManager.get(player)
-        if (user == null) return
+        val user = UserManager.get(player) ?: return
 
         if (user.lastLocation != null) {
-            user.lastLocation = null
+            user.lastLocation = player.location.clone()
         }
 
     }
@@ -27,8 +26,7 @@ class LocationListener : Listener {
     fun onTeleport(event: PlayerTeleportEvent) {
         val player = event.player
         val from = event.from
-        val user = UserManager.get(player)
-        if (user == null) return
+        val user = UserManager.get(player) ?: return
 
         user.lastLocation = from
 

@@ -18,7 +18,7 @@ class SetSpawnCommand() : BaseCommand() {
     @Default()
     fun onSetSpawn(player: Player) {
         val serverData = DatabaseManager.getServerData()
-        serverData.spawn = player.location
+        serverData.spawn = player.location.clone()
         player.sendSuccessMessage("You have successfully set the spawn location!")
         DatabaseManager.saveServerData()
     }

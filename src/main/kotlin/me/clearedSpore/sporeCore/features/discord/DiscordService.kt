@@ -5,12 +5,18 @@ import me.clearedSpore.sporeAPI.util.CC.translate
 import me.clearedSpore.sporeAPI.util.Logger
 import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService
+import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.config
 import me.clearedSpore.sporeCore.features.discord.command.DiscordLinkCommand
 import me.clearedSpore.sporeCore.features.discord.`object`.DiscordCommand
+import me.clearedSpore.sporeCore.features.discord.`object`.DiscordLinks
+import me.clearedSpore.sporeCore.features.punishment.`object`.PunishmentType
 import me.clearedSpore.sporeCore.features.setting.impl.ChannelMessagesSetting
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.OnlineStatus
+import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -21,6 +27,7 @@ import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 
 object DiscordService : ListenerAdapter() {
@@ -44,8 +51,6 @@ object DiscordService : ListenerAdapter() {
             return
         }
 
-        initialized = true
-
         registerCommands()
 
         val jda = JDABuilder.create(
@@ -55,6 +60,8 @@ object DiscordService : ListenerAdapter() {
             GatewayIntent.MESSAGE_CONTENT,
             GatewayIntent.GUILD_MESSAGES
         ).addEventListeners(this)
+            .setActivity(getActivity(config.activity))
+            .setStatus(getStatusType(config.status))
             .build()
 
         jda.updateCommands().addCommands(
@@ -72,6 +79,8 @@ object DiscordService : ListenerAdapter() {
             }
         ).queue()
 
+        initialized = true
+
         Logger.info("[Discord] Bot started successfully.")
     }
 
@@ -83,7 +92,43 @@ object DiscordService : ListenerAdapter() {
             jda.shutdownNow()
             true
         } catch (ex: Exception) {
+            ex.printStackTrace()
             false
+        }
+    }
+
+    fun reload() {
+        val config = SporeCore.instance.coreConfig.discord
+        if (!initialized || !config.enabled) return
+
+        Logger.info("[Discord] Attempting to reload...")
+
+        var jda = JDABuilder.createLight(config.botToken).build()
+
+        try {
+            jda.presence.setPresence(getStatusType(config.status), getActivity(config.activity))
+            Logger.info("[Discord] Successfully reloaded")
+        } catch (ex: Exception) {
+            Logger.error("[Discord] Could not reload")
+            ex.printStackTrace()
+        }
+    }
+
+    fun getActivity(activity: String): Activity? {
+        val config = SporeCore.instance.coreConfig.discord
+        return when (activity) {
+            "NONE" -> null
+            else -> Activity.playing(config.activity)
+        }
+    }
+
+    fun getStatusType(status: String): OnlineStatus {
+        return when (status) {
+            "ONLINE" -> OnlineStatus.ONLINE
+            "OFFLINE" -> OnlineStatus.OFFLINE
+            "INVISIBLE" -> OnlineStatus.INVISIBLE
+            "DO_NOT_DISTURB" -> OnlineStatus.DO_NOT_DISTURB
+            else -> OnlineStatus.ONLINE
         }
     }
 
@@ -108,11 +153,20 @@ object DiscordService : ListenerAdapter() {
         cmd.execute(event)
     }
 
+    private fun requireLink(event: MessageReceivedEvent): DiscordLinks.Link? {
+        DiscordLinks.get(event.author.id)?.let { return it }
+        event.message.delete().queue(null) { }
+        event.channel.sendMessage("<@${event.author.id}> link your account with /link in-game first.")
+            .queue({ it.delete().queueAfter(10, TimeUnit.SECONDS, null) { } }, { })
+        return null
+    }
+
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val config = SporeCore.instance.coreConfig.discord
-        if (event.author.isBot) return
+        if (event.author.isBot || !event.isFromGuild) return
         if (config.chatID.isNotEmpty() && event.channel.id != config.chatID) {
             val channel = ChatChannelService.getChannels().first { it.discordID == event.channel.id }
+            val link = requireLink(event) ?: return
             val channelMessage = channel.message
             val serverName = "&dDiscord".translate()
             if (event.author.isBot) return
@@ -123,7 +177,7 @@ object DiscordService : ListenerAdapter() {
                 .replace("%servername%", "&7(${serverName}&7)")
                 .replace("%rankprefix%", "")
                 .replace("%ranksuffix%", "")
-                .replace("%player_name%", event.author.name)
+                .replace("%player_name%", link.name)
                 .replace("%message%", message)
 
             val translatedTemplate = format.translate()
@@ -140,6 +194,16 @@ object DiscordService : ListenerAdapter() {
             return
         }
 
+        val link = requireLink(event) ?: return
+
+        if (UserManager.get(link.uuid)!!.isMuted()) {
+            val user = UserManager.get(link.uuid)!!
+            val mute = user.getActivePunishment(PunishmentType.MUTE)
+            event.message.reply("You are currently muted in-game for **${mute?.reason}** and are unable to talk in this chat until it has expired or revoked.").queue()
+            event.message.delete().delay(2, TimeUnit.SECONDS).queue()
+            return
+        }
+
         val message = event.message.contentRaw
             .replace(Regex("&[0-9a-fk-orA-FK-OR]"), "")
             .replace(Regex("<#[a-fA-F0-9]{6}>"), "")
@@ -148,7 +212,7 @@ object DiscordService : ListenerAdapter() {
         if (config.discordFormat.isNotEmpty()) {
             val format = config.discordFormat
                 .replace("%channel%", event.channel.name)
-                .replace("%author%", event.author.name)
+                .replace("%author%", link.name)
                 .replace("%message%", message)
 
             Tasks.runAsync { Bukkit.broadcast(Component.text(format.translate())) }
@@ -156,7 +220,7 @@ object DiscordService : ListenerAdapter() {
             val guild = event.guild
             val discordOwner = guild.owner?.id
             event.message.reply("An error occurred while attempting to send this message. \n-# <@${discordOwner}>").queue()
-            Bukkit.getLogger().severe("[Discord] The 'discordFormat' variable was found empty, please check the 'config.yml' file!")
+            Logger.error("[Discord] The 'discordFormat' variable was found empty, please check the 'config.yml' file!")
         }
 
 //        Bukkit.getLogger().warning("[Discord] DEBUG: \nAuthor: ${event.author.name}\nMessage: ${event.message.contentRaw}\nChannel: ${event.channel.id}")

@@ -4,18 +4,20 @@ import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.features.chat.color.`object`.ChatColor
 import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
+import me.clearedSpore.sporeCore.util.Util.noTranslate
+import org.dizitart.no2.collection.NitriteCollection
 
 
 object ChatColorService {
 
     fun setColor(user: User, color: ChatColor) {
         user.chatColor = color
-        UserManager.save(user)
+        user.save()
     }
 
     fun resetColor(user: User) {
         user.chatColor = getDefaultColor()
-        UserManager.save(user)
+        user.save()
     }
 
     fun getColor(user: User): ChatColor {
@@ -43,6 +45,6 @@ object ChatColorService {
     fun getColorByKey(key: String): ChatColor? {
         val config = SporeCore.instance.coreConfig.chat.chatColor
         val colorConfig = config.colors[key.lowercase()] ?: return null
-        return ChatColor(colorConfig.name, colorConfig.color, colorConfig.material)
+        return ChatColor(colorConfig.name, colorConfig.color.noTranslate(), colorConfig.material)
     }
 }

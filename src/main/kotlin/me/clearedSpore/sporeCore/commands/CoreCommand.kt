@@ -1,11 +1,12 @@
 package me.clearedSpore.sporeCore.commands
 
-import me.clearedSpore.sporeAPI.command.SporeCommand
 import co.aikar.commands.CommandHelp
 import co.aikar.commands.annotation.*
 import co.aikar.commands.annotation.Optional
 import de.exlll.configlib.ConfigurationException
 import de.exlll.configlib.YamlConfigurations
+import me.clearedSpore.sporeAPI.annotation.RegisterCommand
+import me.clearedSpore.sporeAPI.command.SporeCommand
 import me.clearedSpore.sporeAPI.exception.LoggedException
 import me.clearedSpore.sporeAPI.task.Tasks
 import me.clearedSpore.sporeAPI.util.CC.blue
@@ -21,9 +22,10 @@ import me.clearedSpore.sporeAPI.util.Message.sendErrorMessage
 import me.clearedSpore.sporeAPI.util.Webhook
 import me.clearedSpore.sporeAPI.util.time.TimeUtil
 import me.clearedSpore.sporeCore.CoreConfig
-import me.clearedSpore.sporeCore.SporeCore
 import me.clearedSpore.sporeCore.DatabaseManager
-import me.clearedSpore.sporeAPI.annotation.RegisterCommand
+import me.clearedSpore.sporeCore.SporeCore
+import me.clearedSpore.sporeCore.SporeCore.Companion.version
+import me.clearedSpore.sporeCore.Version
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userFail
 import me.clearedSpore.sporeCore.extension.PlayerExtension.userJoinFail
 import me.clearedSpore.sporeCore.features.chat.channel.ChatChannelService.chatService
@@ -31,6 +33,7 @@ import me.clearedSpore.sporeCore.features.currency.CurrencySystemService
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditAction
 import me.clearedSpore.sporeCore.features.currency.`object`.CreditLog
 import me.clearedSpore.sporeCore.features.currency.`object`.PackagePurchase
+import me.clearedSpore.sporeCore.features.discord.DiscordService
 import me.clearedSpore.sporeCore.features.eco.EconomyService
 import me.clearedSpore.sporeCore.features.mode.ModeService
 import me.clearedSpore.sporeCore.features.punishment.PunishmentService
@@ -42,9 +45,9 @@ import me.clearedSpore.sporeCore.user.User
 import me.clearedSpore.sporeCore.user.UserManager
 import me.clearedSpore.sporeCore.util.Perm
 import me.clearedSpore.sporeCore.util.Util.niceName
+import me.clearedSpore.sporeCore.util.Util.noTranslate
 import me.clearedSpore.sporeCore.util.button.CallbackRegistry
 import me.clearedSpore.sporeCore.util.button.TextButton
-import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -91,6 +94,10 @@ class CoreCommand : SporeCommand() {
 
                 if (config.features.modes) {
                     ModeService.initialize()
+                }
+
+                if (config.discord.enabled) {
+                    DiscordService.reload()
                 }
 
                 Cooldown.updateCooldownDuration("report", config.reports.reportCooldown)
@@ -199,7 +206,12 @@ class CoreCommand : SporeCommand() {
     @Subcommand("version")
     fun onVersion(sender: CommandSender) {
         val desc = SporeCore.instance.description
-        sender.sendMessage("Version: ".white() + " v${desc.version}".green())
+        val formattedVersion = when (version) {
+            Version.PUBLIC -> "Release"
+            Version.DEV -> "Developer Build"
+            Version.PRE_RELEASE -> "Pre-Release Build"
+        }
+        sender.sendMessage("Version: ".white() + " v${desc.version} &7(${formattedVersion})".green())
         sender.sendMessage("Author(s): ".white() + desc.authors.joinToString(", ").blue())
     }
 
@@ -208,13 +220,17 @@ class CoreCommand : SporeCommand() {
         val uptime = System.currentTimeMillis() - startTime
         val uptimeFormatted = formatDuration(uptime)
         val desc = SporeCore.instance.description
+        val formattedVersion = when (version) {
+            Version.PUBLIC -> "Release"
+            Version.DEV -> "Developer Build"
+            Version.PRE_RELEASE -> "Pre-Release Build"
+        }
 
         sender.sendMessage("=== Plugin Info ===".blue())
         sender.sendMessage("Name: ".white() + desc.name.green())
-        sender.sendMessage("Version: ".white() + desc.version.green())
+        sender.sendMessage("Version: ".white() + "${desc.version.green()} &7(${formattedVersion})".translate())
         sender.sendMessage("Authors: ".white() + desc.authors.joinToString(", ").green())
         sender.sendMessage("Uptime: ".white() + uptimeFormatted.green())
-        sender.sendMessage("Loaded Config: ".white() + (if (SporeCore.instance.coreConfig != null) "✅" else "❌"))
     }
 
 
@@ -243,7 +259,7 @@ class CoreCommand : SporeCommand() {
 
         field.isAccessible = true
         val value = field.get(user) ?: "null"
-        sender.sendMessage("Value of '$fieldName' for ${target.name}: ".blue() + value.toString().green())
+        sender.sendMessage("Value of '$fieldName' for ${target.name}: ".blue() + value.toString().noTranslate())
     }
 
     @Subcommand("staffrollback")

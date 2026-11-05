@@ -158,7 +158,7 @@ object ModeService {
                 }
             }
 
-            if (mode.vanish && !user.getSettingOrDefault(VanishOnMMLeaveSetting()) && playerIssued) {
+            if (mode.vanish && SporeCore.instance.coreConfig.joinLeaveMessages.vanish && !user.getSettingOrDefault(VanishOnMMLeaveSetting()) && playerIssued) {
                 VanishService.unVanish(player.uniqueId, true)
                 Bukkit.broadcastMessage(
                     SporeCore.instance.coreConfig.joinLeaveMessages.join
@@ -259,7 +259,7 @@ object ModeService {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.name))
             }
 
-            if (mode.vanish && !isVanished && playerIssued) {
+            if (mode.vanish && SporeCore.instance.coreConfig.joinLeaveMessages.vanish && !isVanished && playerIssued) {
                 VanishService.vanish(player.uniqueId, true)
                 Bukkit.broadcastMessage(
                     SporeCore.instance.coreConfig.joinLeaveMessages.leave
